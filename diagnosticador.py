@@ -89,7 +89,11 @@ FECHAS = {}    # fuente -> última fecha disponible
 # UTILIDADES
 # ----------------------------------------------------------------------------
 
-def get(url, params=None, intentos=3, espera=3, timeout=30):
+INICIO = time.time()
+LIMITE_DESCARGAS = INICIO + 12 * 60   # nunca más de 12 minutos descargando
+
+
+def get(url, params=None, intentos=2, espera=2, timeout=20):
     ultimo = ""
     for i in range(intentos):
         try:
@@ -106,10 +110,18 @@ def get(url, params=None, intentos=3, espera=3, timeout=30):
 
 
 def seguro(nombre, fn, *a, **k):
+    if time.time() > LIMITE_DESCARGAS:
+        ERRORES.append((nombre, "sin tiempo"))
+        print(f"[{time.time() - INICIO:5.0f}s] {nombre}: SALTADO (sin tiempo)", flush=True)
+        return None
+    t0 = time.time()
     try:
-        return fn(*a, **k)
+        r = fn(*a, **k)
+        print(f"[{time.time() - INICIO:5.0f}s] {nombre}: ok ({time.time() - t0:.0f}s)", flush=True)
+        return r
     except Exception as e:  # noqa
         ERRORES.append((nombre, str(e)[:180]))
+        print(f"[{time.time() - INICIO:5.0f}s] {nombre}: FALLO ({time.time() - t0:.0f}s) {str(e)[:120]}", flush=True)
         return None
 
 
@@ -327,7 +339,7 @@ def actualizar_putcall():
     pendientes = pendientes[-300:]
     nuevas = {}
     fallos = 0
-    limite = time.time() + 240   # como mucho 4 minutos por ejecución
+    limite = min(time.time() + 180, LIMITE_DESCARGAS)   # como mucho 3 minutos por ejecución
     for d in reversed(pendientes):
         if time.time() > limite:
             break
