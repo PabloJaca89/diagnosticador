@@ -18,6 +18,321 @@ import numpy as np
 import pandas as pd
 import requests
 
+
+# ----------------------------------------------------------------------------
+# TEXTOS DE AYUDA (ⓘ)
+# ----------------------------------------------------------------------------
+# Textos de ayuda (ⓘ). Clave -> (título, párrafos/viñetas en HTML, [(fuente, url)])
+
+FRED = "https://fred.stlouisfed.org/series/"
+
+INFO = {
+    # ---------------- DIAGNOSTICADOR: tarjetas y reglas ----------------
+    "valoracion": ("Valoración de la bolsa de EE. UU. (ECY)", """
+<p><b>Qué es.</b> El <i>Excess CAPE Yield</i> (ECY) de Shiller: la rentabilidad por beneficios ajustada al ciclo (1/CAPE) menos el tipo real del bono a 10 años. Mide cuánta prima ofrece la bolsa de EE. UU. frente a los bonos.</p>
+<ul><li>&lt;1,5 %: muy cara · 1,5–3 %: cara · 3–4,5 %: razonable · ≥4,5 %: barata.</li>
+<li>Una caída fuerte de la bolsa sube el ECY.</li></ul>
+<p><b>Cómo se usa.</b> Solo afecta al S&amp;P 500 y al S&amp;P 500 equiponderado: para que sus condiciones sean "muy buenas" hace falta un ECY de al menos el 3 %.</p>
+<p><b>Cuidado.</b> Mide valoración a 10 años; no sirve para elegir el momento a pocos meses. Para Europa, emergentes y MSCI World no hay una medida de valoración gratuita equivalente.</p>""",
+        [("Shiller, Black y Jivraj (2020), CAPE and the COVID-19 pandemic effect", "https://spiral.imperial.ac.uk/handle/10044/1/86992"),
+         ("Datos de Shiller", "https://shillerdata.com/"),
+         ("AAII: ECY y rentabilidades a 10 años", "https://www.aaii.com/investor-update/article/235947-excess-cape-yield-low-ahead-of-potential-interest-rate-cut")]),
+
+    "condiciones": ("Condiciones de indexación", """
+<p>Valoración, para cada índice, de si es buen momento para tenerlo indexado. Se decide en este orden:</p>
+<ul><li><b>Tendencia</b> (media de 40 semanas): alcista si el precio está por encima de su media y esta sube; bajista si está por debajo y baja; si no, lateral.</li>
+<li><b>Muy malas:</b> tendencia bajista y, además, crédito deteriorándose con rapidez o precio todavía a más de un 10 % de su media de 200 semanas (le queda recorrido a la baja).</li>
+<li><b>Malas:</b> tendencia alcista pero con señales de fin de ciclo (fase de madurez o giro, o 2 señales de agotamiento); o sin tendencia, con el impulso débil y lejos de la zona de suelo.</li>
+<li><b>Regular-pesimista:</b> bajista pero ya cerca de la zona de suelo, sin señales suficientes; o sin tendencia y con el impulso débil.</li>
+<li><b>Regular-optimista:</b> sin tendencia pero con el impulso mejorando; tendencia alcista pero perdiendo fuerza frente a la liquidez (fase de rezagado o suelo en el mapa); o bajista cerca del suelo con la puerta en tramo 2 o más.</li>
+<li><b>Buenas:</b> tendencia alcista sana: fase de arranque o aceleración en el mapa y sin señales de fin de ciclo.</li>
+<li><b>Muy buenas:</b> lo anterior y, además, precio atractivo: como mucho a un 10 % de su media de 200 semanas y, en los índices de EE. UU., ECY de al menos el 3 %.</li></ul>
+<p><b>Puerta:</b> puntos de suelo y tramo que corresponde construir. <b>Cuidado:</b> reglas de criterio propio, no calibradas.</p>""", []),
+
+    "puntos": ("Puerta de indexación", """
+<p><b>Qué es.</b> Suma de condiciones típicas de suelo de mercado, cumplidas en cualquier orden en las últimas 13 semanas. Se calcula para cada índice:</p>
+<ul><li>Precio del índice cerca de su media de 200 semanas: 2 puntos.</li>
+<li>Crédito girando a la baja desde su pico: 2 puntos (común a todos).</li>
+<li>VIX vuelve a contango tras inversión: 1 punto (común a todos).</li>
+<li>RSI semanal del índice en sobreventa: 1 punto.</li></ul>
+<p>2, 4 y 6 puntos abren los tramos 1, 2 y 3: construir la posición en tercios. Si una condición deja de cumplirse no se abren tramos nuevos, pero no hay venta automática.</p>
+<p><b>Cuidado.</b> Pesos y umbrales son de criterio propio, no calibrados: hay pocos mercados bajistas con datos.</p>""", []),
+
+    "veto": ("Veto por crédito", """
+<p><b>Qué es.</b> Freno de emergencia: si el diferencial de crédito (Baa − bono 10 años) sube un 30 % o más en 13 semanas y además acelera, el tramo máximo de la puerta queda en 1 y los índices en tendencia bajista pasan a condiciones "muy malas".</p>
+<p><b>Por qué.</b> En 2001-02 y 2008-09 el S&amp;P 500 perforó su media de 200 semanas y siguió cayendo meses mientras el crédito se deterioraba. El veto evita comprar demasiado pronto en ese escenario.</p>
+<p>Se levanta tras 4 semanas seguidas sin cumplirse.</p>""",
+        [("Serie BAA10Y (FRED)", FRED + "BAA10Y")]),
+
+    "conviccion": ("Grado de convicción", """
+<p><b>Qué es.</b> Cuántos bloques independientes (régimen, estrés, liquidez y valoración/técnico/sentimiento) apuntan en la misma dirección que el mapa de la renta variable global.</p>
+<ul><li>0–1 coincidencias: baja → no construir.</li><li>2–3: media → completar el tramo en 2–3 meses.</li><li>4: alta → completar el tramo en 1 mes.</li></ul>
+<p><b>Cuidado.</b> Regla de criterio propio. A 6-12 meses ninguna señal tiene gran capacidad predictiva.</p>""", []),
+
+    "c_ma200": ("Precio cerca de la media de 200 semanas", """
+<p>La media de 200 semanas (unos 4 años) es una referencia de muy largo plazo. Históricamente los grandes suelos se han formado cerca de ella o por debajo.</p>
+<p><b>En esta web.</b> Se cumple si el cierre semanal del índice está como mucho un 5 % por encima de su propia media de 200 semanas, o por debajo, en alguna de las últimas 13 semanas. Al lado se muestra la distancia actual.</p>
+<p><b>Cuidado.</b> En 2001-02 y 2008-09 el precio la perforó y siguió cayendo meses (de ahí el veto por crédito).</p>""", []),
+
+    "c_credito": ("Crédito girando a la baja desde su pico", """
+<p>Cuando el diferencial de crédito empieza a bajar tras un episodio de estrés, suele indicar que lo peor de la crisis financiera ha pasado.</p>
+<p><b>En esta web</b> (serie Baa − bono 10 años), deben cumplirse tres cosas: hubo estrés (máximo de 26 semanas ≥ 1,4 veces el mínimo del año anterior), el diferencial ha bajado un 15 % desde ese máximo y su media de 4 semanas está por debajo de la de 13.</p>""",
+        [("Serie BAA10Y (FRED)", FRED + "BAA10Y")]),
+
+    "c_vix": ("VIX vuelve a contango tras inversión", """
+<p>Normalmente la volatilidad esperada a 3 meses (VIX3M) es mayor que la de 1 mes (VIX): eso es "contango". En pánicos se invierte (VIX &gt; VIX3M). La vuelta a la normalidad suele acompañar el final de la fase aguda de miedo.</p>
+<p><b>En esta web.</b> Al menos una semana con VIX/VIX3M &gt; 1 y después dos cierres semanales seguidos por debajo de 0,95.</p>""",
+        [("VIX3M (Macroption)", "https://www.macroption.com/vix3m/")]),
+
+    "c_rsi": ("RSI semanal en sobreventa", """
+<p>El RSI (índice de fuerza relativa, J. Welles Wilder, 1978) compara subidas y bajadas recientes en una escala de 0 a 100. Por debajo de 30 se considera sobreventa.</p>
+<p><b>En esta web.</b> RSI de 14 semanas de cada índice por debajo de 30 en alguna de las últimas 13 semanas. En datos semanales es una señal rara, típica de caídas fuertes.</p>""", []),
+
+    "b_A": ("Bloque A · Régimen", """
+<p>Dirección de la economía. Vota a favor del riesgo si las encuestas industriales de la Fed (Filadelfia y Nueva York) mejoran a 3 meses y las peticiones de subsidio bajan. Vota en contra si la regla de Sahm llega a 0,5 o si ambas empeoran.</p>""", []),
+    "b_B": ("Bloque B · Estrés", """
+<p>Tensión financiera. A favor del riesgo si el diferencial de crédito baja a 13 semanas y el VIX está en contango. En contra si el diferencial sube y el VIX está invertido.</p>""", []),
+    "b_C": ("Bloque C · Liquidez", """
+<p>A favor del riesgo si la liquidez neta de la Fed sube a 13 semanas y las condiciones financieras (NFCI) se relajan. En contra si ocurre lo contrario.</p>
+<p><b>Cuidado.</b> La relación liquidez-bolsa es una idea muy popular desde 2020, con poca evidencia académica sólida.</p>""", []),
+    "b_EFG": ("Bloque E+F+G · Valoración, técnico y sentimiento", """
+<p>Usa el indicador de sentimiento (réplica del Euphoriameter). Por encima de 80 vota en contra del riesgo (euforia); por debajo de 20, a favor (miedo).</p>""", []),
+    "b_D": ("Bloque D · Beta o alfa", """
+<p>No vota. Indica si el entorno favorece seleccionar valores o comprar el índice.</p>
+<ul><li>Dispersión alta (DSPX) y correlación baja (COR3M): los valores se mueven distinto entre sí → más margen para la selección (alfa).</li>
+<li>Lo contrario: todo se mueve junto → el índice (beta) es más eficiente.</li></ul>
+<p><b>Cuidado.</b> Es el bloque con evidencia más débil: los informes SPIVA muestran que la mayoría de gestores activos no bate al índice a largo plazo.</p>""",
+        [("Cboe: correlación implícita", "https://cboe.com/us/indices/implied/"),
+         ("Cboe: índice de dispersión", "https://www.cboe.com/us/indices/dispersion")]),
+    "sentimiento": ("Sentimiento (réplica del Euphoriameter)", """
+<p>Media de tres percentiles: valoración (CAPE), calma (VIX invertido) y distancia del ACWI a su media de 200 semanas. De 0 (miedo) a 100 (euforia).</p>
+<p><b>Por qué una réplica.</b> El Euphoriameter original no tiene datos descargables, y el índice NAAIM, que iba a usarse, pasó a ser de pago.</p>
+<p><b>Cuidado.</b> Sus componentes se solapan con la valoración y el técnico: cuenta como un único input.</p>""", []),
+
+    # ---------------- Mapas ----------------
+    "mapa": ("Mapa de rotación de motores", """
+<p>Versión abierta y aproximada de los <i>Relative Rotation Graphs</i> de Julius de Kempenaer. Cada punto es un motor de rentabilidad, comparado con las letras del Tesoro (BIL).</p>
+<ul><li><b>Eje horizontal (fuerza):</b> por encima de 100, el motor bate a la liquidez en su tendencia reciente.</li>
+<li><b>Eje vertical (impulso):</b> por encima de 100, esa fuerza está acelerando.</li>
+<li>El giro habitual es en sentido horario: mejorando → liderando → debilitándose → rezagado.</li>
+<li>La cola muestra las últimas 24 semanas (cierres semanales): el cuadrado es el punto de partida y el círculo grande, el momento actual.</li>
+<li>Los colores indican la familia del motor (renta variable, renta fija, materias primas…), no su fase. Puedes ocultar familias o motores con las casillas.</li></ul>
+<p><b>Cuidado.</b> Los proxies son fondos cotizados en dólares; no reproduce exactamente el RRG comercial (es una marca registrada).</p>""",
+        [("StockCharts ChartSchool: RRG", "https://chartschool.stockcharts.com/table-of-contents/chart-analysis/chart-types/relative-rotation-graphs-rrg-charts"),
+         ("StockCharts: patrón de rotación", "https://c.stockcharts.com/articles/chartwatchers/2019/04/when-tails-remain-on-one-side-of-a-relative-rotation-graph-what-does-that-mean.html")]),
+    "fuerza": ("Fuerza relativa", """
+<p>Compara el motor con las letras del Tesoro (liquidez en dólares): se divide su precio entre el de las letras y se mira si esa relación está por encima o por debajo de su media de 26 semanas.</p>
+<p><b>Lectura.</b> Por encima de 100, el motor está batiendo a la liquidez en su tendencia reciente; por debajo de 100, lo hace peor que tener el dinero en liquidez.</p>""", []),
+    "impulso": ("Impulso", """
+<p>Velocidad a la que cambia la fuerza relativa: compara la fuerza actual con la de hace 4 semanas.</p>
+<p><b>Lectura.</b> Por encima de 100, la fuerza está mejorando (acelera); por debajo, empeorando (frena). El impulso suele girar antes que la fuerza: por eso anticipa las rotaciones.</p>""", []),
+    "agotamiento": ("Señales de agotamiento", """
+<p>Cuántas de estas tres señales de extremo se dan ahora (de 0 a 3):</p>
+<ul><li>RSI semanal por encima de 70 (alcista) o por debajo de 30 (bajista).</li>
+<li>Distancia a su media de 40 semanas entre el 10 % más alto (alcista) o más bajo (bajista) de su historia.</li>
+<li>Fuerza relativa por encima de su percentil 90 (alcista) o por debajo del 10 (bajista).</li></ul>
+<p><b>Lectura.</b> "Alcista 2 de 3" indica una subida muy estirada: riesgo de fin de ciclo. "Bajista 2 de 3" indica una caída muy estirada: posible suelo.</p>""", []),
+    "direccion": ("Dirección del mapa (RV global)", """
+<p>Fase en la que está el ACWI (bolsa mundial) en el mapa de rotación. Suelo, arranque o aceleración cuentan como dirección favorable al riesgo; madurez, giro o rezagado, como desfavorable. La convicción mide cuántos bloques coinciden con esta dirección.</p>""", []),
+    "top_salir": ("Cerca de fin de ciclo · ir saliendo", """
+<p>Motores en fase de <b>giro</b> (fuerza alta pero impulso ya por debajo de 100) o de <b>madurez</b> (impulso frenando 3 semanas o 2 señales de agotamiento alcista).</p>
+<p>Orden: primero los que están en giro y, dentro de cada fase, los que más impulso han perdido en las últimas 4 semanas.</p>""", []),
+    "top_ampliar": ("Tendencia alcista con recorrido · ampliar", """
+<p>Motores en fase de <b>aceleración</b> (fuerza e impulso por encima de 100, sin frenar) y con como mucho una señal de agotamiento alcista: la tendencia está viva y no parece estirada.</p>
+<p>Orden: de mayor a menor impulso.</p>""", []),
+    "top_construir": ("Podrían iniciar tendencia alcista · empezar a construir", """
+<p>Motores en fase de <b>arranque</b>: todavía lo hacen peor que la liquidez (fuerza por debajo de 100), pero su impulso ya es positivo. Es donde está el margen: al principio del ciclo.</p>
+<p>Orden: de mayor a menor impulso. Recuerda construir poco a poco: muchos arranques fallan.</p>""", []),
+    "nivel_macro": ("Nivel (percentil histórico)", """
+<p>Qué parte de toda la historia de la variable queda por debajo de su valor actual. 0 = mínimo histórico, 100 = máximo histórico, 50 = mitad de su rango habitual.</p>""", []),
+    "impulso_macro": ("Impulso de una variable macro", """
+<p>Cambio de la variable en las últimas 13 semanas (datos semanales y diarios) o en los últimos 6 meses (datos mensuales). En el mapa se expresa como percentil: por encima de 50, la variable sube más deprisa de lo habitual; por debajo, baja o sube menos de lo habitual.</p>""", []),
+    "fases": ("Fases y qué hacer", """
+<ul><li><b>Suelo:</b> fuerza e impulso bajos, pero el impulso sube 3 semanas o hay agotamiento bajista → vigilar.</li>
+<li><b>Arranque:</b> fuerza baja pero impulso al alza → construir poco a poco (el margen está al principio).</li>
+<li><b>Aceleración:</b> fuerza e impulso altos → mantener.</li>
+<li><b>Madurez:</b> fuerza alta pero impulso frenando 3 semanas, o 2 señales de agotamiento → empezar a salir antes del clímax.</li>
+<li><b>Giro:</b> fuerza alta e impulso bajo → salir.</li>
+<li><b>Rezagado:</b> fuerza e impulso bajos sin señal de suelo → no tocar.</li></ul>
+<p><b>Agotamiento (↑/↓):</b> número de señales de extremo alcista/bajista: RSI semanal &gt;70 o &lt;30, distancia a la media de 40 semanas en el 10 % extremo de su historia, fuerza relativa en el percentil &gt;90 o &lt;10.</p>""", []),
+    "mapa_macro": ("Mapa macro", """
+<p>Sitúa cada variable por su <b>nivel</b> (percentil histórico, eje horizontal) y su <b>impulso</b> (percentil de su cambio reciente, eje vertical). Sirve para ver en qué fase está cada pata del régimen: si está alta y todavía subiendo, alta y frenando, etc.</p>
+<p>Una variable alta y subiendo puede estar cerca de su clímax: el margen está en anticipar el giro, no en seguirla.</p>""", []),
+    "variables": ("Variables", """
+<p><b>Percentil:</b> qué parte de su historia queda por debajo del valor actual (100 = máximo histórico).</p>
+<p><b>Cambio reciente:</b> 13 semanas para los datos rápidos y 6 meses para los mensuales.</p>
+<p><b>Fase:</b> misma lógica que los motores, aplicada a nivel e impulso. "Madurez" = nivel alto (percentil &gt;80) con el impulso frenando.</p>
+<p>⚠ = el dato lleva más tiempo del normal sin actualizarse.</p>""", []),
+
+    # ---------------- Variables macro ----------------
+    "Inflación (IPC interanual, %)": ("Inflación (IPC interanual)", """
+<p>Variación anual del índice de precios al consumo de EE. UU. (todos los artículos, desestacionalizado). Mensual, con unas 2 semanas de retraso.</p>
+<p><b>Lectura.</b> Lo relevante no es el nivel sino la dirección: inflación acelerando favorece activos reales (materias primas, energía); frenando favorece bonos y crecimiento.</p>""",
+        [("Serie CPIAUCSL (FRED)", FRED + "CPIAUCSL")]),
+    "Crecimiento (encuestas Fed, media 3 meses)": ("Crecimiento (encuestas industriales de la Fed)", """
+<p>Media de las encuestas manufactureras de la Fed de Filadelfia y la de Nueva York (Empire State), suavizada a 3 meses. Son índices de difusión: por encima de 0, más empresas ven mejora que empeoramiento.</p>
+<p><b>Por qué estas.</b> Sustituyen al ISM manufacturero, que no está disponible en descarga gratuita.</p>""",
+        [("Fed Filadelfia (FRED)", "https://fred.stlouisfed.org/data/GACDFSA066MSFRBPHI"),
+         ("Fed Nueva York (FRED)", FRED + "GACDISA066MSFRBNY")]),
+    "Estrés de crédito (Baa − bono 10 años)": ("Diferencial Baa − bono 10 años", """
+<p>Rentabilidad extra que pagan los bonos corporativos con calificación Baa (el escalón más bajo del grado de inversión) sobre el bono del Tesoro a 10 años. Diario desde 1986.</p>
+<p><b>Lectura.</b> Bajo = complacencia y crédito fácil; subiendo con rapidez = estrés. Es la serie de crédito que usan las reglas, porque permite comparar con 2002, 2008, 2020 y 2022.</p>""",
+        [("Serie BAA10Y (FRED)", FRED + "BAA10Y")]),
+    "Liquidez neta de la Fed (billones $)": ("Liquidez neta de la Fed", """
+<p>Balance de la Fed menos la cuenta del Tesoro en la Fed menos el repo inverso. Aproxima la liquidez que la Fed deja en el sistema financiero.</p>
+<p><b>Cuidado.</b> Es una heurística popular entre analistas desde 2020; la evidencia académica de su relación con la bolsa es escasa.</p>""",
+        [("Balance WALCL (FRED)", FRED + "WALCL"), ("Cuenta del Tesoro WTREGEN (FRED)", FRED + "WTREGEN"),
+         ("Repo inverso RRPONTSYD (FRED)", FRED + "RRPONTSYD")]),
+    "Condiciones financieras (Chicago Fed)": ("Condiciones financieras (NFCI, Chicago Fed)", """
+<p>Índice semanal que resume 105 medidas de riesgo, crédito y apalancamiento. Cero es la media histórica desde 1971.</p>
+<p><b>Lectura.</b> Positivo = condiciones más tensas que la media; negativo = más holgadas que la media.</p>""",
+        [("Chicago Fed: sobre el NFCI", "https://www.chicagofed.org/research/data/nfci/about")]),
+    "Estrés financiero (St. Louis Fed)": ("Estrés financiero (St. Louis Fed)", """
+<p>Índice semanal construido con 18 series de tipos de interés, diferenciales y otros indicadores. Cero = estrés normal.</p>
+<p><b>Lectura.</b> Positivo = estrés por encima de la media; negativo = por debajo.</p>""",
+        [("Serie STLFSI4 (FRED)", FRED + "STLFSI4")]),
+    "Curva 10 años − 3 meses": ("Curva de tipos 10 años − 3 meses", """
+<p>Diferencia entre el bono del Tesoro a 10 años y la letra a 3 meses.</p>
+<p><b>Lectura.</b> Cuando se invierte (negativa) ha precedido a las recesiones de EE. UU. desde los años 50, con un año o dos de adelanto e imprecisión en el momento. Según la Fed de San Francisco, esta versión de la curva es la de mejor historial.</p>
+""",
+        [("Fed de San Francisco (2022)", "https://www.frbsf.org/research-and-insights/publications/economic-letter/current-recession-risk-according-to-yield-curve"),
+         ("Serie T10Y3M (FRED)", FRED + "T10Y3M")]),
+    "Tipo real 10 años (TIPS)": ("Tipo real a 10 años (TIPS)", """
+<p>Rentabilidad del bono del Tesoro a 10 años protegido contra la inflación: el coste real del dinero a largo plazo.</p>
+<p><b>Lectura.</b> Tipos reales altos y subiendo presionan a la baja la valoración de bolsa, oro y activos de larga duración; bajando, los favorecen.</p>""",
+        [("Serie DFII10 (FRED)", FRED + "DFII10")]),
+    "Inflación implícita 10 años": ("Inflación implícita a 10 años", """
+<p>Diferencia entre el bono nominal a 10 años y el ligado a la inflación: la inflación media que descuenta el mercado para la próxima década.</p>
+<p><b>Lectura.</b> Subiendo = el mercado teme más inflación (favorece activos reales); bajando = teme desinflación o recesión.</p>""",
+        [("Serie T10YIE (FRED)", FRED + "T10YIE")]),
+    "Dólar (índice amplio)": ("Dólar (índice amplio)", """
+<p>Valor del dólar frente a una cesta amplia de divisas de sus socios comerciales.</p>
+<p><b>Lectura.</b> Un dólar fuerte endurece las condiciones financieras globales y suele perjudicar a emergentes y materias primas. Para un inversor en euros, además, cambia el valor de todo lo que está en dólares.</p>""",
+        [("Serie DTWEXBGS (FRED)", FRED + "DTWEXBGS")]),
+    "Peticiones de subsidio (media 4 semanas)": ("Peticiones iniciales de subsidio por desempleo", """
+<p>Nuevas solicitudes semanales de prestación por desempleo en EE. UU. (media de 4 semanas). Es de los datos de empleo más rápidos.</p>
+<p><b>Lectura.</b> Subidas sostenidas suelen anticipar deterioro del mercado laboral. Ojo: el percentil compara con una historia desde 1967, con una población mucho menor.</p>""",
+        [("Serie ICSA (FRED)", FRED + "ICSA")]),
+    "Regla de Sahm": ("Regla de Sahm", """
+<p>Compara la media de 3 meses del paro con su mínimo de los 12 meses anteriores. Si la diferencia llega a 0,50 puntos, marca el inicio de una recesión.</p>
+<p><b>Lectura.</b> Es una señal de confirmación temprana, no de anticipación: salta cuando la recesión ya ha empezado.</p>""",
+        [("Serie SAHMREALTIME (FRED)", FRED + "SAHMREALTIME")]),
+    "Condiciones financieras FCI-G (Fed)": ("Condiciones financieras FCI-G (Reserva Federal)", """
+<p>Índice de la Reserva Federal que traduce siete variables (tipos oficiales, bono a 10 años, hipotecas, bonos corporativos BBB, bolsa, vivienda y dólar) en su efecto sobre el PIB del año siguiente.</p>
+<p><b>Lectura.</b> Positivo = viento en contra del crecimiento; negativo = viento a favor. Un valor de 1 equivale a restar (o sumar) un punto de crecimiento. Es mensual y se publica con retraso.</p>""",
+        [("Reserva Federal (Ajello y otros, 2023)", "https://www.federalreserve.gov/econres/notes/feds-notes/a-new-index-to-measure-us-financial-conditions-20230630.html")]),
+    "Cobre / oro": ("Ratio cobre / oro", """
+<p>Precio del cobre (metal industrial, sensible al crecimiento) frente al oro (refugio).</p>
+<p><b>Lectura.</b> Subiendo suele acompañar expectativas de más crecimiento y tipos más altos; bajando, de menos crecimiento o miedo.</p>
+<p><b>Cuidado.</b> Es una heurística de mercado sin respaldo académico sólido. Aquí se mide con dos fondos cotizados (CPER y GLD), con historia desde 2011.</p>""", []),
+    "Estructura del VIX (VIX/VIX3M)": ("Estructura del VIX (VIX/VIX3M)", """
+<p>Volatilidad esperada a 1 mes frente a la de 3 meses.</p>
+<p><b>Lectura.</b> Por debajo de 1 (contango) es lo normal. Por encima de 1 (inversión) indica miedo agudo a corto plazo. La vuelta por debajo de 0,95 tras una inversión cuenta como punto en la puerta.</p>""",
+        [("VIX3M (Macroption)", "https://www.macroption.com/vix3m/")]),
+    "Dispersión (DSPX)": ("Dispersión (Cboe DSPX)", """
+<p>Mide cuánto se espera que difieran entre sí los valores del S&amp;P 500 en los próximos 30 días, a partir de opciones del índice y de opciones de sus valores. Lo publican Cboe y S&amp;P DJI desde 2023, con historia retrocalculada desde 2014.</p>
+<p><b>Lectura.</b> Alta = cada valor va por su lado, más margen para la selección. Baja = todo se mueve junto.</p>""",
+        [("Cboe: índice de dispersión", "https://www.cboe.com/us/indices/dispersion"),
+         ("S&P DJI: preguntas frecuentes", "https://spglobal.com/spdji/en/education/article/faq-cboe-sp-500-dispersion-index")]),
+    "Correlación implícita (COR3M)": ("Correlación implícita a 3 meses (Cboe COR3M)", """
+<p>Correlación media esperada entre los 50 mayores valores del S&amp;P 500 en los próximos 3 meses, deducida de sus opciones. Cboe la describe como una medida del "comportamiento en manada".</p>
+<p><b>Lectura.</b> Alta = la diversificación entre acciones aporta poco y manda el índice; baja = beneficios de diversificación altos y más margen para la selección.</p>""",
+        [("Cboe: correlación implícita", "https://cboe.com/us/indices/implied/"),
+         ("Cboe: documento técnico", "https://cdn.cboe.com/resources/indices/documents/Implied_Correlation-WhitePaper-v1.0.5.pdf")]),
+    "Diferencial high yield (solo 3 años)": ("Diferencial high yield", """
+<p>Prima que pagan los bonos corporativos de alto rendimiento sobre el Tesoro (índice de ICE BofA).</p>
+<p><b>Lectura.</b> Es el termómetro de crédito más sensible al estrés.</p>
+<p><b>Cuidado.</b> FRED solo ofrece sus 3 últimos años, así que su percentil no es histórico: se muestra como alarma complementaria y no entra en las reglas.</p>""",
+        [("Serie BAMLH0A0HYM2 (FRED)", FRED + "BAMLH0A0HYM2")]),
+    "Equiponderado / capitalización (RSP/SPY)": ("Equiponderado frente a capitalización (RSP/SPY)", """
+<p>S&amp;P 500 con todas las empresas al mismo peso frente al S&amp;P 500 normal, ponderado por tamaño.</p>
+<p><b>Lectura.</b> Subiendo = la subida se extiende a más empresas (amplitud sana). Bajando = mandan unas pocas grandes (concentración). Sustituye a las medidas de amplitud y concentración, que no tienen fuente gratuita.</p>""", []),
+
+    # ---------------- OPCIONES ----------------
+    "gamma": ("Gamma de los creadores de mercado (aproximada)", """
+<p><b>Qué es.</b> Estimación de cómo tendrán que cubrirse los creadores de mercado de opciones del S&amp;P 500 cuando el índice se mueva.</p>
+<ul><li><b>Positiva:</b> compran en las caídas y venden en las subidas → amortiguan los movimientos.</li>
+<li><b>Negativa:</b> venden en las caídas y compran en las subidas → amplifican los movimientos.</li></ul>
+<p><b>Cuidado.</b> Se basa en un supuesto simplificado y estándar (los creadores tienen las calls compradas y las puts vendidas). No predice la dirección del mercado, solo cómo de nervioso puede estar. Excluye las opciones que vencen el mismo día.</p>""",
+        [("SpotGamma: qué es la exposición gamma", "https://spotgamma.com/gamma-exposure-explained/")]),
+    "giro": ("Nivel de giro de la gamma", """
+<p>Nivel del S&amp;P 500 en el que la gamma estimada cambia de signo.</p>
+<p><b>Lectura.</b> Por encima del giro, el mercado tiende a estar amortiguado; por debajo, los movimientos tienden a amplificarse.</p>""", []),
+    "muros": ("Muros de opciones", """
+<p>Precios de ejercicio con más interés abierto en los próximos 70 días: el de puts por debajo del precio actual y el de calls por encima.</p>
+<p><b>Lectura.</b> Suelen actuar como soporte (put) y resistencia (call) a corto plazo. Pierden fuerza tras los vencimientos.</p>""", []),
+    "skew": ("SKEW (Cboe)", """
+<p><b>Qué es.</b> Mide el precio de las opciones put muy fuera de dinero sobre el S&amp;P 500 frente a las opciones en dinero, a 30 días. Con rentabilidades "normales" valdría 100; sube cuanto más se paga por protegerse de caídas extremas. Suele moverse entre 100 y 150.</p>
+<ul><li><b>Alto (más de 140):</b> los grandes inversores pagan mucho por cubrirse del riesgo de cola. Proteger la cartera con puts lejanas sale caro; venderlas paga más prima, a cambio de asumir ese riesgo.</li>
+<li><b>No es una señal de caída inminente.</b> Mide el precio de la protección, no la probabilidad real de un desplome. Según algunos analistas, suele estar alto en mercados tranquilos, cuando cubrirse resulta barato en términos absolutos y los fondos compran protección de forma sistemática.</li></ul>
+<p><b>Percentiles.</b> El histórico compara con toda su historia desde 1990; el anual, con el último año. El nivel del SKEW ha tendido a subir en las últimas décadas, así que el percentil anual es más útil para ver si está extremo ahora.</p>""",
+        [("Cboe: metodología del SKEW", "https://cdn.cboe.com/resources/release_notes/2025/Consultation-Regarding-Proposed-Changes-to-the-Cboe-SKEW-Index.pdf"),
+         ("Cboe: origen del skew", "https://www.cboe.com/insights/posts/dawn-of-a-new-era-brings-on-the-existence-of-skew")]),
+    "putcall": ("Ratio put/call", """
+<p><b>Qué es.</b> Volumen diario de opciones put (protección) dividido por el de calls (apuestas alcistas) en Cboe.</p>
+<ul><li><b>Acciones:</b> refleja sobre todo al inversor particular; es el más usado como señal.</li>
+<li><b>Índices y S&amp;P 500:</b> refleja más las coberturas institucionales; suele ser más alto que el de acciones.</li>
+<li><b>Total:</b> la suma de ambos.</li></ul>
+<p><b>Lectura.</b> Se usa como indicador contrario: extremos altos (mucho miedo) suelen coincidir con zonas de suelo y extremos bajos (complacencia), con zonas de techo. Mejor con la media de 10 días que con el dato de un día.</p>
+<p><b>Cuidado.</b> No sirve para afinar fechas exactas.</p>""",
+        [("StockCharts ChartSchool: ratio put/call", "https://chartschool.stockcharts.com/table-of-contents/market-indicators/put-call-ratio"),
+         ("AAII: el ratio put/call", "https://www.aaii.com/journal/article/295384-the-put-call-ratio-viewing-market-sentiment-through-options-activity")]),
+    "cot": ("Posicionamiento (CFTC)", """
+<p><b>Qué es.</b> Informe semanal del regulador de futuros de EE. UU. con las posiciones de los grandes operadores (datos del martes, publicados el viernes).</p>
+<ul><li><b>Gestoras:</b> fondos de inversión, pensiones y aseguradoras. Posicionamiento lento y estructural.</li>
+<li><b>Fondos apalancados:</b> hedge funds y fondos de gestión tendencial (CTA). Más tácticos y rápidos.</li>
+<li><b>Especuladores</b> (materias primas): gestores de dinero (fondos y CTA) que operan por cuenta de terceros.</li></ul>
+<p><b>Lectura.</b> Neto = largos menos cortos, en % del interés abierto. Percentiles extremos (≥90 o ≤10 en 3 años) señalan posiciones muy cargadas, que pueden deshacerse con violencia si el mercado se gira.</p>""",
+        [("CFTC: notas del informe financiero", "https://www.cftc.gov/idc/groups/public/@commitmentsoftraders/documents/file/tfmexplanatorynotes.pdf"),
+         ("CFTC: notas del informe de materias primas", "https://www.cftc.gov/MarketReports/CommitmentsofTraders/DisaggregatedExplanatoryNotes/index.htm"),
+         ("OFR: quiénes son los fondos apalancados", "https://financialresearch.gov/hedge-fund-monitor/categories/size/chart-94")]),
+
+    # ---------------- CALENDARIO ----------------
+    "blackout": ("Blackout de recompras (estimado)", """
+<p><b>Qué es.</b> Periodo en el que la mayoría de empresas deja de recomprar acciones propias por iniciativa propia: desde unas 5 semanas antes de publicar resultados hasta unas 48 horas después. Según Goldman Sachs, las recompras son la mayor fuente de demanda de acciones en EE. UU.</p>
+<p><b>Cuidado.</b> No hay dato oficial ni obligación legal: es una práctica de las empresas. Aquí se estima como una franja por trimestre.</p>""",
+        [("Goldman Sachs (Kostin), vía Business Insider", "https://www.businessinsider.in/goldman-were-blaming-the-stock-market-sell-off-on-a-pullback-in-buybacks/articleshow/44889114.cms"),
+         ("Goldman Sachs: las 48 horas posteriores, vía MarketWatch", "https://macdailynews.com/2015/03/24/goldman-sachs-buy-apple-during-buyback-blackout-period/"),
+         ("Goldman Sachs: peso de las recompras, vía Bloomberg", "https://www.bloombergquint.com/markets/goldman-considers-a-world-without-buybacks-it-looks-ominous")]),
+    "ciclo": ("Ciclo presidencial", """
+<p>Rentabilidad media del S&amp;P 500 según el año del mandato presidencial de EE. UU. (datos de Shiller desde 1871).</p>
+<p><b>Cuidado.</b> Es un patrón popular sin respaldo académico sólido para el año del mandato; la literatura académica más citada (Santa-Clara y Valkanov, 2003) estudia el partido del presidente, no el año del ciclo. Pocas observaciones: unas 38 por cada año del ciclo.</p>""",
+        [("Santa-Clara y Valkanov (2003), Journal of Finance", "https://doi.org/10.1111/1540-6261.00590")]),
+    "estacionalidad": ("Estacionalidad mensual", """
+<p>Rentabilidad media y mediana del S&amp;P 500 en cada mes del año, y porcentaje de años en que ese mes fue positivo.</p>
+<p><b>Evidencia.</b> El efecto más estudiado es "Sell in May" (efecto Halloween): Bouman y Jacobsen (2002) hallaron mejores rentabilidades de noviembre a abril en 36 de 37 mercados. En EE. UU., otros autores atribuyen el resultado a dos meses extremos (octubre de 1987 y agosto de 1998).</p>
+<p><b>Cuidado.</b> Efectos débiles e inestables; no deben pesar más que el régimen.</p>""",
+        [("Bouman y Jacobsen (2002), American Economic Review", "https://doi.org/10.1257/000282802762024683"),
+         ("Crítica en Econ Journal Watch", "https://econjwatch.org/articles/stock-market-efficiency-withstands-another-challenge-solving-the-sell-in-may-buy-after-halloween-puzzle")]),
+    "cambio_mes": ("Efecto cambio de mes", """
+<p>Las bolsas tienden a subir más en el último día hábil del mes y los tres primeros del siguiente (Lakonishok y Smidt, 1988; Ariel, 1987). Una de las explicaciones propuestas son los flujos de dinero periódicos de fin de mes (nóminas, pensiones, fondos).</p>
+<p><b>Cuidado.</b> Útil, como mucho, para afinar el día de una compra ya decidida.</p>""",
+        [("McConnell y Xu: el efecto persiste", "https://docs.lib.purdue.edu/ciberwp/43"),
+         ("Ariel (1987), Journal of Financial Economics", "https://doi.org/10.1016/0304-405X(87)90066-3")]),
+    "Opciones": ("Vencimientos de opciones", """
+<ul><li><b>Mensual:</b> tercer viernes de cada mes. Al vencer, se liberan coberturas y cambia la gamma.</li>
+<li><b>Trimestral:</b> tercer viernes de marzo, junio, septiembre y diciembre. Vencen a la vez opciones y futuros sobre índices y acciones, y además se rebalancea el S&amp;P 500. Mucho volumen al cierre.</li>
+<li><b>VIX:</b> miércoles, 30 días antes del vencimiento mensual del mes siguiente.</li></ul>""", []),
+    "Cierres": ("Cierres de trimestre y de año", """
+<p>Las gestoras y los fondos de pensiones rebalancean sus carteras y "maquillan" posiciones antes de publicar resultados. Puede haber flujos grandes los últimos días, sobre todo tras trimestres con mucha diferencia entre bolsa y bonos.</p>""", []),
+    "Recompras": ("Recompras", """<p>Inicio y fin estimados del blackout de recompras de cada trimestre. Ver la tarjeta "Blackout de recompras".</p>""", []),
+    "Índices": ("Reconstitución de índices Russell", """
+<p>FTSE Russell recompone sus índices de EE. UU. (Russell 1000, 2000…). Desde 2026 lo hace dos veces al año, en junio y diciembre. Genera un volumen enorme al cierre del día efectivo, sobre todo en small caps. El día de referencia fija qué empresas entran y salen.</p>""",
+        [("FTSE Russell: reconstitución de diciembre de 2026", "https://www.lseg.com/en/media-centre/press-releases/ftse-russell/2026/ftse-russell-begins-december-2026-semi-annual-russell-us-indexes-reconstitution")]),
+    "Fed": ("Reuniones de la Fed (FOMC)", """
+<p>Decisión de tipos de interés y, en las reuniones trimestrales, nuevas previsiones. El día de la decisión aumenta la volatilidad de bonos, dólar y bolsa.</p>""",
+        [("Reserva Federal: calendario", "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm")]),
+    "Datos": ("IPC de EE. UU.", """
+<p>Publicación mensual de la inflación (8:30 de Nueva York; normalmente 14:30 en España). Es uno de los datos que más mueve los mercados mientras la inflación sea el centro de la política de la Fed.</p>""",
+        [("BLS: calendario del IPC", "https://www.bls.gov/schedule/news_release/cpi.htm")]),
+    "Fiscal": ("Fechas fiscales", """
+<ul><li><b>31 de marzo:</b> cierre del año fiscal en Japón (repatriación y rebalanceo de inversores japoneses).</li>
+<li><b>15 de abril:</b> pago de impuestos en EE. UU. (salida de liquidez).</li>
+<li><b>31 de octubre:</b> fin de ejercicio fiscal de muchos fondos de inversión estadounidenses (ventas para materializar pérdidas).</li>
+<li><b>Diciembre:</b> ventas de particulares para compensar pérdidas en impuestos; Roll (1983) lo relacionó con el rebote de enero.</li></ul>""", []),
+}
+
+
 # ----------------------------------------------------------------------------
 # CONFIGURACIÓN
 # ----------------------------------------------------------------------------
@@ -40,11 +355,63 @@ MOTORES = [
     ("MTUM", "Momentum"), ("QUAL", "Calidad"), ("BTAL", "Anti-beta"),
     ("TLT", "Bonos largos"), ("IEF", "Bonos medios"), ("TIP", "Bonos ligados a inflación"),
     ("HYG", "High yield"), ("DBC", "Materias primas"), ("XLE", "Energía"),
-    ("GLD", "Oro"), ("URA", "Uranio"), ("UUP", "Dólar"),
+    ("GLD", "Oro"), ("URA", "Uranio"), ("UUP", "Dólar"), ("FXE", "Euro"),
     ("DBMF", "Managed futures"), ("VIXY", "Volatilidad"),
 ]
 REFERENCIA = "BIL"
-OTROS_TIINGO = ["CPER"]
+OTROS_TIINGO = ["CPER", "URTH", "IEMG"]
+
+# Índices para las condiciones de indexación: (ticker, nombre, ¿EE. UU.?)
+INDICES_COND = [("URTH", "MSCI World", False), ("SPY", "S&P 500", True),
+                ("RSP", "S&P 500 equiponderado", True), ("VGK", "Europa", False),
+                ("IEMG", "Emergentes (MSCI EM IMI)", False)]
+
+GRUPO = {
+    "ACWI": "Renta variable", "SPY": "Renta variable", "RSP": "Renta variable", "VGK": "Renta variable",
+    "EEM": "Renta variable", "QQQ": "Renta variable", "IWM": "Renta variable",
+    "VTV": "Factores", "VUG": "Factores", "MTUM": "Factores", "QUAL": "Factores",
+    "TLT": "Renta fija", "IEF": "Renta fija", "TIP": "Renta fija", "HYG": "Crédito",
+    "DBC": "Materias primas", "XLE": "Materias primas", "GLD": "Materias primas", "URA": "Materias primas",
+    "UUP": "Divisas", "FXE": "Divisas", "BTAL": "Alternativos", "DBMF": "Alternativos", "VIXY": "Alternativos",
+}
+COLOR_GRUPO = {"Renta variable": "#2f6fdb", "Factores": "#8e44ad", "Renta fija": "#1f9d55",
+               "Crédito": "#a0672a", "Materias primas": "#e67e22", "Divisas": "#c0392b",
+               "Alternativos": "#16a085"}
+DESC = {
+    "ACWI": "iShares MSCI ACWI: bolsa mundial, países desarrollados y emergentes.",
+    "SPY": "SPDR S&P 500: las 500 mayores empresas de EE. UU., ponderadas por tamaño.",
+    "RSP": "Invesco S&P 500 Equal Weight: las mismas 500 empresas, todas con el mismo peso.",
+    "VGK": "Vanguard FTSE Europe: bolsa de Europa desarrollada.",
+    "EEM": "iShares MSCI Emerging Markets: bolsa de países emergentes.",
+    "QQQ": "Invesco QQQ: Nasdaq-100, las 100 mayores empresas no financieras del Nasdaq (sesgo tecnológico).",
+    "IWM": "iShares Russell 2000: empresas pequeñas de EE. UU.",
+    "VTV": "Vanguard Value: empresas de EE. UU. baratas por valoración.",
+    "VUG": "Vanguard Growth: empresas de EE. UU. de alto crecimiento.",
+    "MTUM": "iShares MSCI USA Momentum: acciones de EE. UU. con mejor comportamiento reciente.",
+    "QUAL": "iShares MSCI USA Quality: empresas de EE. UU. rentables, poco endeudadas y estables.",
+    "BTAL": "Fondo anti-beta de AGF: compra acciones de beta baja y vende las de beta alta en igual importe. Aproximación a market neutral.",
+    "TLT": "iShares 20+ Year Treasury: bonos del Tesoro de EE. UU. a más de 20 años.",
+    "IEF": "iShares 7-10 Year Treasury: bonos del Tesoro de EE. UU. a 7-10 años.",
+    "TIP": "iShares TIPS: bonos del Tesoro de EE. UU. ligados a la inflación.",
+    "HYG": "iShares iBoxx High Yield: bonos corporativos de alto rendimiento en dólares.",
+    "DBC": "Invesco DB Commodity: cesta diversificada de futuros de materias primas.",
+    "XLE": "Energy Select Sector SPDR: sector energía del S&P 500.",
+    "GLD": "SPDR Gold Shares: oro físico.",
+    "URA": "Global X Uranium: empresas de minería y combustible de uranio.",
+    "UUP": "Invesco DB US Dollar Bullish: dólar frente a una cesta de divisas desarrolladas.",
+    "FXE": "Invesco CurrencyShares Euro: euro frente al dólar.",
+    "DBMF": "iMGP DBi Managed Futures: réplica de los fondos de gestión tendencial.",
+    "VIXY": "ProShares VIX Short-Term Futures: futuros del VIX a corto plazo. Sube en los picos de miedo y pierde valor con el tiempo en mercados tranquilos.",
+    "BIL": "SPDR 1-3 Month T-Bill: letras del Tesoro de EE. UU., la referencia de liquidez.",
+    "URTH": "iShares MSCI World: bolsa de países desarrollados.",
+    "IEMG": "iShares Core MSCI Emerging Markets: emergentes de empresas grandes, medianas y pequeñas (índice IMI).",
+    "CPER": "United States Copper Index Fund: futuros de cobre.",
+}
+
+
+def tk(t):
+    return f'<span class="tk" data-tip="{html.escape(t + " · " + DESC.get(t, ""))}">{html.escape(t)}</span>'
+
 
 FRED_SERIES = {
     "T10YIE": "Inflación implícita 10 años",
@@ -183,6 +550,21 @@ def fmt(x, dec=2, suf=""):
 
 def e(t):
     return html.escape(str(t))
+
+
+def i(k):
+    return f' <button class="info" data-k="{html.escape(k)}" title="¿Qué es?">ⓘ</button>' if k in INFO else ""
+
+
+def info_json():
+    datos = {}
+    for k, (tit, cuerpo, fuentes) in INFO.items():
+        f = ""
+        if fuentes:
+            f = '<p class="fuentes-info"><b>Fuentes:</b> ' + " · ".join(
+                f'<a href="{html.escape(u)}" target="_blank" rel="noopener">{html.escape(n)}</a>' for n, u in fuentes) + "</p>"
+        datos[k] = {"t": tit, "h": cuerpo.strip() + f}
+    return json.dumps(datos, ensure_ascii=False).replace("</", "<\\/")
 
 
 def antiguedad_ok(fecha, frecuencia):
@@ -539,6 +921,13 @@ def fase_motor(precio_w, rs, X, Y):
     return f, {"rsi": r, "alc": alc, "baj": baj}
 
 
+CLAVE_COND = {"Precio cerca de la media de 200 semanas": "c_ma200",
+              "Crédito girando a la baja desde su pico": "c_credito",
+              "VIX vuelve a contango tras inversión": "c_vix",
+              "RSI semanal en sobreventa": "c_rsi"}
+CLAVE_BLOQUE = {"A · Régimen": "b_A", "B · Estrés": "b_B", "C · Liquidez": "b_C",
+                "E+F+G · Valoración, técnico y sentimiento": "b_EFG"}
+
 ACCION = {
     "SUELO": "Vigilar", "ARRANQUE": "Construir poco a poco", "ACELERACIÓN": "Mantener",
     "MADUREZ": "Empezar a salir", "GIRO": "Salir", "REZAGADO": "No tocar",
@@ -570,62 +959,41 @@ def variable_macro(nombre, s, frecuencia, periodos, modo="dif"):
     niv = pct(s)
     ultimo = imp.iloc[-1]
     fase = fase_macro(niv, ultimo, frenando3)
-    rastro_x = [pct(s, v) for v in s.iloc[-8:]]
-    rastro_y = [pct(imp, v) for v in imp.iloc[-8:]]
+    desde = s.index[-1] - pd.Timedelta(weeks=24)
+    ventana = imp[imp.index >= desde].index
+    rastro_x = [pct(s, s.loc[d]) for d in ventana]
+    rastro_y = [pct(imp, imp.loc[d]) for d in ventana]
     return {"nombre": nombre, "valor": s.iloc[-1], "fecha": s.index[-1], "nivel": niv,
             "impulso": ultimo, "fase": fase, "frecuencia": frecuencia,
             "rx": rastro_x, "ry": rastro_y, "modo": modo, "periodos": periodos}
 
 
-def puerta(acwi_w, baa_w, ratio_vix_w, ecy):
-    res = {"condiciones": [], "puntos": 0, "tramo": 0, "veto": False, "techo": None,
-           "techo_txt": "sin dato", "exposicion": None}
-    # Techo
-    if ecy is not None and not math.isnan(ecy):
-        if ecy < 1.5:
-            res["techo"], res["techo_txt"] = 0.0, "NADA"
-        elif ecy < 3:
-            res["techo"], res["techo_txt"] = 1 / 3, "1/3"
-        elif ecy < 4.5:
-            res["techo"], res["techo_txt"] = 2 / 3, "2/3"
-        else:
-            res["techo"], res["techo_txt"] = 1.0, "TODO"
-    V = 13
+V_MEMORIA = 13
 
-    # 1. Precio cerca de la media de 200 semanas
-    c1 = None
-    if acwi_w is not None and len(acwi_w) > 210:
-        ma = acwi_w.rolling(200).mean()
-        cond = (acwi_w <= 1.05 * ma)
-        c1 = bool(cond.iloc[-V:].any())
-        dist = (acwi_w.iloc[-1] / ma.iloc[-1] - 1) * 100
-        res["dist_ma200"] = dist
-    res["condiciones"].append(("Precio cerca de la media de 200 semanas", 2, c1,
-                               f"distancia actual {fmt(res.get('dist_ma200'), 1, ' %')}"))
 
-    # 2. Crédito girando a la baja
-    c2 = None
+def puerta_comun(baa_w, ratio_vix_w):
+    """Condiciones comunes a todos los índices: crédito, VIX y veto."""
+    res = {"credito": None, "vix": None, "veto": False, "baa_13s": None, "ratio_vix": None}
+    V = V_MEMORIA
     if baa_w is not None and len(baa_w) > 120:
         b = baa_w.values
         sma4 = baa_w.rolling(4).mean().values
         sma13 = baa_w.rolling(13).mean().values
         n = len(b)
         hits = []
-        for i in range(n - V, n):
-            ini = max(0, i - 25)
-            j = ini + int(np.argmax(b[ini:i + 1]))
+        for k in range(n - V, n):
+            ini = max(0, k - 25)
+            j = ini + int(np.argmax(b[ini:k + 1]))
             M = b[j]
             previo = b[max(0, j - 52):j]
             if len(previo) == 0:
                 hits.append(False)
                 continue
-            m = previo.min()
-            hits.append(bool(M >= 1.4 * m and b[i] <= 0.85 * M and sma4[i] < sma13[i]))
-        c2 = any(hits)
-    res["condiciones"].append(("Crédito girando a la baja desde su pico", 2, c2, ""))
-
-    # 3. VIX vuelve a contango
-    c3 = None
+            hits.append(bool(M >= 1.4 * previo.min() and b[k] <= 0.85 * M and sma4[k] < sma13[k]))
+        res["credito"] = any(hits)
+        cond = (baa_w / baa_w.shift(13) - 1 >= 0.30) & ((baa_w - baa_w.shift(4)) > (baa_w.shift(4) - baa_w.shift(8)))
+        res["veto"] = bool(cond.iloc[-4:].any())
+        res["baa_13s"] = (baa_w.iloc[-1] / baa_w.iloc[-14] - 1) * 100
     if ratio_vix_w is not None and len(ratio_vix_w) > 40:
         r = ratio_vix_w.values
         n = len(r)
@@ -633,35 +1001,91 @@ def puerta(acwi_w, baa_w, ratio_vix_w, ecy):
         for k in range(n - V, n):
             if k < 15:
                 continue
-            ok = r[k - 1] < 0.95 and r[k] < 0.95 and (r[max(0, k - 14):k - 1] > 1).any()
-            hits.append(bool(ok))
-        c3 = any(hits)
-    res["condiciones"].append(("VIX vuelve a contango tras inversión", 1, c3,
-                               f"VIX/VIX3M actual {fmt(ratio_vix_w.iloc[-1] if ratio_vix_w is not None else None, 2)}"))
-
-    # 4. RSI semanal en sobreventa
-    c4 = None
-    if acwi_w is not None and len(acwi_w) > 30:
-        rr = rsi(acwi_w)
-        c4 = bool((rr.iloc[-V:] < 30).any())
-        res["rsi_acwi"] = rr.iloc[-1]
-    res["condiciones"].append(("RSI semanal en sobreventa", 1, c4,
-                               f"RSI actual {fmt(res.get('rsi_acwi'), 0)}"))
-
-    res["puntos"] = sum(p for _, p, c, _ in res["condiciones"] if c)
-    res["tramo"] = 3 if res["puntos"] >= 6 else 2 if res["puntos"] >= 4 else 1 if res["puntos"] >= 2 else 0
-
-    # Veto
-    if baa_w is not None and len(baa_w) > 30:
-        b = baa_w
-        cond = (b / b.shift(13) - 1 >= 0.30) & ((b - b.shift(4)) > (b.shift(4) - b.shift(8)))
-        res["veto"] = bool(cond.iloc[-4:].any())
-        res["baa_13s"] = (b.iloc[-1] / b.iloc[-14] - 1) * 100
-    if res["veto"]:
-        res["tramo"] = min(res["tramo"], 1)
-    if res["techo"] is not None:
-        res["exposicion"] = res["techo"] * res["tramo"] / 3
+            hits.append(bool(r[k - 1] < 0.95 and r[k] < 0.95 and (r[max(0, k - 14):k - 1] > 1).any()))
+        res["vix"] = any(hits)
+        res["ratio_vix"] = float(r[-1])
     return res
+
+
+def puerta_indice(px_w, comun):
+    """Puntos de la puerta para un índice: su media de 200 semanas y su RSI + condiciones comunes."""
+    res = {"ma200": None, "rsi": None, "dist": None, "rsi_v": None, "puntos": 0, "tramo": 0}
+    V = V_MEMORIA
+    if px_w is not None and len(px_w) > 210:
+        ma = px_w.rolling(200).mean()
+        res["ma200"] = bool((px_w <= 1.05 * ma).iloc[-V:].any())
+        res["dist"] = (px_w.iloc[-1] / ma.iloc[-1] - 1) * 100
+    if px_w is not None and len(px_w) > 30:
+        rr = rsi(px_w)
+        res["rsi"] = bool((rr.iloc[-V:] < 30).any())
+        res["rsi_v"] = float(rr.iloc[-1])
+    pts = 2 * bool(res["ma200"]) + 2 * bool(comun["credito"]) + bool(comun["vix"]) + bool(res["rsi"])
+    res["puntos"] = int(pts)
+    tramo = 3 if pts >= 6 else 2 if pts >= 4 else 1 if pts >= 2 else 0
+    res["tramo"] = min(tramo, 1) if comun["veto"] else tramo
+    return res
+
+
+NIVELES = ["MUY MALAS", "MALAS", "REGULAR-PESIMISTA", "REGULAR-OPTIMISTA", "BUENAS", "MUY BUENAS"]
+COLOR_NIVEL = {"MUY MALAS": "#8e1b1b", "MALAS": "#d9534f", "REGULAR-PESIMISTA": "#e0a33a",
+               "REGULAR-OPTIMISTA": "#9cbf4a", "BUENAS": "#2e9d55", "MUY BUENAS": "#146b37"}
+
+
+def condicion_indice(px_w, ref_w, comun, ecy, es_eeuu):
+    if px_w is None or len(px_w) < 60:
+        return None
+    ma40 = px_w.rolling(40).mean()
+    pendiente = ma40.iloc[-1] / ma40.iloc[-5] - 1
+    cierre = px_w.iloc[-1]
+    if cierre > ma40.iloc[-1] and pendiente > 0:
+        tend = "alcista"
+    elif cierre < ma40.iloc[-1] and pendiente < 0:
+        tend = "bajista"
+    else:
+        tend = "lateral"
+    fase, extra, Yv = None, {"alc": 0}, 100.0
+    if ref_w is not None:
+        rs, X, Y = rrg(px_w, ref_w)
+        XY = pd.concat([X, Y], axis=1).dropna()
+        if len(XY) >= 12:
+            fase, extra = fase_motor(px_w.loc[:rs.index[-1]], rs, XY.iloc[:, 0], XY.iloc[:, 1])
+            Yv = float(XY.iloc[-1, 1])
+    pu = puerta_indice(px_w, comun)
+    dist = pu["dist"]
+    lejos = dist is None or dist > 10
+    valor_ok = (not es_eeuu) or (ecy is not None and ecy >= 3)
+    atractivo = (not lejos) and valor_ok
+    if tend == "bajista":
+        if comun["veto"]:
+            n, m = "MUY MALAS", "Tendencia bajista confirmada y crédito deteriorándose con rapidez"
+        elif lejos:
+            n, m = "MUY MALAS", "Tendencia bajista confirmada y precio aún lejos de su media de 200 semanas"
+        elif pu["tramo"] >= 2:
+            n, m = "REGULAR-OPTIMISTA", "Bajista, pero cerca de la zona de suelo y con señales de suelo acumulándose"
+        else:
+            n, m = "REGULAR-PESIMISTA", "Bajista, cerca de la zona de suelo: esperar señales"
+    elif tend == "alcista":
+        if fase in ("MADUREZ", "GIRO") or extra.get("alc", 0) >= 2:
+            n, m = "MALAS", f"Tendencia alcista con señales de fin de ciclo (fase {fase.lower() if fase else 'sin dato'})"
+        elif fase in ("REZAGADO", "SUELO"):
+            n, m = "REGULAR-OPTIMISTA", "Tendencia alcista, pero perdiendo fuerza frente a la liquidez"
+        elif atractivo:
+            n, m = "MUY BUENAS", "Tendencia alcista sana y precio atractivo"
+        else:
+            n, m = "BUENAS", "Tendencia alcista sana"
+            if lejos:
+                m += ", aunque el precio está lejos de su media de 200 semanas"
+    else:
+        if lejos and fase in ("GIRO", "REZAGADO"):
+            n, m = "MALAS", "Sin tendencia, impulso débil y lejos de la zona de suelo"
+        elif fase in ("ARRANQUE", "SUELO") or Yv >= 100:
+            n, m = "REGULAR-OPTIMISTA", "Sin tendencia clara, pero el impulso mejora"
+        else:
+            n, m = "REGULAR-PESIMISTA", "Sin tendencia clara y con el impulso débil"
+    if es_eeuu and ecy is not None and ecy < 1.5 and n in ("BUENAS", "MUY BUENAS"):
+        m += " · valoración muy exigente (ECY bajo)"
+    return {"nivel": n, "motivo": m, "tend": tend, "fase": fase, "dist": dist,
+            "puntos": pu["puntos"], "tramo": pu["tramo"], "pu": pu}
 
 
 # ----------------------------------------------------------------------------
@@ -811,11 +1235,13 @@ def svg_rrg(puntos, titulo_x, titulo_y, centro=100.0, rango=None, ancho=680, alt
     s.append(f'<text x="{ancho / 2}" y="{alto - 8}" text-anchor="middle" class="eje">{e(titulo_x)} →</text>')
     s.append(f'<text x="14" y="{alto / 2}" text-anchor="middle" class="eje" transform="rotate(-90 14 {alto / 2})">{e(titulo_y)} →</text>')
     for p in puntos:
-        s.append(f'<g class="serie" data-t="{e(p["et"])}">')
+        s.append(f'<g class="serie" data-t="{e(p["et"])}" data-g="{e(p.get("g", ""))}" data-tip="{e(p.get("tip", p["et"]))}">')
         pts = " ".join(f"{X(a):.1f},{Y(b):.1f}" for a, b in zip(p["xs"], p["ys"]))
-        s.append(f'<polyline points="{pts}" fill="none" stroke="{p["color"]}" stroke-width="1.6" stroke-opacity="0.55"/>')
-        for a, b in zip(p["xs"][:-1], p["ys"][:-1]):
-            s.append(f'<circle cx="{X(a):.1f}" cy="{Y(b):.1f}" r="1.8" fill="{p["color"]}" fill-opacity="0.5"/>')
+        s.append(f'<polyline class="r" points="{pts}" fill="none" stroke="{p["color"]}" stroke-width="1.6" stroke-opacity="0.55"/>')
+        for a, b in zip(p["xs"][1:-1], p["ys"][1:-1]):
+            s.append(f'<circle class="r" cx="{X(a):.1f}" cy="{Y(b):.1f}" r="1.6" fill="{p["color"]}" fill-opacity="0.45"/>')
+        a0, b0 = p["xs"][0], p["ys"][0]
+        s.append(f'<rect class="r" x="{X(a0) - 3.5:.1f}" y="{Y(b0) - 3.5:.1f}" width="7" height="7" fill="#fff" stroke="{p["color"]}" stroke-width="1.6"/>')
         a, b = p["xs"][-1], p["ys"][-1]
         s.append(f'<circle cx="{X(a):.1f}" cy="{Y(b):.1f}" r="4.5" fill="{p["color"]}"/>')
         if X(a) > ancho - 110:
@@ -923,7 +1349,8 @@ def main():
             X, Y = XY.iloc[:, 0], XY.iloc[:, 1]
             f, extra = fase_motor(W[t].loc[:rs.index[-1]], rs, X, Y)
             motores.append({"t": t, "nombre": nombre, "X": X.iloc[-1], "Y": Y.iloc[-1],
-                            "xs": list(X.iloc[-8:].values), "ys": list(Y.iloc[-8:].values),
+                            "xs": list(X.iloc[-24:].values), "ys": list(Y.iloc[-24:].values),
+                            "dy4": float(Y.iloc[-1] - Y.iloc[-5]),
                             "fase": f, "rsi": extra["rsi"], "alc": extra["alc"], "baj": extra["baj"],
                             "fecha": X.index[-1]})
 
@@ -941,7 +1368,30 @@ def main():
             ecy = float(ss["ECY"].iloc[-1])
             cape = float(ss["CAPE"].iloc[-1])
             fecha_ecy = ss.index[-1]
-    P = puerta(acwi_w, baa_w, ratio_vix_w, ecy)
+    comun = puerta_comun(baa_w, ratio_vix_w)
+    conds = []
+    for t, nom, eeuu in INDICES_COND:
+        c = condicion_indice(W.get(t), ref_w, comun, ecy, eeuu)
+        if c:
+            c.update({"t": t, "nombre": nom})
+            conds.append(c)
+    if ecy is None:
+        val_txt = "sin dato"
+    elif ecy < 1.5:
+        val_txt = "MUY CARA"
+    elif ecy < 3:
+        val_txt = "CARA"
+    elif ecy < 4.5:
+        val_txt = "RAZONABLE"
+    else:
+        val_txt = "BARATA"
+
+    # TOP 3
+    top_salir = sorted([m for m in motores if m["fase"] in ("GIRO", "MADUREZ")],
+                       key=lambda z: (0 if z["fase"] == "GIRO" else 1, z["dy4"]))[:3]
+    top_ampliar = sorted([m for m in motores if m["fase"] == "ACELERACIÓN" and m["alc"] <= 1],
+                         key=lambda z: -z["Y"])[:3]
+    top_construir = sorted([m for m in motores if m["fase"] == "ARRANQUE"], key=lambda z: -z["Y"])[:3]
 
     # Liquidez neta de la Fed (millones de $)
     liq_w = None
@@ -1058,73 +1508,129 @@ def main():
     # ===== PESTAÑA 1: DIAGNOSTICADOR
     H.append('<section id="t1" class="pest activa">')
 
-    # Puerta
-    exp_txt = "sin dato" if P["exposicion"] is None else f"{P['exposicion'] * 100:.0f} %"
-    H.append('<div class="tarjetas">')
-    H.append(f'<div class="tarjeta"><div class="t">Techo de indexación</div><div class="v">{e(P["techo_txt"])}</div>'
-             f'<div class="s">ECY {fmt(ecy, 2, " %")} · CAPE {fmt(cape, 1)}'
-             f'{" · " + format(fecha_ecy, "%m-%Y") if fecha_ecy is not None else ""}</div></div>')
-    H.append(f'<div class="tarjeta"><div class="t">Puntos de la puerta</div><div class="v">{P["puntos"]} / 6</div>'
-             f'<div class="s">Tramo indicado: {P["tramo"]} de 3</div></div>')
-    H.append(f'<div class="tarjeta"><div class="t">Indexación indicada</div><div class="v">{exp_txt}</div>'
-             f'<div class="s">= techo × tramo</div></div>')
-    vt = "ACTIVO" if P["veto"] else "no"
-    H.append(f'<div class="tarjeta {"alerta" if P["veto"] else ""}"><div class="t">Veto por crédito</div><div class="v">{vt}</div>'
-             f'<div class="s">Baa−10a a 13 semanas: {fmt(P.get("baa_13s"), 1, " %")}</div></div>')
-    H.append(f'<div class="tarjeta"><div class="t">Convicción</div><div class="v">{conv}</div>'
-             f'<div class="s">{e(ritmo)}</div></div>')
-    H.append('</div>')
-
-    H.append('<h2>Puerta de indexación</h2><table><tr><th>Condición (últimas 13 semanas)</th><th>Puntos</th><th>¿Se cumple?</th><th>Dato</th></tr>')
-    for nom, pts, c, extra in P["condiciones"]:
-        estado = "sin dato" if c is None else ("SÍ" if c else "no")
-        cls = "si" if c else ""
-        H.append(f'<tr><td>{e(nom)}</td><td>{pts}</td><td class="{cls}">{estado}</td><td>{e(extra)}</td></tr>')
+    # Condiciones de indexación
+    H.append(f'<h2 class="primero">Condiciones de indexación{i("condiciones")}</h2>')
+    H.append('<table><tr><th>Índice</th><th>Condiciones</th><th>Por qué</th><th>Tendencia</th><th>Fase</th>'
+             f'<th>Distancia a media 200 sem.</th><th>Puerta{i("puntos")}</th></tr>')
+    for c in conds:
+        H.append(f'<tr><td><b>{e(c["nombre"])}</b> ({tk(c["t"])})</td>'
+                 f'<td><span class="nivel" style="background:{COLOR_NIVEL[c["nivel"]]}">{c["nivel"]}</span></td>'
+                 f'<td class="motivo">{e(c["motivo"])}</td><td>{c["tend"]}</td>'
+                 f'<td>{e((c["fase"] or "—").capitalize())}</td><td>{fmt(c["dist"], 1, " %")}</td>'
+                 f'<td>{c["puntos"]}/6 · tramo {c["tramo"]}</td></tr>')
     H.append('</table>')
 
-    H.append('<h2>Grado de convicción</h2><table><tr><th>Bloque</th><th>Voto</th></tr>')
+    # TOP 3
+    def lista_top(ms):
+        if not ms:
+            return '<p class="nota">Ningún motor cumple ahora el criterio.</p>'
+        return "<ol>" + "".join(f'<li>{tk(m["t"])} <span class="nota">{e(m["nombre"])}</span></li>' for m in ms) + "</ol>"
+    H.append('<div class="tarjetas tops">')
+    H.append(f'<div class="tarjeta top salir"><div class="t">Cerca de fin de ciclo · ir saliendo{i("top_salir")}</div>{lista_top(top_salir)}</div>')
+    H.append(f'<div class="tarjeta top ampliar"><div class="t">Tendencia alcista con recorrido · ampliar{i("top_ampliar")}</div>{lista_top(top_ampliar)}</div>')
+    H.append(f'<div class="tarjeta top construir"><div class="t">Podrían iniciar tendencia alcista · empezar a construir{i("top_construir")}</div>{lista_top(top_construir)}</div>')
+    H.append('</div>')
+
+    # Tarjetas de contexto
+    H.append('<div class="tarjetas" style="margin-top:10px">')
+    H.append(f'<div class="tarjeta"><div class="t">Valoración EE. UU. (ECY){i("valoracion")}</div><div class="v">{val_txt}</div>'
+             f'<div class="s">ECY {fmt(ecy, 2, " %")} · CAPE {fmt(cape, 1)}'
+             f'{" · " + format(fecha_ecy, "%m-%Y") if fecha_ecy is not None else ""}</div></div>')
+    vt = "ACTIVO" if comun["veto"] else "no"
+    H.append(f'<div class="tarjeta {"alerta" if comun["veto"] else ""}"><div class="t">Veto por crédito{i("veto")}</div><div class="v">{vt}</div>'
+             f'<div class="s">Baa−10a a 13 semanas: {fmt(comun.get("baa_13s"), 1, " %")}</div></div>')
+    H.append(f'<div class="tarjeta"><div class="t">Convicción{i("conviccion")}</div><div class="v">{conv}</div>'
+             f'<div class="s">{e(ritmo)}</div></div>')
+    H.append(f'<div class="tarjeta"><div class="t">Sentimiento (0–100){i("sentimiento")}</div><div class="v">{fmt(sent, 0)}</div>'
+             f'<div class="s">0 = miedo · 100 = euforia</div></div>')
+    H.append('</div>')
+
+    # Puerta por índice
+    def si_no(v, dato=""):
+        if v is None:
+            return "<td>sin dato</td>"
+        return f'<td class="{"si" if v else ""}">{"SÍ" if v else "no"}{(" · " + dato) if dato else ""}</td>'
+    rv = comun.get("ratio_vix")
+    rv_txt = "" if rv is None else f'VIX/VIX3M {fmt(rv, 2)}: {"contango, lo normal" if rv < 1 else "invertida, miedo agudo"}'
+    H.append(f'<h2>Puerta de indexación{i("puntos")}</h2>')
+    H.append(f'<table><tr><th>Índice</th><th>Cerca de la media de 200 sem. (2){i("c_ma200")}</th>'
+             f'<th>Crédito girando (2){i("c_credito")}</th><th>VIX vuelve a contango (1){i("c_vix")}</th>'
+             f'<th>RSI semanal en sobreventa (1){i("c_rsi")}</th><th>Puntos</th><th>Tramo</th></tr>')
+    for c in conds:
+        pu = c["pu"]
+        H.append(f'<tr><td>{e(c["nombre"])}</td>{si_no(pu["ma200"], "a " + fmt(pu["dist"], 1, " %"))}'
+                 f'{si_no(comun["credito"])}{si_no(comun["vix"])}{si_no(pu["rsi"], "RSI " + fmt(pu["rsi_v"], 0))}'
+                 f'<td><b>{c["puntos"]}/6</b></td><td>{c["tramo"]} de 3</td></tr>')
+    H.append(f'</table><p class="nota">Crédito y VIX son comunes a todos los índices. {e(rv_txt)}. '
+             'Cada condición cuenta si se cumplió en las últimas 13 semanas. 2, 4 y 6 puntos abren los tramos 1, 2 y 3.</p>')
+
+    H.append(f'<h2>Grado de convicción{i("conviccion")}</h2><table><tr><th>Bloque</th><th>Voto</th></tr>')
     for k, v in votos.items():
-        H.append(f'<tr><td>{e(k)}</td><td>{"a favor del riesgo" if v > 0 else "en contra del riesgo" if v < 0 else "neutral"}</td></tr>')
-    H.append(f'<tr><td>Dirección del mapa (RV global)</td><td>{e(fase_acwi or "sin dato")}</td></tr>')
-    H.append(f'<tr><td>D · Beta o alfa</td><td>{e(d_txt or "sin dato")}</td></tr>')
-    H.append(f'<tr><td>Sentimiento (réplica Euphoriameter, 0–100)</td><td>{fmt(sent, 0)}</td></tr>')
+        H.append(f'<tr><td>{e(k)}{i(CLAVE_BLOQUE.get(k, ""))}</td><td>{"a favor del riesgo" if v > 0 else "en contra del riesgo" if v < 0 else "neutral"}</td></tr>')
+    H.append(f'<tr><td>Dirección del mapa (RV global){i("direccion")}</td><td>{e(fase_acwi or "sin dato")}</td></tr>')
+    H.append(f'<tr><td>D · Beta o alfa{i("b_D")}</td><td>{e(d_txt or "sin dato")}</td></tr>')
+    H.append(f'<tr><td>Sentimiento (réplica Euphoriameter, 0–100){i("sentimiento")}</td><td>{fmt(sent, 0)}</td></tr>')
     H.append('</table>')
 
     # Mapa motores
-    H.append('<h2>Mapa de rotación de motores</h2>')
-    H.append('<p class="nota">Fuerza frente a letras del Tesoro y su impulso. Rastro de 8 semanas. Giro habitual: mejorando → liderando → debilitándose → rezagado.</p>')
+    H.append(f'<h2>Mapa de rotación de motores{i("mapa")}</h2>')
+    H.append(f'<p class="nota">Eje horizontal: fuerza relativa{i("fuerza")} · eje vertical: impulso{i("impulso")}. '
+             'Rastro de 24 semanas con cierres semanales: □ inicio · ● ahora. Pasa el cursor por un motor para resaltarlo y ver qué es.</p>')
+    grupos_presentes = [g for g in COLOR_GRUPO if any(GRUPO.get(m["t"]) == g for m in motores)]
+    H.append('<div class="leyenda">' + "".join(
+        f'<label><input type="checkbox" class="fg" value="{e(g)}" checked> <span class="chip" style="background:{COLOR_GRUPO[g]}"></span>{e(g)}</label>'
+        for g in grupos_presentes) + '<label><input type="checkbox" class="rastros" data-mapa="mapa-motores" checked> <b>Mostrar rastros</b></label></div>')
     H.append('<div class="filtros">' + "".join(
-        f'<label><input type="checkbox" class="fm" value="{m["t"]}" checked> {e(m["t"])}</label>' for m in motores) + '</div>')
-    pts = [{"et": m["t"], "xs": m["xs"], "ys": m["ys"], "color": COLOR_FASE[m["fase"]]} for m in motores]
+        f'<label data-tip="{e(m["t"] + " · " + DESC.get(m["t"], ""))}"><input type="checkbox" class="fm" value="{m["t"]}" data-g="{e(GRUPO.get(m["t"], ""))}" checked> {e(m["t"])}</label>'
+        for m in motores) + '</div>')
+    pts = [{"et": m["t"], "xs": m["xs"], "ys": m["ys"], "g": GRUPO.get(m["t"], ""),
+            "color": COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555"),
+            "tip": m["t"] + " · " + DESC.get(m["t"], "") + " Fase: " + m["fase"].lower() + "."} for m in motores]
     H.append(f'<div id="mapa-motores">{svg_rrg(pts, "Fuerza relativa", "Impulso")}</div>')
-    H.append('<table class="ord"><tr><th>Motor</th><th>Nombre</th><th>Fase</th><th>Qué hacer</th><th>Fuerza</th><th>Impulso</th><th>RSI sem.</th><th>Agot. ↑/↓</th></tr>')
+    H.append(f'<table class="ord"><tr><th>Motor</th><th>Nombre</th><th>Grupo</th><th>Fase{i("fases")}</th><th>Qué hacer</th>'
+             f'<th>Fuerza{i("fuerza")}</th><th>Impulso{i("impulso")}</th><th>RSI sem.</th><th>Agotamiento{i("agotamiento")}</th></tr>')
     orden = ["ARRANQUE", "ACELERACIÓN", "MADUREZ", "GIRO", "SUELO", "REZAGADO"]
+
+    def agot_txt(m):
+        partes = []
+        if m["alc"]:
+            partes.append(f'alcista {m["alc"]} de 3')
+        if m["baj"]:
+            partes.append(f'bajista {m["baj"]} de 3')
+        return " · ".join(partes) or "—"
     for m in sorted(motores, key=lambda z: orden.index(z["fase"])):
-        H.append(f'<tr><td><b>{e(m["t"])}</b></td><td>{e(m["nombre"])}</td>'
+        g = GRUPO.get(m["t"], "")
+        H.append(f'<tr><td><b>{tk(m["t"])}</b></td><td>{e(m["nombre"])}</td>'
+                 f'<td><span class="chip" style="background:{COLOR_GRUPO.get(g, "#555")}"></span>{e(g)}</td>'
                  f'<td><span class="fase" style="background:{COLOR_FASE[m["fase"]]}">{m["fase"]}</span></td>'
                  f'<td>{ACCION[m["fase"]]}</td><td>{fmt(m["X"], 1)}</td><td>{fmt(m["Y"], 1)}</td>'
-                 f'<td>{fmt(m["rsi"], 0)}</td><td>{m["alc"]}/{m["baj"]}</td></tr>')
+                 f'<td>{fmt(m["rsi"], 0)}</td><td>{agot_txt(m)}</td></tr>')
     H.append('</table>')
     if motores:
-        H.append(f'<p class="nota">Semana cerrada: {motores[0]["fecha"]:%d-%m-%Y}. Proxies en dólares. Stock picking: ver bloque D. Market neutral: sin proxy.</p>')
+        H.append(f'<p class="nota">Semana cerrada: {motores[0]["fecha"]:%d-%m-%Y}. Proxies en dólares (el euro se ve con FXE). Stock picking: ver bloque D. Market neutral: sin proxy.</p>')
 
     # Mapa macro
     clave = ["Inflación (IPC interanual, %)", "Crecimiento (encuestas Fed, media 3 meses)",
              "Estrés de crédito (Baa − bono 10 años)", "Liquidez neta de la Fed (billones $)"]
     cortos = {clave[0]: "Inflación", clave[1]: "Crecimiento", clave[2]: "Crédito (estrés)", clave[3]: "Liquidez"}
-    pm = [{"et": cortos[k], "xs": mac[k]["rx"], "ys": mac[k]["ry"], "color": COLOR_FASE[mac[k]["fase"]]}
-          for k in clave if k in mac]
-    H.append('<h2>Mapa macro</h2><p class="nota">Nivel (percentil histórico) frente a impulso (percentil de su cambio reciente). Rastro de 8 periodos.</p>')
-    H.append(svg_rrg(pm, "Nivel (percentil)", "Impulso (percentil)", centro=50, rango=(0, 100, 0, 100),
-                     cuadrantes=("ALTO Y SUBIENDO", "ALTO Y BAJANDO", "BAJO Y BAJANDO", "BAJO Y SUBIENDO")))
+    color_macro = {"Inflación": "#c0392b", "Crecimiento": "#2f6fdb", "Crédito (estrés)": "#a0672a", "Liquidez": "#1f9d55"}
+    pm = [{"et": cortos[k], "xs": mac[k]["rx"], "ys": mac[k]["ry"], "color": color_macro[cortos[k]], "g": cortos[k],
+           "tip": cortos[k] + " · fase " + mac[k]["fase"].lower()}
+          for k in clave if k in mac and len(mac[k]["rx"]) >= 1]
+    H.append(f'<h2>Mapa macro{i("mapa_macro")}</h2><p class="nota">Eje horizontal: nivel{i("nivel_macro")} · eje vertical: impulso{i("impulso_macro")}. '
+             'Rastro de 24 semanas: □ inicio · ● ahora (los datos mensuales tienen un punto por mes).</p>')
+    H.append('<div class="leyenda">' + "".join(
+        f'<span><span class="chip" style="background:{c}"></span>{e(g)}</span>' for g, c in color_macro.items()) + '</div>')
+    H.append('<div id="mapa-macro">' + svg_rrg(pm, "Nivel (percentil)", "Impulso (percentil)", centro=50, rango=(0, 100, 0, 100),
+                     cuadrantes=("ALTO Y SUBIENDO", "ALTO Y BAJANDO", "BAJO Y BAJANDO", "BAJO Y SUBIENDO")) + '</div>')
 
-    H.append('<h2>Variables</h2><table class="ord"><tr><th>Variable</th><th>Valor</th><th>Fecha</th><th>Percentil</th><th>Cambio reciente</th><th>Fase</th></tr>')
+    H.append(f'<h2>Variables{i("variables")}</h2><table class="ord"><tr><th>Variable</th><th>Valor</th><th>Fecha</th><th>Percentil{i("nivel_macro")}</th><th>Cambio reciente{i("impulso_macro")}</th><th>Fase</th></tr>')
     for v in macro:
         f_ref = v["fecha"] + pd.offsets.MonthEnd(0) if v["frecuencia"] == "m" else v["fecha"]
         viejo = not antiguedad_ok(f_ref, "m" if v["frecuencia"] == "m" else "s")
         unidad = " %" if v["modo"] == "pct" else ""
         per = f'{v["periodos"]} {"meses" if v["frecuencia"] == "m" else "sem."}'
-        H.append(f'<tr><td>{e(v["nombre"])}</td><td>{fmt(v["valor"], 0 if abs(v["valor"]) >= 1000 else 2)}</td>'
+        H.append(f'<tr><td>{e(v["nombre"])}{i(v["nombre"])}</td><td>{fmt(v["valor"], 0 if abs(v["valor"]) >= 1000 else 2)}</td>'
                  f'<td class="{"viejo" if viejo else ""}">{v["fecha"]:%d-%m-%Y}{" ⚠" if viejo else ""}</td>'
                  f'<td>{fmt(v["nivel"], 0)}</td><td>{fmt(v["impulso"], 2, unidad)} ({per})</td>'
                  f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{v["fase"]}</span></td></tr>')
@@ -1140,24 +1646,25 @@ def main():
         efecto = "amortigua los movimientos" if gm["gex_mm"] > 0 else "amplifica los movimientos"
         hg = gm["hist"]["gex_mm"].dropna()
         inten = f"intensidad: percentil {fmt(pct(hg), 0)} de su histórico" if len(hg) >= 20 else "intensidad: histórico aún corto"
-        H.append(f'<div class="tarjeta {"alerta" if gm["gex_mm"] < 0 else ""}"><div class="t">Gamma de los creadores de mercado (aprox.)</div>'
+        H.append(f'<div class="tarjeta {"alerta" if gm["gex_mm"] < 0 else ""}"><div class="t">Gamma de los creadores de mercado (aprox.){i("gamma")}</div>'
                  f'<div class="v">{signo}</div><div class="s">{efecto} · {inten}</div></div>')
         if gm["giro"]:
             dist = (gm["spot"] / gm["giro"] - 1) * 100
-            H.append(f'<div class="tarjeta"><div class="t">Nivel de giro de la gamma</div><div class="v">{fmt(gm["giro"], 0)}</div>'
+            H.append(f'<div class="tarjeta"><div class="t">Nivel de giro de la gamma{i("giro")}</div><div class="v">{fmt(gm["giro"], 0)}</div>'
                      f'<div class="s">S&P 500 a {fmt(dist, 1, " %")} del giro</div></div>')
-        H.append(f'<div class="tarjeta"><div class="t">Muros (próximos 70 días)</div><div class="v">{fmt(gm["muro_put"], 0)} – {fmt(gm["muro_call"], 0)}</div>'
+        H.append(f'<div class="tarjeta"><div class="t">Muros (próximos 70 días){i("muros")}</div><div class="v">{fmt(gm["muro_put"], 0)} – {fmt(gm["muro_call"], 0)}</div>'
                  f'<div class="s">soporte put · resistencia call</div></div>')
     else:
         H.append('<div class="tarjeta"><div class="t">Gamma</div><div class="v">sin dato</div></div>')
     if "SKEW" in cb:
         sk = cb["SKEW"]
-        H.append(f'<div class="tarjeta"><div class="t">SKEW</div><div class="v">{fmt(sk.iloc[-1], 0)}</div>'
-                 f'<div class="s">percentil {fmt(pct(sk), 0)} desde 1990 · {sk.index[-1]:%d-%m}</div></div>')
+        sk1 = sk[sk.index >= sk.index[-1] - pd.Timedelta(days=365)]
+        H.append(f'<div class="tarjeta"><div class="t">SKEW{i("skew")}</div><div class="v">{fmt(sk.iloc[-1], 0)}</div>'
+                 f'<div class="s">percentil {fmt(pct(sk), 0)} histórico (desde 1990) · {fmt(pct(sk1), 0)} último año · {sk.index[-1]:%d-%m}</div></div>')
     H.append('</div>')
 
     if pc is not None and len(pc):
-        H.append('<h2>Ratio put/call</h2><table><tr><th>Tipo</th><th>Último</th><th>Media 10 días</th><th>Percentil (media 10 d.)</th></tr>')
+        H.append(f'<h2>Ratio put/call{i("putcall")}</h2><table><tr><th>Tipo</th><th>Último</th><th>Media 10 días</th><th>Percentil (media 10 d.)</th></tr>')
         nombres_pc = {"total": "Total", "acciones": "Acciones", "indices": "Índices", "spx": "S&P 500"}
         for col, nom in nombres_pc.items():
             if col not in pc.columns:
@@ -1177,7 +1684,7 @@ def main():
         H.append('<p class="nota">Gamma neta, histórico propio.</p>')
 
     if cot_series:
-        H.append('<h2>Posicionamiento (CFTC, semanal)</h2><table><tr><th>Mercado · grupo</th><th>Neto (% del interés abierto)</th>'
+        H.append(f'<h2>Posicionamiento (CFTC, semanal){i("cot")}</h2><table><tr><th>Mercado · grupo</th><th>Neto (% del interés abierto)</th>'
                  '<th>Cambio 4 semanas</th><th>Percentil 3 años</th><th>Fecha</th></tr>')
         for k, s in cot_series.items():
             s3 = s[s.index >= s.index[-1] - pd.Timedelta(days=3 * 365)]
@@ -1191,33 +1698,33 @@ def main():
 
     # ===== PESTAÑA 3: CALENDARIO
     H.append('<section id="t3" class="pest">')
-    H.append(f'<div class="tarjetas"><div class="tarjeta {"alerta" if en_blackout else ""}"><div class="t">Blackout de recompras (estimado)</div>'
+    H.append(f'<div class="tarjetas"><div class="tarjeta {"alerta" if en_blackout else ""}"><div class="t">Blackout de recompras (estimado){i("blackout")}</div>'
              f'<div class="v">{"SÍ" if en_blackout else "NO"}</div><div class="s">estimación, no dato oficial</div></div>')
     if "anio_actual" in est:
-        H.append(f'<div class="tarjeta"><div class="t">Ciclo presidencial</div><div class="v" style="font-size:1.1em">{e(est["anio_actual"])}</div></div>')
+        H.append(f'<div class="tarjeta"><div class="t">Ciclo presidencial{i("ciclo")}</div><div class="v" style="font-size:1.1em">{e(est["anio_actual"])}</div></div>')
     H.append('</div>')
     H.append('<h2>Próximos 120 días</h2><table><tr><th>Fecha</th><th>Evento</th><th>Tipo</th></tr>')
     dias_sem = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
     for d, t, c in eventos:
-        H.append(f'<tr><td>{dias_sem[d.weekday()]} {d:%d-%m-%Y}</td><td>{e(t)}</td><td><span class="tipo">{e(c)}</span></td></tr>')
+        H.append(f'<tr><td>{dias_sem[d.weekday()]} {d:%d-%m-%Y}</td><td>{e(t)}</td><td><span class="tipo">{e(c)}</span>{i(c)}</td></tr>')
     H.append('</table>')
     if "meses" in est:
         nm = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
-        H.append(f'<h2>Estacionalidad del S&P 500 (desde {est["desde"]})</h2>'
+        H.append(f'<h2>Estacionalidad del S&P 500 (desde {est["desde"]}){i("estacionalidad")}</h2>'
                  '<table><tr><th>Mes</th><th>Media</th><th>Mediana</th><th>% meses positivos</th></tr>')
         for mes, fila in est["meses"].iterrows():
             marca = ' class="hoy"' if mes in (HOY.month, HOY.month % 12 + 1) else ""
             H.append(f'<tr{marca}><td>{nm[mes - 1]}</td><td>{fmt(fila["media"], 2, " %")}</td>'
                      f'<td>{fmt(fila["mediana"], 2, " %")}</td><td>{fmt(fila["positivos"], 0, " %")}</td></tr>')
         H.append('</table>')
-        H.append('<h2>Ciclo presidencial (rentabilidad anual)</h2><table><tr><th>Año del ciclo</th><th>Media</th><th>Mediana</th><th>% años positivos</th></tr>')
+        H.append(f'<h2>Ciclo presidencial (rentabilidad anual){i("ciclo")}</h2><table><tr><th>Año del ciclo</th><th>Media</th><th>Mediana</th><th>% años positivos</th></tr>')
         for nom, me, md, po in est["ciclo"]:
             marca = ' class="hoy"' if nom == est["anio_actual"] else ""
             H.append(f'<tr{marca}><td>{nom}</td><td>{fmt(me, 1, " %")}</td><td>{fmt(md, 1, " %")}</td><td>{fmt(po, 0, " %")}</td></tr>')
         H.append('</table>')
     if "cambio_mes" in est:
         a, b, desde = est["cambio_mes"]
-        H.append(f'<p class="nota">Cambio de mes (último día + 3 primeros, desde {desde}): media diaria {fmt(a, 3, " %")} frente a {fmt(b, 3, " %")} el resto de días.</p>')
+        H.append(f'<p class="nota">Cambio de mes (último día + 3 primeros, desde {desde}): media diaria {fmt(a, 3, " %")} frente a {fmt(b, 3, " %")} el resto de días.{i("cambio_mes")}</p>')
     H.append('<p class="nota">Evidencia académica de la estacionalidad: débil e inestable.</p>')
     H.append('</section>')
 
@@ -1234,7 +1741,10 @@ def main():
 
     # ===== Resumen en texto (para lectura automática)
     R = [f"RESUMEN {HOY:%d-%m-%Y}",
-         f"Techo={P['techo_txt']} (ECY {fmt(ecy, 2)} %), puntos={P['puntos']}/6, tramo={P['tramo']}/3, veto={'sí' if P['veto'] else 'no'}, indexación={exp_txt}",
+         "Condiciones: " + "; ".join(f"{c['nombre']}={c['nivel']} (puerta {c['puntos']}/6, tramo {c['tramo']})" for c in conds)
+         + f"; valoración EE. UU.={val_txt} (ECY {fmt(ecy, 2)} %); veto={'sí' if comun['veto'] else 'no'}",
+         "Top salir: " + ", ".join(m["t"] for m in top_salir) + " · ampliar: " + ", ".join(m["t"] for m in top_ampliar)
+         + " · construir: " + ", ".join(m["t"] for m in top_construir),
          f"Convicción={conv}; votos=" + ", ".join(f"{k}:{v:+d}" for k, v in votos.items()) + f"; dirección RV global={fase_acwi}; beta/alfa={d_txt}; sentimiento={fmt(sent, 0)}",
          "Motores: " + "; ".join(f"{m['t']}={m['fase']}" for m in motores),
          "Macro: " + "; ".join(f"{v['nombre']}={v['fase']} (p{fmt(v['nivel'], 0)})" for v in macro)]
@@ -1245,6 +1755,9 @@ def main():
         R.append("Fallos: " + ", ".join(n for n, _ in ERRORES))
     H.append('<pre class="resumen">' + e("\n".join(R)) + '</pre>')
 
+    H.append('<div id="modal" class="modal"><div class="caja"><button class="cerrar" aria-label="Cerrar">×</button>'
+             '<h3 id="modal-t"></h3><div id="modal-c"></div></div></div>')
+    H.append('<script id="info-datos" type="application/json">' + info_json() + '</script>')
     H.append(PIE)
     with open(os.path.join(CARPETA_WEB, "index.html"), "w", encoding="utf-8") as f:
         f.write("".join(H))
@@ -1294,6 +1807,27 @@ tr.hoy td{background:rgba(47,111,219,.12);font-weight:600}
 .filtros{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.8em;margin:4px 0}
 .fuentes{margin-top:26px;border-top:1px solid var(--b);padding-top:6px;font-size:.88em}
 .error{color:#c0392b}
+th{white-space:normal;vertical-align:bottom;min-width:60px}
+.grafico.resaltando g.serie{opacity:.12}.grafico.resaltando g.serie.activa{opacity:1}
+.grafico g.serie.activa polyline{stroke-width:3;stroke-opacity:.95}.grafico g.serie.activa text{font-size:13px}
+.sin-rastro .r{display:none}
+.nivel{color:#fff;border-radius:6px;padding:3px 8px;font-size:.8em;font-weight:700;white-space:nowrap}
+td.motivo{white-space:normal;min-width:220px;max-width:340px}
+h2.primero{margin-top:6px}
+.tops{margin-top:12px}.tops .tarjeta ol{margin:6px 0 0;padding-left:20px}.tops .tarjeta li{margin:2px 0}
+.top.salir{border-left:4px solid #d9534f}.top.ampliar{border-left:4px solid #2e9d55}.top.construir{border-left:4px solid #2f6fdb}
+.chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:baseline}
+.leyenda{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82em;margin:6px 0}
+.tk{border-bottom:1px dotted currentColor;cursor:help}
+#tip{position:fixed;display:none;z-index:60;max-width:300px;background:#1b2a3a;color:#fff;padding:7px 10px;border-radius:7px;font-size:12px;line-height:1.35;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.info{border:0;background:none;color:var(--acento);cursor:pointer;font-size:.95em;padding:0 3px;line-height:1;vertical-align:baseline}
+.modal{display:none;position:fixed;inset:0;background:rgba(20,30,45,.45);z-index:50;align-items:flex-start;justify-content:center;padding:36px 12px;overflow:auto}
+.modal.abierto{display:flex}
+.modal .caja{background:#fff;color:#1b2a3a;max-width:640px;width:100%;border-radius:12px;padding:16px 20px;box-shadow:0 10px 30px rgba(0,0,0,.2);position:relative;font-size:.93em;line-height:1.5}
+.modal h3{margin:0 28px 8px 0;font-size:1.1em}.modal ul{padding-left:20px}
+.modal .cerrar{position:absolute;top:8px;right:12px;border:0;background:none;font-size:1.5em;cursor:pointer;color:#56677a}
+.fuentes-info{font-size:.85em;color:#56677a;border-top:1px solid #e3e7ec;padding-top:8px;margin-top:10px}
+.fuentes-info a{color:#2f6fdb}
 .resumen{white-space:pre-wrap;font-size:.75em;color:var(--s);background:var(--panel);padding:8px;border-radius:8px;margin-top:16px}
 </style>
 <script>try{var t=localStorage.getItem('tema');if(t){document.documentElement.className='tema-'+t;}}catch(e){}</script>
@@ -1311,6 +1845,28 @@ PIE = r"""
 (function(){var sel=document.getElementById('tema');var actual=document.documentElement.className.replace('tema-','');
  sel.value=actual;sel.addEventListener('change',function(){document.documentElement.className='tema-'+sel.value;
  try{localStorage.setItem('tema',sel.value);}catch(e){}});})();
+(function(){var datos={};try{datos=JSON.parse(document.getElementById('info-datos').textContent);}catch(e){}
+ var m=document.getElementById('modal');
+ function cerrar(){m.classList.remove('abierto');}
+ document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('.info');
+  if(b){ev.preventDefault();ev.stopPropagation();var d=datos[b.getAttribute('data-k')];if(!d)return;
+   document.getElementById('modal-t').textContent=d.t;document.getElementById('modal-c').innerHTML=d.h;m.classList.add('abierto');return;}
+  if(ev.target===m||(ev.target.classList&&ev.target.classList.contains('cerrar')))cerrar();},true);
+ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')cerrar();});})();
+(function(){var tip=document.createElement('div');tip.id='tip';document.body.appendChild(tip);
+ document.addEventListener('mouseover',function(ev){var t=ev.target.closest&&ev.target.closest('[data-tip]');
+  if(!t){tip.style.display='none';return;}tip.textContent=t.getAttribute('data-tip');tip.style.display='block';});
+ document.addEventListener('mousemove',function(ev){if(tip.style.display!=='block')return;
+  var x=ev.clientX+14,y=ev.clientY+16;if(x+310>window.innerWidth)x=Math.max(4,window.innerWidth-310);
+  if(y+80>window.innerHeight)y=ev.clientY-60;tip.style.left=x+'px';tip.style.top=y+'px';});
+ document.querySelectorAll('.fg').forEach(function(c){c.addEventListener('change',function(){
+  document.querySelectorAll('.fm[data-g="'+c.value+'"]').forEach(function(m){m.checked=c.checked;
+   m.dispatchEvent(new Event('change'));});});});})();
+document.querySelectorAll('.grafico g.serie').forEach(function(g){var svg=g.ownerSVGElement;
+ g.addEventListener('mouseenter',function(){svg.classList.add('resaltando');g.classList.add('activa');});
+ g.addEventListener('mouseleave',function(){svg.classList.remove('resaltando');g.classList.remove('activa');});});
+document.querySelectorAll('.rastros').forEach(function(c){c.addEventListener('change',function(){
+ var m=document.getElementById(c.getAttribute('data-mapa'));if(m)m.classList.toggle('sin-rastro',!c.checked);});});
 document.querySelectorAll('nav button').forEach(function(b){b.addEventListener('click',function(){
  document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('activa')});
  document.querySelectorAll('.pest').forEach(function(x){x.classList.remove('activa')});
