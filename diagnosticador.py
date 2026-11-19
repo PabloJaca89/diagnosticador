@@ -242,6 +242,19 @@ def tiingo(ticker, frecuencia="weekly"):
     return s.rename(ticker)
 
 
+def _leer_excel(contenido):
+    try:
+        import python_calamine  # noqa
+    except ImportError:
+        import subprocess
+        import sys
+        subprocess.run([sys.executable, "-m", "pip", "install", "-q", "python-calamine"], check=False)
+    try:
+        return pd.read_excel(io.BytesIO(contenido), sheet_name="Data", header=None, engine="calamine")
+    except Exception:  # noqa
+        return pd.read_excel(io.BytesIO(contenido), sheet_name="Data", header=None)
+
+
 def shiller():
     pagina = get("https://shillerdata.com/").text
     enlaces = re.findall(r'href="([^"]*ie_data\.xls[^"]*)"', pagina)
@@ -250,34 +263,55 @@ def shiller():
     url = html.unescape(enlaces[0])
     if url.startswith("//"):
         url = "https:" + url
-    contenido = get(url, timeout=120).content
-    df = pd.read_excel(io.BytesIO(contenido), sheet_name="Data", header=None)
-    fila = None
-    for i in range(min(40, len(df))):
-        celdas = [str(v).strip() for v in df.iloc[i].values]
-        if "CAPE" in celdas:
-            fila = i
-            break
-    if fila is None:
-        raise RuntimeError("formato no reconocido")
-    celdas = [str(v).strip() for v in df.iloc[fila].values]
-    col_cape = celdas.index("CAPE")
-    datos = df.iloc[fila + 1:].copy()
+    raw = _leer_excel(get(url, timeout=(10, 60)).content)
+
+    col0 = pd.to_numeric(raw.iloc[:, 0], errors="coerce")
+    arranque = col0[(col0 > 1870) & (col0 < 1872)]
+    if arranque.empty:
+        raise RuntimeError("formato no reconocido (fechas)")
+    inicio = raw.index.get_loc(arranque.index[0])
+    cab = raw.iloc[:inicio]
+    textos = [" ".join(str(v) for v in cab.iloc[:, k] if pd.notna(v)).upper() for k in range(raw.shape[1])]
+    datos = raw.iloc[inicio:]
     fecha = pd.to_numeric(datos.iloc[:, 0], errors="coerce")
     datos = datos[fecha.notna()]
     fecha = fecha[fecha.notna()]
-    anio = np.floor(fecha).astype(int)
-    mes = np.round((fecha - anio) * 100).astype(int).clip(1, 12)
-    idx = pd.to_datetime(dict(year=anio, month=mes, day=1))
-    out = pd.DataFrame({
-        "P": pd.to_numeric(datos.iloc[:, 1], errors="coerce").values,
-        "CPI": pd.to_numeric(datos.iloc[:, 4], errors="coerce").values,
-        "GS10": pd.to_numeric(datos.iloc[:, 6], errors="coerce").values,
-        "CAPE": pd.to_numeric(datos.iloc[:, col_cape], errors="coerce").values,
-    }, index=idx.values)
-    out = out[~out.index.duplicated(keep="last")].sort_index()
+
+    def col(k):
+        return pd.to_numeric(datos.iloc[:, k], errors="coerce").reset_index(drop=True)
+
+    def ultimo(k):
+        v = col(k).dropna()
+        return v.iloc[-1] if len(v) else np.nan
+
+    def buscar(cond, rango):
+        for k, t in enumerate(textos):
+            if cond(t) and rango[0] <= ultimo(k) <= rango[1]:
+                return k
+        return None
+
+    k_cape = buscar(lambda t: "CAPE" in t and "TR" not in t and "YIELD" not in t and "EXCESS" not in t, (5, 80))
+    if k_cape is None:
+        raise RuntimeError("formato no reconocido (CAPE)")
+    k_ecy = buscar(lambda t: "YIELD" in t and ("CAPE" in t or "EXCESS" in t), (-0.2, 0.3))
+    k_gs10 = buscar(lambda t: "GS10" in t, (0, 20))
+    k_cpi = buscar(lambda t: "CPI" in t, (50, 1000))
+    k_gs10 = 6 if k_gs10 is None else k_gs10
+    k_cpi = 4 if k_cpi is None else k_cpi
+
+    anio = np.floor(fecha.values).astype(int)
+    mes = np.clip(np.round((fecha.values - anio) * 100).astype(int), 1, 12)
+    idx = pd.to_datetime(pd.DataFrame({"year": anio, "month": mes, "day": 1}))
+    out = pd.DataFrame({"P": col(1).values, "CPI": col(k_cpi).values,
+                        "GS10": col(k_gs10).values, "CAPE": col(k_cape).values}, index=idx.values)
     infl10 = (out["CPI"] / out["CPI"].shift(120)) ** 0.1 - 1
     out["ECY"] = 100 / out["CAPE"] - (out["GS10"] - 100 * infl10)
+    if k_ecy is not None:                      # cifra publicada por Shiller, si existe
+        out["ECY"] = col(k_ecy).values * 100
+    out = out[~out.index.duplicated(keep="last")].sort_index()
+    ult = out["ECY"].dropna()
+    if ult.empty or not (-5 <= ult.iloc[-1] <= 15):
+        raise RuntimeError("valor de ECY fuera de rango")
     return out
 
 
@@ -396,7 +430,7 @@ def _gamma_bs(S, K, T, iv):
     return np.exp(-0.5 * d1 ** 2) / np.sqrt(2 * np.pi) / (S * iv * sq)
 
 
-def gamma_spx():
+def gamma_spx(spy_ultimo=None):
     d = get("https://cdn-api.cboe.com/api/global/delayed_quotes/options/_SPX.json", timeout=120).json()
     datos = d["data"]
     op = pd.DataFrame(datos["options"])
@@ -427,7 +461,10 @@ def gamma_spx():
         k = (tabla["C"] - tabla["P"]).abs().idxmin()
         spot = float(k + tabla.loc[k, "C"] - tabla.loc[k, "P"])
 
-    op = op[(op["open_interest"] > 0) & (op["iv"] > 0.01) & (op["T"] < 1.5)]
+    if spy_ultimo:
+        if abs(spot / (spy_ultimo * 10) - 1) > 0.04:
+            raise RuntimeError("precio del S&P 500 incoherente")
+    op = op[(op["open_interest"] > 0) & (op["iv"] > 0.01) & (op["T"] > 1 / 365) & (op["T"] < 1.5)]
     signo = np.where(op["tipo"].values == "C", 1.0, -1.0)
     K = op["K"].values
     T = op["T"].values
@@ -825,7 +862,7 @@ def main():
         s = seguro(f"Precio {t}", tiingo, t, "daily" if t == "SPY" else "weekly")
         if s is not None:
             precios[t] = s
-            registrar(f"Precio {t}", s)
+            registrar(f"Precio {t}", s[s.index <= HOY])
         time.sleep(0.5)
     fr = {}
     for sid in FRED_SERIES:
@@ -847,7 +884,8 @@ def main():
     pc = seguro("Ratio put/call (Cboe)", actualizar_putcall)
     if pc is not None:
         registrar("Ratio put/call (Cboe)", pc)
-    gm = seguro("Gamma SPX (Cboe)", gamma_spx)
+    spy_ult = float(precios["SPY"].iloc[-1]) if "SPY" in precios else None
+    gm = seguro("Gamma SPX (Cboe)", gamma_spx, spy_ult)
     cot_series = {}
     for etq, ds, cod, l, c in [
         ("S&P 500 · gestoras", "gpe5-46if", "13874A", "asset_mgr_positions_long", "asset_mgr_positions_short"),
@@ -1059,7 +1097,7 @@ def main():
         f'<label><input type="checkbox" class="fm" value="{m["t"]}" checked> {e(m["t"])}</label>' for m in motores) + '</div>')
     pts = [{"et": m["t"], "xs": m["xs"], "ys": m["ys"], "color": COLOR_FASE[m["fase"]]} for m in motores]
     H.append(f'<div id="mapa-motores">{svg_rrg(pts, "Fuerza relativa", "Impulso")}</div>')
-    H.append('<table class="ord"><tr><th>Motor</th><th></th><th>Fase</th><th>Qué hacer</th><th>Fuerza</th><th>Impulso</th><th>RSI sem.</th><th>Agot. ↑/↓</th></tr>')
+    H.append('<table class="ord"><tr><th>Motor</th><th>Nombre</th><th>Fase</th><th>Qué hacer</th><th>Fuerza</th><th>Impulso</th><th>RSI sem.</th><th>Agot. ↑/↓</th></tr>')
     orden = ["ARRANQUE", "ACELERACIÓN", "MADUREZ", "GIRO", "SUELO", "REZAGADO"]
     for m in sorted(motores, key=lambda z: orden.index(z["fase"])):
         H.append(f'<tr><td><b>{e(m["t"])}</b></td><td>{e(m["nombre"])}</td>'
@@ -1082,10 +1120,11 @@ def main():
 
     H.append('<h2>Variables</h2><table class="ord"><tr><th>Variable</th><th>Valor</th><th>Fecha</th><th>Percentil</th><th>Cambio reciente</th><th>Fase</th></tr>')
     for v in macro:
-        viejo = not antiguedad_ok(v["fecha"], "m" if v["frecuencia"] == "m" else "s")
+        f_ref = v["fecha"] + pd.offsets.MonthEnd(0) if v["frecuencia"] == "m" else v["fecha"]
+        viejo = not antiguedad_ok(f_ref, "m" if v["frecuencia"] == "m" else "s")
         unidad = " %" if v["modo"] == "pct" else ""
         per = f'{v["periodos"]} {"meses" if v["frecuencia"] == "m" else "sem."}'
-        H.append(f'<tr><td>{e(v["nombre"])}</td><td>{fmt(v["valor"], 2)}</td>'
+        H.append(f'<tr><td>{e(v["nombre"])}</td><td>{fmt(v["valor"], 0 if abs(v["valor"]) >= 1000 else 2)}</td>'
                  f'<td class="{"viejo" if viejo else ""}">{v["fecha"]:%d-%m-%Y}{" ⚠" if viejo else ""}</td>'
                  f'<td>{fmt(v["nivel"], 0)}</td><td>{fmt(v["impulso"], 2, unidad)} ({per})</td>'
                  f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{v["fase"]}</span></td></tr>')
@@ -1099,8 +1138,10 @@ def main():
     if gm:
         signo = "POSITIVA" if gm["gex_mm"] > 0 else "NEGATIVA"
         efecto = "amortigua los movimientos" if gm["gex_mm"] > 0 else "amplifica los movimientos"
-        H.append(f'<div class="tarjeta {"alerta" if gm["gex_mm"] < 0 else ""}"><div class="t">Gamma de los creadores de mercado</div>'
-                 f'<div class="v">{signo}</div><div class="s">{efecto} · {fmt(gm["gex_mm"], 1)} mil M$ por 1 %</div></div>')
+        hg = gm["hist"]["gex_mm"].dropna()
+        inten = f"intensidad: percentil {fmt(pct(hg), 0)} de su histórico" if len(hg) >= 20 else "intensidad: histórico aún corto"
+        H.append(f'<div class="tarjeta {"alerta" if gm["gex_mm"] < 0 else ""}"><div class="t">Gamma de los creadores de mercado (aprox.)</div>'
+                 f'<div class="v">{signo}</div><div class="s">{efecto} · {inten}</div></div>')
         if gm["giro"]:
             dist = (gm["spot"] / gm["giro"] - 1) * 100
             H.append(f'<div class="tarjeta"><div class="t">Nivel de giro de la gamma</div><div class="v">{fmt(gm["giro"], 0)}</div>'
@@ -1198,7 +1239,7 @@ def main():
          "Motores: " + "; ".join(f"{m['t']}={m['fase']}" for m in motores),
          "Macro: " + "; ".join(f"{v['nombre']}={v['fase']} (p{fmt(v['nivel'], 0)})" for v in macro)]
     if gm:
-        R.append(f"Gamma={'positiva' if gm['gex_mm'] > 0 else 'negativa'} ({fmt(gm['gex_mm'], 1)}), giro={fmt(gm['giro'], 0)}")
+        R.append(f"Gamma={'positiva' if gm['gex_mm'] > 0 else 'negativa'}, giro={fmt(gm['giro'], 0)}, S&P={fmt(gm['spot'], 0)}")
     R.append(f"Blackout estimado={'sí' if en_blackout else 'no'}")
     if ERRORES:
         R.append("Fallos: " + ", ".join(n for n, _ in ERRORES))
@@ -1213,48 +1254,63 @@ def main():
 
 
 CABECERA = """<!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8">
+<html lang="es" class="tema-azul"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diagnosticador de mercados</title>
 <style>
-:root{--f:#1d2733;--s:#5b6776;--b:#e3e7ec;--fondo:#f6f8fa}
+html.tema-azul{--pagina:linear-gradient(170deg,#eef5fc 0%,#dce9f6 55%,#cfe0f2 100%);--panel:rgba(255,255,255,.72);--th:rgba(225,236,248,.95);--b:#c9d8e8;--f:#1b2a3a;--s:#56677a;--acento:#2f6fdb}
+html.tema-gris{--pagina:linear-gradient(170deg,#f4f5f7 0%,#e6e9ee 100%);--panel:rgba(255,255,255,.8);--th:#eceff3;--b:#d8dde3;--f:#1d2733;--s:#5b6776;--acento:#4a5d75}
+html.tema-blanco{--pagina:#ffffff;--panel:#f6f8fa;--th:#f6f8fa;--b:#e3e7ec;--f:#1d2733;--s:#5b6776;--acento:#2f6fdb}
+html.tema-arena{--pagina:linear-gradient(170deg,#fbf8f2 0%,#f1eadc 100%);--panel:rgba(255,255,255,.75);--th:#f3ecdf;--b:#e2d7c3;--f:#2b2620;--s:#6c6253;--acento:#a0672a}
 *{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--f);background:#fff;margin:0;padding:14px;max-width:1100px;margin:auto;font-size:15px;line-height:1.4}
-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+html{background:var(--pagina);background-attachment:fixed;min-height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--f);background:transparent;margin:0 auto;padding:14px;max-width:1100px;font-size:15px;line-height:1.4}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 h1{font-size:1.25em;margin:0}
 .fecha{color:var(--s);font-size:.85em}
+.apariencia{font-size:.8em;color:var(--s)}
+.apariencia select{font-size:1em;border:1px solid var(--b);border-radius:6px;background:var(--panel);color:var(--f);padding:2px 4px}
 nav{display:flex;gap:6px;border-bottom:1px solid var(--b);margin-bottom:14px;flex-wrap:wrap}
 nav button{border:0;background:none;padding:9px 14px;font-size:1em;cursor:pointer;color:var(--s);border-bottom:3px solid transparent}
-nav button.activa{color:var(--f);border-bottom-color:#2f6fdb;font-weight:600}
+nav button.activa{color:var(--f);border-bottom-color:var(--acento);font-weight:600}
 .pest{display:none}.pest.activa{display:block}
 h2{font-size:1.05em;margin:22px 0 8px}
 .tarjetas{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.tarjeta{background:var(--fondo);border:1px solid var(--b);border-radius:10px;padding:10px 12px}
+.tarjeta{background:var(--panel);border:1px solid var(--b);border-radius:10px;padding:10px 12px}
 .tarjeta.alerta{background:#fff1ec;border-color:#f3b49b}
 .tarjeta .t{font-size:.8em;color:var(--s)}.tarjeta .v{font-size:1.5em;font-weight:700;margin:2px 0}.tarjeta .s{font-size:.8em;color:var(--s)}
-table{border-collapse:collapse;width:100%;font-size:.88em;display:block;overflow-x:auto}
+table{border-collapse:collapse;width:fit-content;max-width:100%;font-size:.88em;display:block;overflow-x:auto;background:var(--panel);border-radius:8px}
 th,td{padding:6px 8px;border-bottom:1px solid var(--b);text-align:left;white-space:nowrap}
-th{background:var(--fondo);font-weight:600;cursor:default}
+th{background:var(--th);font-weight:600;cursor:default}
 table.ord th{cursor:pointer}
 td.si{color:#1f7a45;font-weight:700}td.viejo{color:#c0392b}td.extremo{background:#fff1ec;font-weight:700}
-tr.hoy td{background:#eef4ff;font-weight:600}
+tr.hoy td{background:rgba(47,111,219,.12);font-weight:600}
 .fase{color:#fff;border-radius:6px;padding:2px 7px;font-size:.8em;font-weight:600}
-.tipo{background:var(--fondo);border:1px solid var(--b);border-radius:6px;padding:1px 6px;font-size:.8em}
+.tipo{background:var(--th);border:1px solid var(--b);border-radius:6px;padding:1px 6px;font-size:.8em}
 .nota{color:var(--s);font-size:.82em;margin:6px 0}
-.grafico{width:100%;max-width:760px;height:auto;display:block;margin:6px 0}
-.mini{width:100%;max-width:760px;height:auto;display:block;background:var(--fondo);border-radius:8px;margin-top:8px}
-.grafico .cuad{font-size:12px;font-weight:700;opacity:.7}.grafico .eje{font-size:12px;fill:#5b6776}.grafico .etq{font-size:11px;font-weight:600;fill:#1d2733}
+.grafico{width:100%;max-width:760px;height:auto;display:block;margin:6px 0;background:var(--panel);border-radius:10px}
+.mini{width:100%;max-width:760px;height:auto;display:block;background:var(--panel);border-radius:8px;margin-top:8px}
+.grafico .cuad{font-size:12px;font-weight:700;opacity:.7}.grafico .eje{font-size:12px;fill:#56677a}.grafico .etq{font-size:11px;font-weight:600;fill:#1b2a3a}
 .filtros{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.8em;margin:4px 0}
 .fuentes{margin-top:26px;border-top:1px solid var(--b);padding-top:6px;font-size:.88em}
 .error{color:#c0392b}
-.resumen{white-space:pre-wrap;font-size:.75em;color:var(--s);background:var(--fondo);padding:8px;border-radius:8px;margin-top:16px}
-</style></head><body>
-<header><h1>Diagnosticador de mercados</h1><span class="fecha">Actualizado {{FECHA}} (hora peninsular aprox.)</span></header>
+.resumen{white-space:pre-wrap;font-size:.75em;color:var(--s);background:var(--panel);padding:8px;border-radius:8px;margin-top:16px}
+</style>
+<script>try{var t=localStorage.getItem('tema');if(t){document.documentElement.className='tema-'+t;}}catch(e){}</script>
+</head><body>
+<header><h1>Diagnosticador de mercados</h1>
+<span class="fecha">Actualizado {{FECHA}} (hora peninsular aprox.)</span>
+<label class="apariencia">Apariencia
+<select id="tema"><option value="azul">Azul suave</option><option value="gris">Gris claro</option><option value="arena">Arena</option><option value="blanco">Blanco</option></select></label>
+</header>
 <nav><button class="activa" data-t="t1">Diagnosticador</button><button data-t="t2">Opciones</button><button data-t="t3">Calendario</button></nav>
 """
 
 PIE = r"""
 <script>
+(function(){var sel=document.getElementById('tema');var actual=document.documentElement.className.replace('tema-','');
+ sel.value=actual;sel.addEventListener('change',function(){document.documentElement.className='tema-'+sel.value;
+ try{localStorage.setItem('tema',sel.value);}catch(e){}});})();
 document.querySelectorAll('nav button').forEach(function(b){b.addEventListener('click',function(){
  document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('activa')});
  document.querySelectorAll('.pest').forEach(function(x){x.classList.remove('activa')});
