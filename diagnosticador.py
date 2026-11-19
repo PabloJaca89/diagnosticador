@@ -90,22 +90,44 @@ FECHAS = {}    # fuente -> última fecha disponible
 # ----------------------------------------------------------------------------
 
 INICIO = time.time()
-LIMITE_DESCARGAS = INICIO + 12 * 60   # nunca más de 12 minutos descargando
+LIMITE_DESCARGAS = INICIO + 10 * 60   # nunca más de 10 minutos descargando
+SERVIDOR_FALLOS = {}                   # servidor -> fallos seguidos
+SERVIDOR_CAIDO = set()                 # servidores que no se vuelven a intentar hoy
 
 
-def get(url, params=None, intentos=2, espera=2, timeout=20):
+class NoEncontrado(Exception):
+    pass
+
+
+def get(url, params=None, intentos=2, espera=2, timeout=(10, 30)):
+    from urllib.parse import urlparse
+    host = urlparse(url).netloc
+    if host in SERVIDOR_CAIDO:
+        raise RuntimeError(f"{host} no responde hoy (omitido)")
     ultimo = ""
     for i in range(intentos):
         try:
             r = requests.get(url, params=params, headers=UA, timeout=timeout)
             if r.status_code == 200:
+                SERVIDOR_FALLOS[host] = 0
                 return r
+            if r.status_code == 404:
+                raise NoEncontrado("HTTP 404")
+            if r.status_code == 429:          # límite de peticiones: no insistir
+                SERVIDOR_CAIDO.add(host)
+                raise RuntimeError("HTTP 429 (límite de peticiones)")
             ultimo = f"HTTP {r.status_code}"
-            if r.status_code in (401, 403, 404):
-                break
-        except Exception as e:  # noqa
-            ultimo = str(e)
-        time.sleep(espera * (i + 1))
+            if 400 <= r.status_code < 500:
+                raise RuntimeError(ultimo)
+        except (NoEncontrado, RuntimeError):
+            raise
+        except Exception as e:  # noqa  (tiempo agotado, conexión cortada...)
+            ultimo = str(e)[:120]
+        if i < intentos - 1:
+            time.sleep(espera)
+    SERVIDOR_FALLOS[host] = SERVIDOR_FALLOS.get(host, 0) + 1
+    if SERVIDOR_FALLOS[host] >= 2:
+        SERVIDOR_CAIDO.add(host)
     raise RuntimeError(ultimo)
 
 
@@ -180,10 +202,14 @@ def registrar(nombre, s):
 # ----------------------------------------------------------------------------
 
 def fred(sid):
-    r = get("https://fred.stlouisfed.org/graph/fredgraph.csv", params={"id": sid})
-    df = pd.read_csv(io.StringIO(r.text))
-    s = pd.Series(pd.to_numeric(df.iloc[:, 1], errors="coerce").values,
-                  index=pd.to_datetime(df.iloc[:, 0], errors="coerce"))
+    clave = os.environ.get("FRED_API_KEY", "").strip()
+    if not clave:
+        raise RuntimeError("falta la clave de FRED")
+    r = get("https://api.stlouisfed.org/fred/series/observations",
+            params={"series_id": sid, "api_key": clave, "file_type": "json"})
+    obs = r.json().get("observations", [])
+    s = pd.Series(pd.to_numeric([o.get("value") for o in obs], errors="coerce"),
+                  index=pd.to_datetime([o.get("date") for o in obs], errors="coerce"))
     s = s[s.index.notna()].dropna().sort_index()
     if len(s) == 0:
         raise RuntimeError("serie vacía")
@@ -206,7 +232,7 @@ def tiingo(ticker):
     if not clave:
         raise RuntimeError("falta la clave de Tiingo")
     r = get(f"https://api.tiingo.com/tiingo/daily/{ticker}/prices",
-            params={"startDate": "1990-01-01", "token": clave})
+            params={"startDate": "1990-01-01", "token": clave}, intentos=1)
     d = r.json()
     if not isinstance(d, list) or not d:
         raise RuntimeError(str(d)[:120])
@@ -309,8 +335,9 @@ PC_CLAVES = {
 
 def putcall_dia(fecha):
     url = f"https://cdn.cboe.com/data/us/options/market_statistics/daily/{fecha:%Y-%m-%d}_daily_options"
-    r = requests.get(url, headers=UA, timeout=10)
-    if r.status_code != 200:
+    try:
+        r = get(url, intentos=1, timeout=(10, 15))
+    except NoEncontrado:
         return None
     d = r.json()
     ratios = d.get("ratios", []) if isinstance(d, dict) else []
@@ -345,8 +372,8 @@ def actualizar_putcall():
             break
         try:
             fila = putcall_dia(d)
-        except Exception:  # noqa
-            fila = None
+        except Exception:  # noqa  servidor caído: dejarlo para mañana
+            break
         if fila:
             nuevas[d] = fila
             fallos = 0
