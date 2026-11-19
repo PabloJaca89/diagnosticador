@@ -89,7 +89,7 @@ FECHAS = {}    # fuente -> última fecha disponible
 # UTILIDADES
 # ----------------------------------------------------------------------------
 
-def get(url, params=None, intentos=3, espera=4, timeout=60):
+def get(url, params=None, intentos=3, espera=3, timeout=30):
     ultimo = ""
     for i in range(intentos):
         try:
@@ -297,7 +297,7 @@ PC_CLAVES = {
 
 def putcall_dia(fecha):
     url = f"https://cdn.cboe.com/data/us/options/market_statistics/daily/{fecha:%Y-%m-%d}_daily_options"
-    r = requests.get(url, headers=UA, timeout=30)
+    r = requests.get(url, headers=UA, timeout=10)
     if r.status_code != 200:
         return None
     d = r.json()
@@ -327,7 +327,10 @@ def actualizar_putcall():
     pendientes = pendientes[-300:]
     nuevas = {}
     fallos = 0
+    limite = time.time() + 240   # como mucho 4 minutos por ejecución
     for d in reversed(pendientes):
+        if time.time() > limite:
+            break
         try:
             fila = putcall_dia(d)
         except Exception:  # noqa
@@ -337,7 +340,7 @@ def actualizar_putcall():
             fallos = 0
         else:
             fallos += 1
-        if fallos >= 40:   # festivos o fin del archivo disponible
+        if fallos >= 15:   # festivos o fin del archivo disponible
             break
         time.sleep(0.3)
     if nuevas:
@@ -775,6 +778,7 @@ def svg_linea(serie, alto=120, ancho=680, color="#2f6fdb", ref=None):
 
 def main():
     os.makedirs(CARPETA_WEB, exist_ok=True)
+    open(os.path.join(CARPETA_WEB, ".nojekyll"), "w").close()
 
     # --- Descargas
     precios = {}
