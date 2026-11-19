@@ -11,7 +11,7 @@ permissions:
 jobs:
   actualizar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -25,12 +25,14 @@ jobs:
       - name: Ejecutar diagnosticador
         env:
           TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python diagnosticador.py
 
       - name: Guardar resultados
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add docs datos || true
+          git add docs
+          if [ -d datos ]; then git add datos; fi
           git commit -m "Actualización $(date -u +%Y-%m-%d)" || echo "Sin cambios"
           git push
