@@ -227,12 +227,12 @@ def cboe_indice(nombre):
     return s.rename(nombre)
 
 
-def tiingo(ticker):
+def tiingo(ticker, frecuencia="weekly"):
     clave = os.environ.get("TIINGO_API_KEY", "").strip()
     if not clave:
         raise RuntimeError("falta la clave de Tiingo")
     r = get(f"https://api.tiingo.com/tiingo/daily/{ticker}/prices",
-            params={"startDate": "1990-01-01", "token": clave}, intentos=1)
+            params={"startDate": "1990-01-01", "resampleFreq": frecuencia, "token": clave}, intentos=1)
     d = r.json()
     if not isinstance(d, list) or not d:
         raise RuntimeError(str(d)[:120])
@@ -822,7 +822,7 @@ def main():
     # --- Descargas
     precios = {}
     for t in [m for m, _ in MOTORES] + [REFERENCIA] + OTROS_TIINGO:
-        s = seguro(f"Precio {t}", tiingo, t)
+        s = seguro(f"Precio {t}", tiingo, t, "daily" if t == "SPY" else "weekly")
         if s is not None:
             precios[t] = s
             registrar(f"Precio {t}", s)
