@@ -486,6 +486,7 @@ IPC_EEUU = [
 ]
 
 ERRORES = []   # (fuente, mensaje)
+BRUTO = {}     # ticker -> cierres sin ajustar (para enlazar el precio provisional con la serie ajustada)
 FECHAS = {}    # fuente -> última fecha disponible
 
 
@@ -669,7 +670,31 @@ def tiingo(ticker, frecuencia="weekly"):
     df = pd.DataFrame(d)
     idx = pd.to_datetime(df["date"], utc=True).dt.tz_convert(None).dt.normalize()
     s = pd.Series(df["adjClose"].astype(float).values, index=idx).sort_index()
+    if "close" in df.columns:
+        BRUTO[ticker] = pd.Series(df["close"].astype(float).values, index=idx).sort_index()
     return s.rename(ticker)
+
+
+def iex_ultimos():
+    """Último precio de cada valor (Tiingo IEX, una sola petición para todos). ticker -> (fecha en Nueva York, precio)."""
+    clave = os.environ.get("TIINGO_API_KEY", "").strip()
+    if not clave:
+        raise RuntimeError("falta la clave de Tiingo")
+    d = get("https://api.tiingo.com/iex", params={"token": clave}, intentos=1, timeout=(10, 60)).json()
+    if not isinstance(d, list) or not d:
+        raise RuntimeError(str(d)[:120])
+    queremos = {t.upper() for t, _ in MOTORES} | {REFERENCIA}
+    out = {}
+    for x in d:
+        t = str(x.get("ticker", "")).upper()
+        if t not in queremos or x.get("tngoLast") is None or not x.get("timestamp"):
+            continue
+        f = pd.Timestamp(x["timestamp"])
+        f = (f.tz_convert("America/New_York") if f.tzinfo else f).tz_localize(None).normalize()
+        out[t] = (f, float(x["tngoLast"]))
+    if REFERENCIA not in out:
+        raise RuntimeError("sin precio de la referencia")
+    return out
 
 
 def _leer_excel(contenido):
@@ -1412,14 +1437,18 @@ def _tramos(qs):
     return runs
 
 
-def _recorrido(runs, fechas, fmt_f, sg, pl, nombres, frases, mensual=False):
+def _recorrido(runs, fechas, fmt_f, sg, pl, nombres, frases, mensual=False, provisional=False):
     """Lista en lenguaje llano por dónde ha pasado, con fechas, y si ha seguido el ciclo normal."""
     def u(L):
         return f"{L} {sg if L == 1 else pl}"
     items = []
     for q, k, L in runs:
         fin = fechas[k + L - 1]
-        if k + L == len(fechas):
+        if k + L == len(fechas) and provisional and L == 1:
+            tramo = f"Semana en curso, hasta el {fd(fmt_f(fechas[k]))} (provisional)"
+        elif k + L == len(fechas) and provisional:
+            tramo = f"Desde el {fd(fmt_f(fechas[k]))}, con la semana en curso (provisional)"
+        elif k + L == len(fechas):
             tramo = f"{'Desde' if mensual else 'Desde el'} {fd(fmt_f(fechas[k]))}"
         elif L == 1:
             tramo = f"{'Mes de' if mensual else 'Semana del'} {fd(fmt_f(fechas[k]))}"
@@ -1489,7 +1518,14 @@ def narrativa_motor(m):
         avisos.append(f"Señales de cansancio de la subida ({len(m['s_alc'])} de 4): {'; '.join(m['s_alc'])}.")
     if m.get("s_baj"):
         avisos.append(f"Señales de agotamiento de la caída ({len(m['s_baj'])} de 4): {'; '.join(m['s_baj'])}.")
-    P.append(f'<p><span class="et">Qué hacer según las reglas</span> Fase {m["fase"].lower()}. {hacer}</p>')
+    extra_prov = ""
+    if m.get("prov"):
+        extra_prov = (f' Las reglas usan solo semanas cerradas (la última, la del {fd(f_(m["fecha_cerrada"]))}).'
+                      + (f' Con los datos provisionales hasta el {fd(f_(fechas[-1]))} pasaría a fase <b>{m["fase_prov"].lower()}</b>: '
+                         'se confirmará o no con el cierre del viernes.'
+                         if m.get("fase_prov") and m["fase_prov"] != m["fase"] else
+                         f' Con los datos provisionales hasta el {fd(f_(fechas[-1]))} seguiría en la misma fase.'))
+    P.append(f'<p><span class="et">Qué hacer según las reglas</span> Fase {m["fase"].lower()}. {hacer}{extra_prov}</p>')
     if avisos:
         P.append('<p class="exp-aviso">' + "<br>".join(avisos) + "</p>")
     # Rentabilidades
@@ -1498,13 +1534,15 @@ def narrativa_motor(m):
         nombres_p = {4: "Último mes", 13: "3 meses", 26: "6 meses"}
         filas = "".join(f"<tr><td>{nombres_p[k]}</td><td>{_con_signo(a)}</td><td>{_con_signo(b)}</td>"
                         f"<td><b>{_con_signo(a - b, 1, '')}</b></td></tr>" for k, (a, b) in sorted(rents.items()))
-        P.append(f'<p><span class="et">Rentabilidad hasta el {fd(f_(fechas[-1]))}</span></p>'
+        P.append(f'<p><span class="et">Rentabilidad hasta el {fd(f_(fechas[-1]))}{" (provisional)" if m.get("prov") else ""}</span></p>'
                  f'<table class="exp-tabla"><tr><th></th><th>{e(t)}</th><th>Liquidez (BIL)</th><th>Diferencia (puntos)</th></tr>{filas}</table>')
     # Recorrido
     P.append(f'<p><span class="et">Cómo ha llegado hasta aquí (últimas 24 semanas)</span></p>'
-             + _recorrido(runs, fechas, f_, "semana", "semanas", CUAD_MOTOR, TRAMO_MOTOR))
+             + _recorrido(runs, fechas, f_, "semana", "semanas", CUAD_MOTOR, TRAMO_MOTOR, provisional=bool(m.get("prov"))))
     if t in NOTA_ALTERNATIVO:
         P.append(f'<p class="nota">{NOTA_ALTERNATIVO[t]}</p>')
+    if m.get("prov"):
+        P.append(f'<p class="nota">El último punto ({fd(f_(fechas[-1]))}) es provisional: es el último cierre disponible de la semana en curso.</p>')
     P.append(f'<p class="nota">"Por delante" o "por detrás" de la liquidez compara su evolución reciente frente a las letras del Tesoro '
              f'con su media de los últimos 6 meses. Fuerza ahora {fmt(xs[-1], 1)} (100 = esa media); impulso {fmt(ys[-1], 1)} '
              f'(100 = sin cambio en 4 semanas; hace 4 semanas, {fmt(ys[-5], 1)}).</p>')
@@ -1725,9 +1763,32 @@ def main():
     if cot_series:
         registrar("Posicionamiento (CFTC)", max(cot_series.values(), key=lambda x: x.index[-1]))
 
-    # --- Series semanales
+    # --- Series semanales (solo semanas cerradas: las reglas usan siempre estas)
     W = {t: semanal(s) for t, s in precios.items()}
     ref_w = W.get(REFERENCIA)
+
+    # --- Semana en curso (provisional): último cierre disponible, solo para mapas, explicaciones y base 100
+    PROV = {}   # ticker -> (fecha real, valor ajustado)
+    ult = seguro("Precios de la semana en curso (Tiingo IEX)", iex_ultimos) if ref_w is not None else None
+    for t in [m for m, _ in MOTORES] + [REFERENCIA]:
+        if W.get(t) is None:
+            continue
+        ultimo_w = W[t].index[-1]
+        if t == "SPY" and t in precios and precios[t].index[-1] > ultimo_w:     # SPY ya viene en diario
+            PROV[t] = (precios[t].index[-1], float(precios[t].iloc[-1]))
+        elif ult and t in ult and t in BRUTO and ult[t][0] > ultimo_w and ult[t][0] <= HOY:
+            bruto_w = semanal(BRUTO[t])
+            if bruto_w is not None and len(bruto_w) and bruto_w.index[-1] == ultimo_w:
+                PROV[t] = (ult[t][0], float(W[t].iloc[-1] * ult[t][1] / bruto_w.iloc[-1]))
+    if REFERENCIA not in PROV:
+        PROV = {}
+    ETQ_PROV = ULTIMO_VIERNES + pd.Timedelta(days=7)   # etiqueta semanal de la semana en curso
+
+    def extendida(t):
+        if t in PROV:
+            return pd.concat([W[t], pd.Series([PROV[t][1]], index=[ETQ_PROV])])
+        return W[t]
+    ref_p = extendida(REFERENCIA) if ref_w is not None else None
 
     # --- Mapa de rotación de motores
     motores = []
@@ -1741,22 +1802,37 @@ def main():
             XY = pd.concat([X, Y], axis=1).dropna()
             X, Y = XY.iloc[:, 0], XY.iloc[:, 1]
             f, extra = fase_motor(W[t].loc[:rs.index[-1]], rs, X, Y)
-            fechas = list(X.index[-24:])
+            prov = t in PROV
+            f_prov = None
+            if prov:
+                rs_p, X_p, Y_p = rrg(extendida(t), ref_p)
+                XYp = pd.concat([X_p, Y_p], axis=1).dropna()
+                if len(XYp) and XYp.index[-1] == ETQ_PROV:
+                    X_v, Y_v = XYp.iloc[:, 0], XYp.iloc[:, 1]
+                    f_prov = fase_motor(extendida(t).loc[:rs_p.index[-1]], rs_p, X_v, Y_v)[0]
+                else:
+                    prov = False
+            if not prov:
+                X_v, Y_v = X, Y
+            fechas = list(X_v.index[-24:])
+            if prov:
+                fechas[-1] = PROV[t][0]
             r_m = r_ref = None
             try:
                 r_m = (W[t].loc[fechas[-1]] / W[t].loc[fechas[0]] - 1) * 100
                 r_ref = (ref_w.loc[fechas[-1]] / ref_w.loc[fechas[0]] - 1) * 100
             except Exception:  # noqa
                 pass
-            # Rentabilidades a 4, 13 y 26 semanas (motor y letras), hasta la última semana cerrada
+            # Rentabilidades a 4, 13 y 26 semanas (motor y letras), hasta el último dato (provisional si lo hay)
             rents = {}
-            pm_, pr_ = W[t].loc[:fechas[-1]], ref_w.loc[:fechas[-1]]
+            pm_, pr_ = (extendida(t), ref_p) if prov else (W[t], ref_w)
             for k in (4, 13, 26):
                 if len(pm_) > k and len(pr_) > k:
                     rents[k] = ((pm_.iloc[-1] / pm_.iloc[-1 - k] - 1) * 100, (pr_.iloc[-1] / pr_.iloc[-1 - k] - 1) * 100)
             motores.append({"t": t, "nombre": nombre, "X": X.iloc[-1], "Y": Y.iloc[-1],
-                            "xs": list(X.iloc[-24:].values), "ys": list(Y.iloc[-24:].values),
+                            "xs": list(X_v.iloc[-24:].values), "ys": list(Y_v.iloc[-24:].values),
                             "fechas": fechas, "r_m": r_m, "r_ref": r_ref, "rents": rents,
+                            "prov": prov, "fase_prov": f_prov, "fecha_cerrada": X.index[-1],
                             "dy4": float(Y.iloc[-1] - Y.iloc[-5]),
                             "fase": f, "rsi": extra["rsi"], "alc": extra["alc"], "baj": extra["baj"],
                             "s_alc": extra["s_alc"], "s_baj": extra["s_baj"],
@@ -1805,10 +1881,11 @@ def main():
     # Vista en base 100 (cierres semanales normalizados; nunca precios)
     b100 = None
     if ref_w is not None and motores:
-        idx = ref_w.index[-(B100_SEMANAS + 1):]
+        con_prov = bool(PROV)
+        idx = (ref_p if con_prov else ref_w).index[-(B100_SEMANAS + 1):]
         ser = {}
         for t in [m["t"] for m in motores] + [REFERENCIA]:
-            s = W.get(t)
+            s = extendida(t) if (t in W and W[t] is not None) else None
             if s is None:
                 continue
             s = s.reindex(idx)
@@ -1817,7 +1894,10 @@ def main():
                 continue
             s = (s / v.iloc[0] * 100).round(2)
             ser[t] = [None if pd.isna(a) else float(a) for a in s.values]
-        b100 = {"f": [f"{d:%Y-%m-%d}" for d in idx], "s": ser, "ref": REFERENCIA,
+        fechas_b = [f"{d:%Y-%m-%d}" for d in idx]
+        if con_prov:
+            fechas_b[-1] = f"{PROV[REFERENCIA][0]:%Y-%m-%d}"
+        b100 = {"f": fechas_b, "s": ser, "ref": REFERENCIA, "prov": con_prov,
                 "c": {m["t"]: COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555") for m in motores},
                 "n": {**{m["t"]: m["nombre"] for m in motores}, REFERENCIA: "Letras del Tesoro"}}
 
@@ -2015,7 +2095,8 @@ def main():
              '<label class="periodo" hidden>Periodo <select id="b100-per"><option value="24">24 semanas</option>'
              '<option value="52">1 año</option><option value="156">3 años</option><option value="260">5 años</option></select></label></div>')
     H.append(f'<p class="nota solo-mapa">Eje horizontal: fuerza relativa{i("fuerza")} · eje vertical: impulso{i("impulso")}. '
-             'Rastro de 24 semanas con cierres semanales: □ inicio · ● ahora. La escala se ajusta a los motores marcados '
+             'Rastro de 24 semanas con cierres semanales: □ inicio · ● ahora (○ con línea discontinua = provisional, semana en curso; '
+             'pasa el cursor por el final del vector para ver la fecha del último dato). La escala se ajusta a los motores marcados '
              '(por defecto, solo SPY). <b>Pulsa un motor para leer qué dice del mercado.</b></p>')
     H.append('<p class="nota solo-b100" hidden>Cuánto vale hoy lo que valía 100 al inicio del periodo (dividendos incluidos, en dólares). '
              'Línea negra discontinua: letras del Tesoro (BIL). Escala logarítmica. <b>Pulsa una línea para leer la dinámica del motor.</b></p>')
@@ -2030,7 +2111,9 @@ def main():
         "c": 100, "q": CUAD_MOTOR, "tx": "Fuerza frente a la liquidez (100 = su media de 6 meses)",
         "ty": "Impulso (100 = sin cambio en 4 semanas)",
         "s": [{"k": m["t"], "g": GRUPO.get(m["t"], ""), "c": COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555"),
-               "tip": m["t"] + " · " + DESC.get(m["t"], "") + " Fase: " + m["fase"].lower() + ". Pulsa para ver su dinámica.",
+               "tip": m["t"] + " · último dato: " + f'{m["fechas"][-1]:%d-%m-%Y}'
+                      + (" (provisional, semana en curso)" if m["prov"] else " (semana cerrada)") + ". " + DESC.get(m["t"], "")
+                      + " Fase: " + m["fase"].lower() + ". Pulsa para ver su dinámica.", "p": bool(m["prov"]),
                "x": [round(float(v), 2) for v in m["xs"]], "y": [round(float(v), 2) for v in m["ys"]]} for m in motores]}
     H.append('<div id="mapa-motores" class="solo-mapa" data-exp="mapa-motores"></div>')
     H.append('<div id="b100" class="solo-b100" data-exp="mapa-motores" hidden><div class="b100-graf"></div>'
@@ -2061,7 +2144,10 @@ def main():
                  f'<td>{fmt(m["rsi"], 0)}</td><td>{agot_txt(m)}</td></tr>')
     H.append('</table>')
     if motores:
-        H.append(f'<p class="nota">Semana cerrada: {fd(format(motores[0]["fecha"], "%d-%m-%Y"))}. Proxies en dólares (el euro se ve con FXE). '
+        fp = max((m["fechas"][-1] for m in motores if m["prov"]), default=None)
+        H.append(f'<p class="nota">Reglas, fases y columnas de esta tabla: semana cerrada del {fd(format(motores[0]["fecha"], "%d-%m-%Y"))}.'
+                 + (f' Mapa, explicaciones y base 100: datos provisionales hasta el {fd(format(fp, "%d-%m-%Y"))} (semana en curso).' if fp else '')
+                 + ' Proxies en dólares (el euro se ve con FXE). '
                  'Stock picking: ver bloque D. Market neutral: sin proxy. Volatilidad, managed futures y anti-beta: solo referencia (no entran en el TOP 3).</p>')
 
     # Mapa macro
@@ -2075,7 +2161,9 @@ def main():
         "tx": "Nivel: percentil sobre toda su historia (0 = mínimo, 100 = máximo)",
         "ty": "Impulso: percentil de su cambio reciente sobre toda su historia",
         "s": [{"k": cortos[k], "g": cortos[k], "c": color_macro[cortos[k]],
-               "tip": cortos[k] + " · fase " + mac[k]["fase"].lower() + ". Pulsa para ver qué significa.",
+               "tip": cortos[k] + " · último dato: "
+                      + format(mac[k]["fecha"], "%m-%Y" if mac[k]["frecuencia"] == "m" else "%d-%m-%Y")
+                      + ". Fase " + mac[k]["fase"].lower() + ". Pulsa para ver qué significa.",
                "x": [round(float(v), 1) for v in mac[k]["rx"]], "y": [round(float(v), 1) for v in mac[k]["ry"]]}
               for k in clave if k in mac and len(mac[k]["rx"]) >= 1]}
     if reg:
@@ -2428,12 +2516,16 @@ document.querySelectorAll('nav button').forEach(function(b){b.addEventListener('
   o.push('<text x="13" y="'+((mt+H-mb)/2)+'" text-anchor="middle" class="eje" transform="rotate(-90 13 '+((mt+H-mb)/2)+')">'+esc(D.ty)+' →</text>');
   ser.forEach(function(z){var col=z.c,n=z.x.length;
    o.push('<g class="serie" data-t="'+esc(z.k)+'" data-k="'+esc(z.k)+'" data-g="'+esc(z.g)+'" data-tip="'+esc(z.tip)+'">');
-   o.push('<polyline class="r" points="'+z.x.map(function(v,i){return X(v).toFixed(1)+','+Y(z.y[i]).toFixed(1);}).join(' ')+
+   var nl=z.p&&n>1?n-1:n;
+   o.push('<polyline class="r" points="'+z.x.slice(0,nl).map(function(v,i){return X(v).toFixed(1)+','+Y(z.y[i]).toFixed(1);}).join(' ')+
     '" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-opacity="0.55"/>');
+   if(nl<n)o.push('<line class="r" x1="'+X(z.x[n-2]).toFixed(1)+'" y1="'+Y(z.y[n-2]).toFixed(1)+'" x2="'+X(z.x[n-1]).toFixed(1)+'" y2="'+Y(z.y[n-1]).toFixed(1)+
+    '" stroke="'+col+'" stroke-width="1.6" stroke-dasharray="3 3"/>');
    for(var i=1;i<n-1;i++)o.push('<circle class="r" cx="'+X(z.x[i]).toFixed(1)+'" cy="'+Y(z.y[i]).toFixed(1)+'" r="1.6" fill="'+col+'" fill-opacity="0.45"/>');
    o.push('<rect class="r" x="'+(X(z.x[0])-3.5).toFixed(1)+'" y="'+(Y(z.y[0])-3.5).toFixed(1)+'" width="7" height="7" fill="#fff" stroke="'+col+'" stroke-width="1.6"/>');
    var a=X(z.x[n-1]),b=Y(z.y[n-1]);
-   o.push('<circle cx="'+a.toFixed(1)+'" cy="'+b.toFixed(1)+'" r="4.5" fill="'+col+'"/>');
+   o.push(z.p?'<circle cx="'+a.toFixed(1)+'" cy="'+b.toFixed(1)+'" r="4.5" fill="#fff" stroke="'+col+'" stroke-width="2.2"/>'
+    :'<circle cx="'+a.toFixed(1)+'" cy="'+b.toFixed(1)+'" r="4.5" fill="'+col+'"/>');
    o.push(a>W-110?'<text x="'+(a-6).toFixed(1)+'" y="'+(b-5).toFixed(1)+'" text-anchor="end" class="etq">'+esc(z.k)+'</text>'
     :'<text x="'+(a+6).toFixed(1)+'" y="'+(b-5).toFixed(1)+'" class="etq">'+esc(z.k)+'</text>');
    o.push('</g>');});
@@ -2558,7 +2650,7 @@ document.querySelectorAll('table.ord').forEach(function(tb){tb.querySelectorAll(
   var refFin=null;L.forEach(function(l){if(l.ref)refFin=l.fin;});
   var R=L.slice().sort(function(a,b){return b.fin-a.fin;});
   rank.innerHTML='<p class="nota">Rentabilidad en el periodo (<span class="fd">'+fch(F[0],true)+'</span> → <span class="fd">'+fch(F[n-1],true)+
-   '</span>), de mayor a menor. Verde: mejor que las letras del Tesoro; rojo: peor.</p><ol>'+R.map(function(l){
+   '</span>'+(D.prov?', último dato provisional de la semana en curso':'')+'), de mayor a menor. Verde: mejor que las letras del Tesoro; rojo: peor.</p><ol>'+R.map(function(l){
    var col=l.ref?'#1b2a3a':(D.c[l.t]||'#555'),cls=l.ref||refFin==null?'':(l.fin>=refFin?'mas':'menos');
    return '<li'+(l.ref?' class="ref"':'')+'><span class="chip" style="background:'+col+'"></span><b>'+esc(l.t)+'</b> '+esc(D.n[l.t]||'')+
     ' <span class="v '+cls+'">'+pctTxt(l.fin)+'</span></li>';}).join('')+'</ol>';
