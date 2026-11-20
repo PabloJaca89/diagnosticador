@@ -47,6 +47,7 @@ INFO = {
 <li><b>Regular-optimista:</b> sin tendencia pero con el impulso mejorando; tendencia alcista pero perdiendo fuerza frente a la liquidez (fase de rezagado o suelo en el mapa); o bajista cerca del suelo con la puerta en tramo 2 o más.</li>
 <li><b>Buenas:</b> tendencia alcista sana: fase de arranque o aceleración en el mapa y sin señales de fin de ciclo.</li>
 <li><b>Muy buenas:</b> lo anterior y, además, precio atractivo: como mucho a un 10 % de su media de 200 semanas y, en los índices de EE. UU., ECY de al menos el 3 %.</li></ul>
+<p><b>Plazo.</b> De 6 a 12 meses. Todo se calcula con cierres semanales: la tendencia con la media de 40 semanas (unos 9 meses), la fase del mapa con 26 semanas, la puerta con la media de 200 semanas (unos 4 años) y con una memoria de 13 semanas. No sirven para decidir a días o semanas: para eso está la pestaña Opciones.</p>
 <p><b>Puerta:</b> puntos de suelo y tramo que corresponde construir. <b>Cuidado:</b> reglas de criterio propio, no calibradas.</p>""", []),
 
     "puntos": ("Puerta de indexación", """
@@ -61,7 +62,8 @@ INFO = {
     "veto": ("Veto por crédito", """
 <p><b>Qué es.</b> Freno de emergencia: si el diferencial de crédito (Baa − bono 10 años) sube un 30 % o más en 13 semanas y además acelera, el tramo máximo de la puerta queda en 1 y los índices en tendencia bajista pasan a condiciones "muy malas".</p>
 <p><b>Por qué.</b> En 2001-02 y 2008-09 el S&amp;P 500 perforó su media de 200 semanas y siguió cayendo meses mientras el crédito se deterioraba. El veto evita comprar demasiado pronto en ese escenario.</p>
-<p>Se levanta tras 4 semanas seguidas sin cumplirse.</p>""",
+<p>Se levanta tras 4 semanas seguidas sin cumplirse.</p>
+<p><b>En la tarjeta.</b> El diferencial actual en puntos (rentabilidad de los bonos de empresas Baa menos la del bono del Tesoro a 10 años) y su cambio en porcentaje en 13 semanas. Ejemplo: −13 % significa que el diferencial es un 13 % más estrecho que hace 13 semanas (por ejemplo, de 1,80 a 1,57 puntos): menos miedo al crédito. El veto exige +30 % o más.</p>""",
         [("Serie BAA10Y (FRED)", FRED + "BAA10Y")]),
 
     "conviccion": ("Grado de convicción", """
@@ -101,19 +103,21 @@ INFO = {
 <p>No vota. Indica si el entorno favorece seleccionar valores o comprar el índice.</p>
 <ul><li>Dispersión alta (DSPX) y correlación baja (COR3M): los valores se mueven distinto entre sí → más margen para la selección (alfa).</li>
 <li>Lo contrario: todo se mueve junto → el índice (beta) es más eficiente.</li></ul>
+<p><b>Umbrales.</b> Favorable a selección si la dispersión está por encima de su percentil 60 y la correlación por debajo del 40; al revés, favorable al índice. Percentiles sobre toda su historia: DSPX desde 2014 y COR3M desde 2006.</p>
 <p><b>Cuidado.</b> Es el bloque con evidencia más débil: los informes SPIVA muestran que la mayoría de gestores activos no bate al índice a largo plazo.</p>""",
         [("Cboe: correlación implícita", "https://cboe.com/us/indices/implied/"),
          ("Cboe: índice de dispersión", "https://www.cboe.com/us/indices/dispersion")]),
     "sentimiento": ("Sentimiento (réplica del Euphoriameter)", """
-<p>Media de tres percentiles: valoración (CAPE), calma (VIX invertido) y distancia del ACWI a su media de 200 semanas. De 0 (miedo) a 100 (euforia).</p>
+<p>Media de tres percentiles, cada uno sobre toda su historia disponible: valoración (CAPE, desde 1881), calma (VIX invertido, desde 1990) y distancia del ACWI a su media de 200 semanas (desde que hay 200 semanas de datos, 2012). De 0 (miedo) a 100 (euforia).</p>
 <p><b>Por qué una réplica.</b> El Euphoriameter original no tiene datos descargables, y el índice NAAIM, que iba a usarse, pasó a ser de pago.</p>
 <p><b>Cuidado.</b> Sus componentes se solapan con la valoración y el técnico: cuenta como un único input.</p>""", []),
 
     # ---------------- Mapas ----------------
     "mapa": ("Mapa de rotación de motores", """
 <p>Versión abierta y aproximada de los <i>Relative Rotation Graphs</i> de Julius de Kempenaer. Cada punto es un motor de rentabilidad, comparado con las letras del Tesoro (BIL).</p>
-<ul><li><b>Eje horizontal (fuerza):</b> por encima de 100, el motor bate a la liquidez en su tendencia reciente.</li>
-<li><b>Eje vertical (impulso):</b> por encima de 100, esa fuerza está acelerando.</li>
+<ul><li><b>Eje horizontal (fuerza):</b> 100 = su comportamiento medio frente a la liquidez en los últimos 6 meses. 103 significa un 3 % mejor que esa media; 97, un 3 % peor.</li>
+<li><b>Eje vertical (impulso):</b> 100 = la fuerza no ha cambiado en 4 semanas. 102 significa que ha mejorado un 2 % en ese mes; 98, que ha empeorado un 2 %.</li>
+<li>La escala se ajusta a los motores que tengas marcados. Por defecto solo aparece el S&amp;P 500 (SPY).</li>
 <li>El giro habitual es en sentido horario: mejorando → liderando → debilitándose → rezagado.</li>
 <li>La cola muestra las últimas 24 semanas (cierres semanales): el cuadrado es el punto de partida y el círculo grande, el momento actual.</li>
 <li>Los colores indican la familia del motor (renta variable, renta fija, materias primas…), no su fase. Puedes ocultar familias o motores con las casillas.</li>
@@ -136,11 +140,13 @@ INFO = {
 <p>Velocidad a la que cambia la fuerza relativa: compara la fuerza actual con la de hace 4 semanas.</p>
 <p><b>Lectura.</b> Por encima de 100, la fuerza está mejorando (acelera); por debajo, empeorando (frena). El impulso suele girar antes que la fuerza: por eso anticipa las rotaciones.</p>""", []),
     "agotamiento": ("Señales de agotamiento", """
-<p>Cuántas de estas tres señales de extremo se dan ahora (de 0 a 3):</p>
+<p>Cuántas de estas cuatro señales de extremo se dan ahora (de 0 a 4):</p>
 <ul><li>RSI semanal por encima de 70 (alcista) o por debajo de 30 (bajista).</li>
-<li>Distancia a su media de 40 semanas entre el 10 % más alto (alcista) o más bajo (bajista) de su historia.</li>
-<li>Fuerza relativa por encima de su percentil 90 (alcista) o por debajo del 10 (bajista).</li></ul>
-<p><b>Lectura.</b> "Alcista 2 de 3" indica una subida muy estirada: riesgo de fin de ciclo. "Bajista 2 de 3" indica una caída muy estirada: posible suelo.</p>""", []),
+<li>Distancia a su media de 40 semanas entre el 10 % más alto (alcista) o más bajo (bajista) de toda la historia del fondo.</li>
+<li>Fuerza frente a la liquidez por encima de su percentil 90 (alcista) o por debajo del 10 (bajista), sobre toda la historia del fondo.</li>
+<li><b>Divergencia:</b> el precio está en la zona de máximos de 26 semanas (a menos de un 2 %) pero el RSI ya está 10 puntos o más por debajo de su máximo de esas 26 semanas: sube, pero con menos fuerza. Simétrico en mínimos para la bajista.</li></ul>
+<p><b>Lectura.</b> "Alcista 2 de 4" indica una subida muy estirada: riesgo de fin de ciclo. "Bajista 2 de 4" indica una caída muy estirada: posible suelo. Con 2 o más señales, la fase pasa a madurez (o suelo).</p>
+<p><b>Cuidado.</b> Umbrales de criterio propio, no calibrados. La divergencia es una señal técnica clásica con evidencia académica débil.</p>""", []),
     "direccion": ("Dirección del mapa (RV global)", """
 <p>Fase en la que está el ACWI (bolsa mundial) en el mapa de rotación. Suelo, arranque o aceleración cuentan como dirección favorable al riesgo; madurez, giro o rezagado, como desfavorable. La convicción mide cuántos bloques coinciden con esta dirección.</p>""", []),
     "top_salir": ("Cerca de fin de ciclo · ir saliendo", """
@@ -154,9 +160,10 @@ INFO = {
 <p>Motores en fase de <b>arranque</b>: todavía lo hacen peor que la liquidez (fuerza por debajo de 100), pero su impulso ya es positivo. Es donde está el margen: al principio del ciclo.</p>
 <p>Orden: de mayor a menor impulso. Recuerda construir poco a poco: muchos arranques fallan. No incluye volatilidad, managed futures ni anti-beta.</p>""", []),
     "nivel_macro": ("Nivel (percentil histórico)", """
-<p>Qué parte de toda la historia de la variable queda por debajo de su valor actual. 0 = mínimo histórico, 100 = máximo histórico, 50 = mitad de su rango habitual.</p>""", []),
+<p>Qué parte de <b>toda la historia</b> de la variable queda por debajo de su valor actual. 0 = mínimo histórico, 100 = máximo histórico, 50 = su valor típico (mediana).</p>
+<p>Cada variable empieza en un año distinto: la tabla de variables indica desde cuándo. El rastro del mapa solo enseña por dónde ha pasado en las últimas 24 semanas, pero cada punto se compara siempre con toda la historia.</p>""", []),
     "impulso_macro": ("Impulso de una variable macro", """
-<p>Cambio de la variable en las últimas 13 semanas (datos semanales y diarios) o en los últimos 6 meses (datos mensuales). En el mapa se expresa como percentil: por encima de 50, la variable sube más deprisa de lo habitual; por debajo, baja o sube menos de lo habitual.</p>""", []),
+<p>Cambio de la variable en las últimas 13 semanas (datos semanales y diarios) o en los últimos 6 meses (datos mensuales). En el mapa se expresa como percentil de ese cambio sobre <b>todos los cambios de su historia</b>: por encima de 50, la variable sube más deprisa de lo habitual; por debajo, baja o sube menos de lo habitual.</p>""", []),
     "fases": ("Fases y qué hacer", """
 <ul><li><b>Suelo:</b> fuerza e impulso bajos, pero el impulso sube 3 semanas o hay agotamiento bajista → vigilar.</li>
 <li><b>Arranque:</b> fuerza baja pero impulso al alza → construir poco a poco (el margen está al principio).</li>
@@ -164,13 +171,25 @@ INFO = {
 <li><b>Madurez:</b> fuerza alta pero impulso frenando 3 semanas, o 2 señales de agotamiento → empezar a salir antes del clímax.</li>
 <li><b>Giro:</b> fuerza alta e impulso bajo → salir.</li>
 <li><b>Rezagado:</b> fuerza e impulso bajos sin señal de suelo → no tocar.</li></ul>
-<p><b>Agotamiento (↑/↓):</b> número de señales de extremo alcista/bajista: RSI semanal &gt;70 o &lt;30, distancia a la media de 40 semanas en el 10 % extremo de su historia, fuerza relativa en el percentil &gt;90 o &lt;10.</p>""", []),
+<p><b>Agotamiento (↑/↓):</b> número de señales de extremo alcista/bajista (de 4): RSI semanal &gt;70 o &lt;30; distancia a la media de 40 semanas en el 10 % extremo de la historia del fondo; fuerza relativa en el percentil &gt;90 o &lt;10 de la historia del fondo; divergencia entre precio y RSI en 26 semanas.</p>""", []),
     "mapa_macro": ("Mapa macro", """
 <p>Sitúa cada variable por su <b>nivel</b> (percentil histórico, eje horizontal) y su <b>impulso</b> (percentil de su cambio reciente, eje vertical). Sirve para ver en qué fase está cada pata del régimen: si está alta y todavía subiendo, alta y frenando, etc.</p>
 <p>Una variable alta y subiendo puede estar cerca de su clímax: el margen está en anticipar el giro, no en seguirla.</p>
-<p><b>Pulsa sobre una variable</b> (o elígela en la lista de debajo) para leer su recorrido y su tendencia explicados con palabras.</p>""", []),
+<p><b>Ejes de 0 a 100.</b> Son percentiles sobre toda la historia de cada variable (no sobre las últimas 24 semanas): el rastro solo enseña el camino reciente.</p>
+<p><b>Pulsa sobre una variable</b> (o elígela en la lista de debajo) para leer qué significa para el mercado.</p>""", []),
+    "regimen": ("Régimen macro", """
+<p>Combina la <b>dirección del crecimiento</b> (encuestas industriales de la Fed) y la <b>dirección de la inflación</b> (IPC interanual) en cuatro entornos, siguiendo el «reloj de inversión» de Merrill Lynch:</p>
+<ul><li><b>Recuperación</b> (crecimiento ↑, inflación ↓): históricamente lo mejor para la bolsa.</li>
+<li><b>Sobrecalentamiento</b> (↑, ↑): materias primas y energía; sufren los bonos. Las buenas noticias pueden ser malas porque alejan las bajadas de tipos.</li>
+<li><b>Estanflación</b> (↓, ↑): lo peor para bolsa y bonos; aguantan liquidez, materias primas, oro y estrategias de tendencia.</li>
+<li><b>Desaceleración</b> (↓, ↓): bonos del Tesoro. Los datos flojos pueden ser buenos para la bolsa mientras no haya recesión.</li></ul>
+<p><b>Por qué las noticias buenas pueden ser malas.</b> Un dato económico mezcla dos mensajes: beneficios futuros y tipos de interés futuros. En expansión pesa más el de los tipos, así que un dato flojo suele subir la bolsa; en recesión pesa más el de los beneficios y ocurre lo contrario (Boyd, Hu y Jagannathan, 2005). Con la inflación por encima del objetivo, un dato fuerte se lee como «más tipos».</p>
+<p><b>Cuidado.</b> Son tendencias históricas, no leyes. Aquí el crecimiento se aproxima con encuestas regionales de la Fed y se usa la dirección (cambio a 6 meses), no el nivel frente a su tendencia como en el estudio original. El umbral del 3 % de inflación es de criterio propio.</p>""",
+        [("Merrill Lynch (2004): The Investment Clock (Greetham y Hartnett)", "https://ks3-cn-beijing.ksyun.com/attachment/114caaf9991619a15e81a0a4b590837f"),
+         ("Boyd, Hu y Jagannathan (2005), Journal of Finance", "https://doi.org/10.1111/j.1540-6261.2005.00742.x"),
+         ("Neville, Draaisma, Funnell, Harvey y Van Hemert (2021), The Best Strategies for Inflationary Times", "https://ssrn.com/abstract=3813202")]),
     "variables": ("Variables", """
-<p><b>Percentil:</b> qué parte de su historia queda por debajo del valor actual (100 = máximo histórico).</p>
+<p><b>Percentil histórico:</b> qué parte de toda su historia, desde el año indicado, queda por debajo del valor actual (100 = máximo histórico).</p>
 <p><b>Cambio reciente:</b> 13 semanas para los datos rápidos y 6 meses para los mensuales.</p>
 <p><b>Fase:</b> misma lógica que los motores, aplicada a nivel e impulso. "Madurez" = nivel alto (percentil &gt;80) con el impulso frenando.</p>
 <p>⚠ = el dato lleva más tiempo del normal sin actualizarse.</p>""", []),
@@ -185,9 +204,12 @@ INFO = {
 <p><b>Por qué estas.</b> Sustituyen al ISM manufacturero, que no está disponible en descarga gratuita.</p>""",
         [("Fed Filadelfia (FRED)", "https://fred.stlouisfed.org/data/GACDFSA066MSFRBPHI"),
          ("Fed Nueva York (FRED)", FRED + "GACDISA066MSFRBNY")]),
-    "Estrés de crédito (Baa − bono 10 años)": ("Diferencial Baa − bono 10 años", """
-<p>Rentabilidad extra que pagan los bonos corporativos con calificación Baa (el escalón más bajo del grado de inversión) sobre el bono del Tesoro a 10 años. Diario desde 1986.</p>
-<p><b>Lectura.</b> Bajo = complacencia y crédito fácil; subiendo con rapidez = estrés. Es la serie de crédito que usan las reglas, porque permite comparar con 2002, 2008, 2020 y 2022.</p>""",
+    "Estrés de crédito: diferencial Baa − Tesoro 10 años (puntos)": ("Diferencial de crédito Baa − Tesoro a 10 años", """
+<p><b>Qué es.</b> La diferencia entre lo que rinden los bonos de empresas con calificación <b>Baa</b> de Moody's y lo que rinde el <b>bono del Tesoro de EE. UU. a 10 años</b> (no la letra a corto plazo).</p>
+<ul><li><b>Baa</b> es el escalón más bajo del grado de inversión: empresas solventes, pero justo por encima del <i>high yield</i>.</li>
+<li>Se mide en <b>puntos porcentuales</b>: 1,6 significa que una empresa Baa paga un 1,6 % anual más que el Tesoro por pedir prestado a plazo parecido.</li>
+<li>Diario desde 1986 (aquí, cierres semanales).</li></ul>
+<p><b>Lectura.</b> Sube = el mercado exige más por prestar a empresas: miedo a impagos, suele anticipar o acompañar caídas de la bolsa. Baja = confianza. Muy bajo = complacencia. Es la serie de crédito que usan las reglas porque permite comparar con 2002, 2008, 2020 y 2022.</p>""",
         [("Serie BAA10Y (FRED)", FRED + "BAA10Y")]),
     "Liquidez neta de la Fed (billones $)": ("Liquidez neta de la Fed", """
 <p>Balance de la Fed menos la cuenta del Tesoro en la Fed menos el repo inverso. Aproxima la liquidez que la Fed deja en el sistema financiero.</p>
@@ -390,6 +412,7 @@ COLOR_GRUPO = {"Renta variable": "#2f6fdb", "Factores": "#8e44ad", "Renta fija":
                "Alternativos": "#16a085"}
 # Familias que no entran en el TOP 3 (coberturas y estrategias, no motores para rotar por tendencia)
 EXCLUIR_TOP = {"Alternativos"}
+MOTOR_INICIAL = "SPY"       # único motor marcado al abrir la página
 B100_SEMANAS = 260          # historia máxima de la vista en base 100 (5 años)
 DESC = {
     "ACWI": "iShares MSCI ACWI: bolsa mundial, países desarrollados y emergentes.",
@@ -929,12 +952,28 @@ def fase_motor(precio_w, rs, X, Y):
     dy = Y.diff().iloc[-3:]
     sube3 = bool((dy > 0).all())
     baja3 = bool((dy < 0).all())
-    r = rsi(precio_w).iloc[-1]
+    rr = rsi(precio_w)
+    r = rr.iloc[-1]
     dist = (precio_w / precio_w.rolling(40).mean() - 1).dropna()
     pd_ = pct(dist)
     prs = pct(rs)
-    alc = int(r > 70) + int(pd_ >= 90) + int(prs > 90)
-    baj = int(r < 30) + int(pd_ <= 10) + int(prs < 10)
+    # 4.ª señal: divergencia. Precio en la zona de máximos (mínimos) de 26 semanas con el RSI ya
+    # 10 puntos por debajo (encima) de su máximo (mínimo) de esas 26 semanas.
+    c26, r26 = precio_w.iloc[-26:], rr.iloc[-26:]
+    div_alc = bool(precio_w.iloc[-1] >= 0.98 * c26.max() and r <= r26.max() - 10)
+    div_baj = bool(precio_w.iloc[-1] <= 1.02 * c26.min() and r >= r26.min() + 10)
+    desde = precio_w.index[0].year
+    s_alc = [n for n, ok in (
+        (f"RSI semanal por encima de 70 ({fmt(r, 0)})", r > 70),
+        (f"precio muy alejado por encima de su media de 40 semanas (10 % más extremo desde {desde})", pd_ >= 90),
+        (f"fuerza frente a la liquidez en máximos (percentil {fmt(prs, 0)} desde {desde})", prs > 90),
+        ("divergencia: precio en máximos de 6 meses, pero con el RSI ya más bajo que en el pico", div_alc)) if ok]
+    s_baj = [n for n, ok in (
+        (f"RSI semanal por debajo de 30 ({fmt(r, 0)})", r < 30),
+        (f"precio muy alejado por debajo de su media de 40 semanas (10 % más extremo desde {desde})", pd_ <= 10),
+        (f"fuerza frente a la liquidez en mínimos (percentil {fmt(prs, 0)} desde {desde})", prs < 10),
+        ("divergencia: precio en mínimos de 6 meses, pero con el RSI ya más alto que en el fondo", div_baj)) if ok]
+    alc, baj = len(s_alc), len(s_baj)
     if x >= 100 and y < 100:
         f = "GIRO"
     elif x >= 100:
@@ -943,7 +982,7 @@ def fase_motor(precio_w, rs, X, Y):
         f = "ARRANQUE"
     else:
         f = "SUELO" if (sube3 or baj >= 2) else "REZAGADO"
-    return f, {"rsi": r, "alc": alc, "baj": baj}
+    return f, {"rsi": r, "alc": alc, "baj": baj, "s_alc": s_alc, "s_baj": s_baj}
 
 
 CLAVE_COND = {"Precio cerca de la media de 200 semanas": "c_ma200",
@@ -993,7 +1032,8 @@ def variable_macro(nombre, s, frecuencia, periodos, modo="dif"):
             "impulso": ultimo, "fase": fase, "frecuencia": frecuencia,
             "rx": rastro_x, "ry": rastro_y, "modo": modo, "periodos": periodos,
             "fechas": list(ventana), "vals": [float(s.loc[d]) for d in ventana],
-            "frenando3": frenando3, "acelera3": acelera3, "nivel_imp": pct(imp)}
+            "frenando3": frenando3, "acelera3": acelera3, "nivel_imp": pct(imp),
+            "desde": s.index[0].year, "desde_imp": imp.index[0].year}
 
 
 V_MEMORIA = 13
@@ -1225,63 +1265,6 @@ def estacionalidad(sh, spy_diario):
 # GRÁFICOS SVG
 # ----------------------------------------------------------------------------
 
-def svg_rrg(puntos, titulo_x, titulo_y, centro=100.0, rango=None, ancho=680, alto=520,
-            cuadrantes=("LIDERANDO", "DEBILITÁNDOSE", "REZAGADO", "MEJORANDO")):
-    """puntos: lista de dict(et, xs, ys, color)."""
-    xs = [v for p in puntos for v in p["xs"]]
-    ys = [v for p in puntos for v in p["ys"]]
-    if not xs:
-        return "<p class='nota'>Sin datos suficientes.</p>"
-    if rango is None:
-        dx = max(abs(max(xs) - centro), abs(min(xs) - centro), 1) * 1.15
-        dy = max(abs(max(ys) - centro), abs(min(ys) - centro), 1) * 1.15
-        x0, x1, y0, y1 = centro - dx, centro + dx, centro - dy, centro + dy
-    else:
-        x0, x1, y0, y1 = rango
-    m = 40
-
-    def X(v):
-        return m + (v - x0) / (x1 - x0) * (ancho - 2 * m)
-
-    def Y(v):
-        return alto - m - (v - y0) / (y1 - y0) * (alto - 2 * m)
-
-    cx, cy = X(centro), Y(centro)
-    s = [f'<svg viewBox="0 0 {ancho} {alto}" class="grafico" role="img">']
-    s.append(f'<rect x="{cx}" y="{m}" width="{ancho - m - cx}" height="{cy - m}" fill="#e8f6ee"/>')
-    s.append(f'<rect x="{cx}" y="{cy}" width="{ancho - m - cx}" height="{alto - m - cy}" fill="#fdf5dc"/>')
-    s.append(f'<rect x="{m}" y="{cy}" width="{cx - m}" height="{alto - m - cy}" fill="#fbe9e7"/>')
-    s.append(f'<rect x="{m}" y="{m}" width="{cx - m}" height="{cy - m}" fill="#e7effc"/>')
-    s.append(f'<line x1="{cx}" y1="{m}" x2="{cx}" y2="{alto - m}" stroke="#999" stroke-width="1"/>')
-    s.append(f'<line x1="{m}" y1="{cy}" x2="{ancho - m}" y2="{cy}" stroke="#999" stroke-width="1"/>')
-    et = [(cuadrantes[0], ancho - m - 6, m + 16, "end", "#1f7a45"),
-          (cuadrantes[1], ancho - m - 6, alto - m - 8, "end", "#9a7400"),
-          (cuadrantes[2], m + 6, alto - m - 8, "start", "#a33"),
-          (cuadrantes[3], m + 6, m + 16, "start", "#2457b0")]
-    for t, x, y, a, c in et:
-        s.append(f'<text x="{x}" y="{y}" text-anchor="{a}" class="cuad" fill="{c}">{t}</text>')
-    s.append(f'<text x="{ancho / 2}" y="{alto - 8}" text-anchor="middle" class="eje">{e(titulo_x)} →</text>')
-    s.append(f'<text x="14" y="{alto / 2}" text-anchor="middle" class="eje" transform="rotate(-90 14 {alto / 2})">{e(titulo_y)} →</text>')
-    for p in puntos:
-        s.append(f'<g class="serie" data-t="{e(p["et"])}" data-k="{e(p["et"])}" data-g="{e(p.get("g", ""))}" '
-                 f'data-tip="{e(p.get("tip", p["et"]) + " Pulsa para ver su dinámica.")}">')
-        pts = " ".join(f"{X(a):.1f},{Y(b):.1f}" for a, b in zip(p["xs"], p["ys"]))
-        s.append(f'<polyline class="r" points="{pts}" fill="none" stroke="{p["color"]}" stroke-width="1.6" stroke-opacity="0.55"/>')
-        for a, b in zip(p["xs"][1:-1], p["ys"][1:-1]):
-            s.append(f'<circle class="r" cx="{X(a):.1f}" cy="{Y(b):.1f}" r="1.6" fill="{p["color"]}" fill-opacity="0.45"/>')
-        a0, b0 = p["xs"][0], p["ys"][0]
-        s.append(f'<rect class="r" x="{X(a0) - 3.5:.1f}" y="{Y(b0) - 3.5:.1f}" width="7" height="7" fill="#fff" stroke="{p["color"]}" stroke-width="1.6"/>')
-        a, b = p["xs"][-1], p["ys"][-1]
-        s.append(f'<circle cx="{X(a):.1f}" cy="{Y(b):.1f}" r="4.5" fill="{p["color"]}"/>')
-        if X(a) > ancho - 110:
-            s.append(f'<text x="{X(a) - 6:.1f}" y="{Y(b) - 5:.1f}" text-anchor="end" class="etq">{e(p["et"])}</text>')
-        else:
-            s.append(f'<text x="{X(a) + 6:.1f}" y="{Y(b) - 5:.1f}" class="etq">{e(p["et"])}</text>')
-        s.append("</g>")
-    s.append("</svg>")
-    return "".join(s)
-
-
 def svg_linea(serie, alto=120, ancho=680, color="#2f6fdb", ref=None):
     s = serie.dropna()
     if len(s) < 2:
@@ -1310,31 +1293,96 @@ def svg_linea(serie, alto=120, ancho=680, color="#2f6fdb", ref=None):
 CUAD_MOTOR = ("LIDERANDO", "DEBILITÁNDOSE", "REZAGADO", "MEJORANDO")
 CUAD_MACRO = ("ALTO Y SUBIENDO", "ALTO Y BAJANDO", "BAJO Y BAJANDO", "BAJO Y SUBIENDO")
 
-# (cuadrante actual, ¿impulso subiendo en 4 semanas?) -> (tendencia, explicación)
+# (cuadrante actual, ¿impulso subiendo en 4 semanas?) -> (tendencia, resumen en lenguaje llano)
 VEREDICTO_MOTOR = {
     ("LIDERANDO", True): ("ALCISTA Y ACELERANDO",
-                          "Bate a la liquidez y la ventaja crece cada semana."),
+                          "Lo está haciendo mejor que la liquidez y la ventaja se amplía."),
     ("LIDERANDO", False): ("ALCISTA, PERDIENDO EMPUJE",
-                           "Sigue batiendo a la liquidez, pero la ventaja crece cada vez menos. "
-                           "Si el impulso baja de 100 pasará a debilitándose."),
+                           "Sigue haciéndolo mejor que la liquidez, pero la ventaja crece cada vez más despacio."),
     ("DEBILITÁNDOSE", False): ("ALCISTA AGOTÁNDOSE",
-                               "Sigue por encima de la liquidez, pero pierde ventaja cada semana: va camino de rezagado."),
+                               "Ha ido mejor que la liquidez, pero ahora devuelve parte de esa ventaja semana a semana."),
     ("DEBILITÁNDOSE", True): ("PAUSA DENTRO DE UNA SUBIDA",
-                              "Pierde ventaja, pero el impulso vuelve a subir: puede volver a liderando sin pasar por rezagado."),
+                              "Ha cedido parte de su ventaja, pero en el último mes vuelve a coger fuerza."),
     ("REZAGADO", False): ("BAJISTA Y EMPEORANDO",
-                          "Lo hace peor que la liquidez y cada vez peor."),
+                          "Lo está haciendo peor que la liquidez y cada vez peor."),
     ("REZAGADO", True): ("BAJISTA, PERO FRENANDO",
-                         "Sigue peor que la liquidez, pero cada vez menos. Si el impulso supera 100 pasará a mejorando."),
+                         "Sigue haciéndolo peor que la liquidez, pero la caída relativa se frena."),
     ("MEJORANDO", True): ("ALCISTA EN FORMACIÓN",
-                          "Todavía por debajo de la liquidez, pero acercándose. Si la fuerza supera 100 pasará a liderando."),
+                          "Todavía va por detrás de la liquidez, pero está recuperando terreno con fuerza."),
     ("MEJORANDO", False): ("MEJORA QUE PIERDE FUELLE",
-                           "Sigue mejorando, pero cada vez más despacio: riesgo de volver a rezagado sin llegar a liderar."),
+                           "Está recuperando terreno frente a la liquidez, pero cada vez más despacio."),
 }
 
+TRAMO_MOTOR = {"LIDERANDO": "por delante de la liquidez y ganando ventaja",
+               "DEBILITÁNDOSE": "por delante de la liquidez, pero perdiendo ventaja",
+               "REZAGADO": "por detrás de la liquidez y perdiendo terreno",
+               "MEJORANDO": "por detrás de la liquidez, pero recuperando"}
+TRAMO_MACRO = {"ALTO Y SUBIENDO": "por encima de su nivel típico y subiendo más deprisa de lo habitual",
+               "ALTO Y BAJANDO": "por encima de su nivel típico, pero bajando o subiendo menos de lo habitual",
+               "BAJO Y BAJANDO": "por debajo de su nivel típico y bajando o subiendo menos de lo habitual",
+               "BAJO Y SUBIENDO": "por debajo de su nivel típico, pero subiendo más deprisa de lo habitual"}
 
-NOTA_ALTERNATIVO = {
-    "VIXY": "En la volatilidad, una tendencia alcista significa que aumenta el miedo en el mercado.",
-    "BTAL": "En el anti-beta, una tendencia alcista suele coincidir con caídas de la bolsa o con rotación hacia valores defensivos.",
+QUE_HACER = {
+    "SUELO": "Vigilar: puede estar formando suelo, pero aún no hay confirmación.",
+    "ARRANQUE": "Construir poco a poco: es el principio del ciclo, donde está el margen, pero muchos arranques fallan.",
+    "ACELERACIÓN": "Mantener: la tendencia está viva.",
+    "MADUREZ": "Empezar a salir: la subida da señales de cansancio antes del clímax.",
+    "GIRO": "Salir: la ventaja frente a la liquidez se está perdiendo.",
+    "REZAGADO": "No tocar: va peor que la liquidez y no hay señales de suelo.",
+}
+
+# Qué suele significar para el mercado que cada motor vaya mejor (fuerte) o peor (débil) que la liquidez.
+LECTURA_MOTOR = {
+    "ACWI": ("El mercado premia tener acciones de todo el mundo frente a tener liquidez: apetito por el riesgo.",
+             "La bolsa mundial pierde atractivo frente a la liquidez: el mercado está reduciendo riesgo."),
+    "SPY": ("Apetito por la bolsa de EE. UU., sobre todo por las grandes empresas que más pesan en el índice.",
+            "La bolsa de EE. UU. pierde atractivo frente a la liquidez: el mercado reduce riesgo o duda de las grandes empresas."),
+    "RSP": ("La subida es amplia: participan muchas empresas, no solo las grandes. Suele ser señal de mercado sano.",
+            "La empresa media de EE. UU. va peor que la liquidez: o el mercado baja, o la subida es estrecha y depende de pocas grandes compañías."),
+    "VGK": ("El dinero busca Europa: suele coincidir con un euro firme, mejora del ciclo europeo o salida de dinero desde EE. UU.",
+            "Europa pierde atractivo: el dinero prefiere otros mercados o la liquidez."),
+    "EEM": ("Apetito por los emergentes: suele coincidir con dólar débil, materias primas firmes y crecimiento global.",
+            "Los emergentes pierden: suele coincidir con dólar fuerte, tipos altos en EE. UU. o miedo al crecimiento global."),
+    "QQQ": ("Apetito por la tecnología: suele coincidir con tipos a la baja o entusiasmo por los beneficios del sector.",
+            "La tecnología pierde fuerza: suele coincidir con tipos al alza o dudas sobre sus valoraciones."),
+    "IWM": ("Las empresas pequeñas lideran: el mercado apuesta por la economía de EE. UU. y por tipos más bajos (dependen más del crédito).",
+            "Las pequeñas sufren: dudas sobre la economía de EE. UU. o crédito caro."),
+    "VTV": ("El estilo value lidera: suele darse con tipos o inflación al alza y con rotación desde la tecnología.",
+            "Value pierde terreno: el mercado prefiere crecimiento o refugio."),
+    "VUG": ("El crecimiento lidera: suele darse con tipos a la baja y confianza en los beneficios futuros.",
+            "Growth pierde terreno: suele coincidir con tipos al alza o recogida de beneficios en las grandes tecnológicas."),
+    "MTUM": ("Las tendencias del mercado se mantienen: lo que más ha subido sigue subiendo.",
+             "El momentum falla: suele indicar un cambio de liderazgo en el mercado."),
+    "QUAL": ("El mercado prefiere empresas sólidas y poco endeudadas: actitud prudente, típica de fases maduras del ciclo.",
+             "La calidad queda atrás: el mercado busca más riesgo (inicio de ciclo) o todo cae a la vez."),
+    "BTAL": ("Las acciones defensivas baten a las arriesgadas: suele coincidir con caídas de la bolsa o con miedo.",
+             "Las acciones arriesgadas baten a las defensivas: mercado con apetito por el riesgo."),
+    "TLT": ("Los bonos largos suben, es decir, sus tipos bajan: el mercado descuenta bajadas de tipos, menos inflación o busca refugio.",
+            "Los bonos largos caen, es decir, sus tipos suben: presión de inflación, de déficit público o de tipos altos durante más tiempo. "
+            "Tipos largos al alza también pesan sobre la bolsa cara."),
+    "IEF": ("Los bonos a 7-10 años suben: el mercado espera tipos más bajos o busca refugio.",
+            "Los bonos a 7-10 años caen: el mercado espera tipos altos durante más tiempo."),
+    "TIP": ("Los bonos ligados a la inflación lideran: el mercado se protege frente a la inflación o espera tipos reales más bajos.",
+            "Los bonos ligados a la inflación pierden: tipos reales al alza o menos miedo a la inflación."),
+    "HYG": ("El crédito de peor calidad va bien: confianza en las empresas y poco miedo a impagos. Suele acompañar a una bolsa alcista.",
+            "El crédito de peor calidad sufre: el mercado teme impagos. Históricamente suele anticipar o acompañar caídas de la bolsa."),
+    "DBC": ("Las materias primas lideran: presión inflacionista o demanda global fuerte.",
+            "Las materias primas pierden: menos inflación o miedo a la demanda global."),
+    "XLE": ("La energía lidera: petróleo y gas al alza, presión inflacionista.",
+            "La energía pierde: petróleo débil y menos presión de precios."),
+    "GLD": ("El oro lidera: demanda de refugio, desconfianza en las divisas o expectativa de tipos reales más bajos.",
+            "El oro pierde frente a la liquidez: tipos reales altos o menos miedo."),
+    "URA": ("El uranio lidera: entra dinero en un tema estructural (energía nuclear), muy volátil.",
+            "El uranio pierde fuerza: sale dinero de un tema muy volátil."),
+    "UUP": ("Dólar fuerte: endurece las condiciones financieras globales y suele perjudicar a emergentes y materias primas. "
+            "Para un inversor en euros, sube el valor de lo que tiene en dólares.",
+            "Dólar débil: suele favorecer a emergentes y materias primas. Para un inversor en euros, resta rentabilidad a lo que tiene en dólares."),
+    "FXE": ("Euro fuerte frente al dólar: para un inversor en euros, lo que tiene en dólares rinde menos.",
+            "Euro débil frente al dólar: para un inversor en euros, lo que tiene en dólares rinde más."),
+    "DBMF": ("Las estrategias de tendencia ganan: hay tendencias claras y duraderas en tipos, divisas o materias primas, al alza o a la baja.",
+             "Las estrategias de tendencia sufren: mercados sin dirección o con giros bruscos."),
+    "VIXY": ("La volatilidad sube: aumenta el miedo en el mercado.",
+             "La volatilidad cae o está dormida: mercado tranquilo (VIXY pierde valor con el tiempo en esa situación)."),
 }
 
 
@@ -1364,45 +1412,45 @@ def _tramos(qs):
     return runs
 
 
-def _recorrido(runs, fechas, fmt_f, sg, pl, nombres, prep="el"):
-    """Describe el paso por los cuadrantes. nombres: (arriba-dcha, abajo-dcha, abajo-izda, arriba-izda)."""
+def _recorrido(runs, fechas, fmt_f, sg, pl, nombres, frases, mensual=False):
+    """Lista en lenguaje llano por dónde ha pasado, con fechas, y si ha seguido el ciclo normal."""
     def u(L):
         return f"{L} {sg if L == 1 else pl}"
-    if len(runs) == 1:
-        return f"Todo el rastro ({'desde el' if prep == 'el' else 'desde'} {fd(fmt_f(fechas[0]))}) en <b>{runs[0][0]}</b>."
-    if len(runs) <= 3:
-        q0, _, L0 = runs[0]
-        partes = [f"Al inicio del rastro ({fd(fmt_f(fechas[0]))}) estaba en <b>{q0}</b> ({u(L0)})"]
-        for q, k, L in runs[1:-1]:
-            partes.append(f"pasó a <b>{q}</b> {prep} {fd(fmt_f(fechas[k]))} ({u(L)})")
-        q, k, L = runs[-1]
-        txt = ", ".join(partes) + f" y entró en <b>{q}</b> {prep} {fd(fmt_f(fechas[k]))}, donde lleva {u(L)}."
-    else:
-        txt = " → ".join(f"<b>{q}</b> ({fd(fmt_f(fechas[k]))}, {u(L)})" for q, k, L in runs) + "."
-    # Sentido de los cambios: el ciclo habitual es horario (arriba-izda → arriba-dcha → abajo-dcha → abajo-izda)
-    ciclo = [nombres[3], nombres[0], nombres[1], nombres[2]]
-    h = a = 0
-    for (q1, _, _), (q2, _, _) in zip(runs[:-1], runs[1:]):
-        d = (ciclo.index(q2) - ciclo.index(q1)) % 4
-        h += d == 1
-        a += d != 1
-    if a == 0:
-        txt += " Ha seguido el giro habitual del ciclo (sentido horario)."
-    elif a >= h:
-        txt += " Va y viene entre cuadrantes, a menudo contra el giro habitual: tendencia poco clara."
-    else:
-        txt += " Sobre todo en el giro habitual del ciclo (sentido horario), con algún retroceso."
+    items = []
+    for q, k, L in runs:
+        fin = fechas[k + L - 1]
+        if k + L == len(fechas):
+            tramo = f"{'Desde' if mensual else 'Desde el'} {fd(fmt_f(fechas[k]))}"
+        elif L == 1:
+            tramo = f"{'Mes de' if mensual else 'Semana del'} {fd(fmt_f(fechas[k]))}"
+        else:
+            tramo = f"{fd(fmt_f(fechas[k]))} → {fd(fmt_f(fin))}"
+        items.append(f"<li>{tramo} ({u(L)}): {frases[q]}.</li>")
+    txt = "<ul class=\"exp-lista\">" + "".join(items) + "</ul>"
+    if len(runs) >= 3:
+        ciclo = [nombres[3], nombres[0], nombres[1], nombres[2]]
+        h = a = 0
+        for (q1, _, _), (q2, _, _) in zip(runs[:-1], runs[1:]):
+            d = (ciclo.index(q2) - ciclo.index(q1)) % 4
+            h += d == 1
+            a += d != 1
+        if a == 0:
+            txt += "<p>Ha seguido el orden normal del ciclo, sin pasos atrás.</p>"
+        elif a >= h:
+            txt += "<p>Ha ido y venido sin un orden claro: la tendencia es poco fiable.</p>"
+        else:
+            txt += "<p>En general ha seguido el orden normal del ciclo, con algún paso atrás.</p>"
     return txt
 
 
-def _con_signo(x, dec=1, suf="\u00a0%"):
+def _con_signo(x, dec=1, suf=" %"):
     if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))):
         return "—"
     return ("+" if x >= 0 else "−") + fmt(abs(x), dec, suf)
 
 
 def narrativa_motor(m):
-    """Texto con la dinámica de un motor en el mapa de rotación."""
+    """Texto en lenguaje de mercado con la dinámica de un motor en el mapa de rotación."""
     t, xs, ys, fechas = m["t"], m["xs"], m["ys"], m["fechas"]
     n = len(xs)
     if n < 6:
@@ -1412,63 +1460,152 @@ def narrativa_motor(m):
     runs = _tramos(qs)
     q = qs[-1]
     dx, dy = xs[-1] - xs[-5], ys[-1] - ys[-5]
-    tit, txt = VEREDICTO_MOTOR[(q, dy > 0)]
+    tit, resumen = VEREDICTO_MOTOR[(q, dy > 0)]
     color = COLOR_GRUPO.get(GRUPO.get(t, ""), "#555")
-    accion = "solo referencia" if GRUPO.get(t) in EXCLUIR_TOP else ACCION[m["fase"]].lower()
+    alternativo = GRUPO.get(t) in EXCLUIR_TOP
     P = [f'<h3><span class="chip" style="background:{color}"></span>{e(t)} · {e(m["nombre"])}</h3>',
-         f'<p class="exp-ver">Tendencia frente a la liquidez: <b>{tit}</b><br>{txt}</p>']
+         f'<p class="exp-ver"><b>En pocas palabras.</b> {resumen}<br>Tendencia frente a la liquidez: <b>{tit}</b>.</p>']
+    # Qué dice del mercado
+    fuerte, debil = LECTURA_MOTOR.get(t, ("", ""))
+    if fuerte:
+        if q in ("LIDERANDO",):
+            lec = fuerte
+        elif q == "REZAGADO":
+            lec = debil
+        elif q == "MEJORANDO":
+            lec = f"{debil} <i>Si la recuperación continúa:</i> {fuerte[0].lower() + fuerte[1:]}"
+        else:
+            lec = f"{fuerte} <i>Si sigue perdiendo ventaja:</i> {debil[0].lower() + debil[1:]}"
+        P.append(f'<p><span class="et">Qué dice del mercado</span> {lec}</p>')
+    # Qué hacer
+    hacer = ("Solo referencia: es una cobertura o una estrategia, no un motor que se rote por tendencia."
+             if alternativo else QUE_HACER[m["fase"]])
     avisos = []
     if math.hypot(xs[-1] - 100, ys[-1] - 100) < 1.0:
-        avisos.append("Está muy cerca del centro del mapa: señal débil, puede cambiar de cuadrante con poco movimiento.")
+        avisos.append("Está muy cerca del punto neutro: señal débil, puede cambiar de situación con poco movimiento.")
     elif math.hypot(dx, dy) < 0.4:
-        avisos.append("Casi sin movimiento en las últimas 4 semanas: señal débil.")
-    if m.get("alc", 0) >= 2:
-        avisos.append(f"Subida muy estirada ({m['alc']} de 3 señales de agotamiento): riesgo de fin de ciclo.")
-    if m.get("baj", 0) >= 2:
-        avisos.append(f"Caída muy estirada ({m['baj']} de 3 señales de agotamiento): posible zona de suelo.")
+        avisos.append("Casi sin movimiento en el último mes: señal débil.")
+    if m.get("s_alc"):
+        avisos.append(f"Señales de cansancio de la subida ({len(m['s_alc'])} de 4): {'; '.join(m['s_alc'])}.")
+    if m.get("s_baj"):
+        avisos.append(f"Señales de agotamiento de la caída ({len(m['s_baj'])} de 4): {'; '.join(m['s_baj'])}.")
+    P.append(f'<p><span class="et">Qué hacer según las reglas</span> Fase {m["fase"].lower()}. {hacer}</p>')
     if avisos:
-        P.append('<p class="exp-aviso">' + " ".join(avisos) + "</p>")
+        P.append('<p class="exp-aviso">' + "<br>".join(avisos) + "</p>")
+    # Rentabilidades
+    rents = m.get("rents") or {}
+    if rents:
+        nombres_p = {4: "Último mes", 13: "3 meses", 26: "6 meses"}
+        filas = "".join(f"<tr><td>{nombres_p[k]}</td><td>{_con_signo(a)}</td><td>{_con_signo(b)}</td>"
+                        f"<td><b>{_con_signo(a - b, 1, '')}</b></td></tr>" for k, (a, b) in sorted(rents.items()))
+        P.append(f'<p><span class="et">Rentabilidad hasta el {fd(f_(fechas[-1]))}</span></p>'
+                 f'<table class="exp-tabla"><tr><th></th><th>{e(t)}</th><th>Liquidez (BIL)</th><th>Diferencia (puntos)</th></tr>{filas}</table>')
+    # Recorrido
+    P.append(f'<p><span class="et">Cómo ha llegado hasta aquí (últimas 24 semanas)</span></p>'
+             + _recorrido(runs, fechas, f_, "semana", "semanas", CUAD_MOTOR, TRAMO_MOTOR))
     if t in NOTA_ALTERNATIVO:
         P.append(f'<p class="nota">{NOTA_ALTERNATIVO[t]}</p>')
-    P.append(f"<p><span class=\"et\">Recorrido</span> {_recorrido(runs, fechas, f_, 'semana', 'semanas', CUAD_MOTOR)}</p>")
-    # Últimas 4 semanas
-    pasos = [math.hypot(xs[k] - xs[k - 4], ys[k] - ys[k - 4]) for k in range(4, n)]
-    tipico = float(np.median(pasos)) if pasos else 0.0
-    d4 = math.hypot(dx, dy)
-    if d4 < 0.4:
-        mov = "prácticamente parado"
-    else:
-        if dx >= 0 and dy >= 0:
-            rumbo, destino = "arriba y a la derecha", "LIDERANDO"
-        elif dx >= 0:
-            rumbo, destino = "abajo y a la derecha", "DEBILITÁNDOSE"
-        elif dy < 0:
-            rumbo, destino = "abajo y a la izquierda", "REZAGADO"
-        else:
-            rumbo, destino = "arriba y a la izquierda", "MEJORANDO"
-        ciclo = ["MEJORANDO", "LIDERANDO", "DEBILITÁNDOSE", "REZAGADO"]
-        salto = (ciclo.index(destino) - ciclo.index(q)) % 4
-        rumbo += (f" (más adentro de {q})" if salto == 0 else
-                  " (hacia el centro del mapa)" if salto == 2 else f" (hacia {destino})")
-        ritmo = ", más deprisa de lo habitual" if tipico and d4 > 1.5 * tipico else \
-                ", más despacio de lo habitual" if tipico and d4 < 0.6 * tipico else ""
-        mov = f"se mueve {rumbo}{ritmo}"
-    P.append(f"<p><span class=\"et\">Últimas 4 semanas</span> {mov[0].upper() + mov[1:]}. Fuerza de {fmt(xs[-5], 1)} a {fmt(xs[-1], 1)}; "
-             f"impulso de {fmt(ys[-5], 1)} a {fmt(ys[-1], 1)}.</p>")
-    arriba = sum(1 for x in xs if x >= 100)
-    if arriba == n:
-        pers = "Todo el rastro por encima de 100 en fuerza: ventaja persistente frente a la liquidez."
-    elif arriba == 0:
-        pers = "Todo el rastro por debajo de 100 en fuerza: debilidad persistente frente a la liquidez."
-    else:
-        pers = f"Por encima de 100 en fuerza {arriba} de las {n} semanas del rastro."
-    P.append(f"<p><span class=\"et\">Constancia</span> {pers}</p>")
-    if m.get("r_m") is not None and m.get("r_ref") is not None:
-        P.append(f"<p><span class=\"et\">Rentabilidad desde el inicio del rastro</span> ({fd(f_(fechas[0]))}): {e(t)} {_con_signo(m['r_m'])} · "
-                 f"letras del Tesoro {_con_signo(m['r_ref'])}.</p>")
-    P.append(f'<p class="nota">Fase según las reglas: {m["fase"]} → {accion}. Rastro de cierres semanales; '
-             f'última semana cerrada: {fd(f_(fechas[-1]))}.</p>')
+    P.append(f'<p class="nota">"Por delante" o "por detrás" de la liquidez compara su evolución reciente frente a las letras del Tesoro '
+             f'con su media de los últimos 6 meses. Fuerza ahora {fmt(xs[-1], 1)} (100 = esa media); impulso {fmt(ys[-1], 1)} '
+             f'(100 = sin cambio en 4 semanas; hace 4 semanas, {fmt(ys[-5], 1)}).</p>')
     return "".join(P)
+
+
+NOTA_ALTERNATIVO = {
+    "VIXY": "En la volatilidad, una tendencia alcista significa que aumenta el miedo en el mercado.",
+    "BTAL": "En el anti-beta, una tendencia alcista suele coincidir con caídas de la bolsa o con rotación hacia valores defensivos.",
+}
+
+
+# ----------------------------------------------------------------------------
+# RÉGIMEN MACRO (crecimiento × inflación) y lectura de cada variable
+# ----------------------------------------------------------------------------
+
+REGIMENES = {
+    (True, False): ("RECUPERACIÓN", "crecimiento mejorando e inflación bajando",
+                    "Históricamente, el mejor entorno para la bolsa. Los bonos aguantan.",
+                    "Favorece: bolsa, sobre todo cíclica; crédito. Penaliza: poco."),
+    (True, True): ("SOBRECALENTAMIENTO", "crecimiento mejorando e inflación subiendo",
+                   "Suelen ir mejor las materias primas y la energía; los bonos largos sufren. Aquí las buenas noticias económicas "
+                   "pueden ser malas para el mercado: alejan las bajadas de tipos.",
+                   "Favorece: materias primas, energía, value. Penaliza: bonos largos; bolsa cara si suben los tipos."),
+    (False, True): ("ESTANFLACIÓN", "crecimiento empeorando e inflación subiendo",
+                    "El peor entorno para la bolsa y los bonos a la vez. Históricamente aguantan mejor la liquidez, las materias primas, "
+                    "el oro y las estrategias de tendencia.",
+                    "Favorece: liquidez, materias primas, oro, tendencia (managed futures). Penaliza: bolsa y bonos."),
+    (False, False): ("DESACELERACIÓN", "crecimiento empeorando e inflación bajando",
+                     "Suelen ir mejor los bonos del Tesoro. Al principio, los datos económicos flojos pueden ser buenos para la bolsa "
+                     "porque anticipan bajadas de tipos; si la economía entra en recesión, dejan de serlo.",
+                     "Favorece: bonos del Tesoro, calidad. Penaliza: materias primas; bolsa cíclica si llega la recesión."),
+}
+INFLACION_ALTA = 3.0   # % interanual: por encima, la Fed tiene poco margen (objetivo 2 %). Criterio.
+
+
+def regimen_macro(mac, clave):
+    inf, cre = mac.get(clave[0]), mac.get(clave[1])
+    if not inf or not cre:
+        return None
+    sube_c, sube_i = cre["impulso"] > 0, inf["impulso"] > 0
+    nom, desc, lectura, favor = REGIMENES[(sube_c, sube_i)]
+    return {"nombre": nom, "desc": desc, "lectura": lectura, "favor": favor, "sube_c": sube_c, "sube_i": sube_i,
+            "inf": inf["valor"], "inf_alta": inf["valor"] >= INFLACION_ALTA, "cre": cre["valor"],
+            "f_inf": inf["fecha"], "f_cre": cre["fecha"]}
+
+
+def lectura_macro(corto, v, reg):
+    """Qué suele significar para el mercado el movimiento actual de la variable, según el régimen."""
+    sube = v["impulso"] > 0
+    niv = v["nivel"]
+    if corto == "Inflación":
+        if sube:
+            t = "Malo para los bonos: más inflación suele traer tipos más altos durante más tiempo."
+            if v["valor"] >= INFLACION_ALTA:
+                t += (f" Con la inflación en {fmt(v['valor'], 1)} %, por encima del objetivo del 2 % de la Fed, hay poco margen para "
+                      "bajar tipos, lo que también pesa sobre la bolsa cara.")
+            t += " Históricamente favorece a materias primas, energía y estrategias de tendencia."
+        else:
+            t = "Favorable para los bonos y, si el crecimiento aguanta, para la bolsa: abre la puerta a bajadas de tipos."
+            if v["valor"] >= INFLACION_ALTA:
+                t += f" Aun así sigue en {fmt(v['valor'], 1)} %, por encima del objetivo del 2 %: la Fed puede tardar en reaccionar."
+        return t
+    if corto == "Crecimiento":
+        zona = "en terreno de expansión (por encima de 0)" if v["valor"] > 0 else "en terreno de contracción (por debajo de 0)"
+        if reg is None:
+            return f"Las encuestas están {zona}."
+        if sube and (reg["sube_i"] or reg["inf_alta"]):
+            t = ("Buena noticia para los beneficios empresariales, pero con la inflación "
+                 f"{'subiendo' if reg['sube_i'] else 'todavía alta'} puede ser mala noticia para el mercado: aleja las bajadas de tipos "
+                 "y presiona a los bonos. Es el caso típico de «las buenas noticias son malas».")
+        elif sube:
+            t = "Favorable para la bolsa y el crédito: más beneficios sin presión de tipos."
+        elif reg["sube_i"]:
+            t = "Combinación de riesgo: la economía se enfría mientras la inflación sube (estanflación). Malo para la bolsa y los bonos a la vez."
+        else:
+            t = ("Mientras la economía siga en expansión, un enfriamiento puede ser buena noticia para la bolsa a corto plazo porque "
+                 "anticipa bajadas de tipos: es el caso típico de «las malas noticias son buenas». Si deriva en recesión deja de serlo, "
+                 "porque caen los beneficios. Favorable para los bonos del Tesoro.")
+        return f"Las encuestas están {zona}. {t}"
+    if corto == "Crédito (estrés)":
+        if sube:
+            t = ("El mercado exige más interés por prestar a empresas: crece el miedo a impagos. Suele anticipar o acompañar caídas "
+                 "de la bolsa y del high yield.")
+            if niv >= 80:
+                t += " Además está en zona alta para su historia: estrés serio."
+        else:
+            t = "Menos miedo a impagos: entorno favorable para la bolsa y el crédito."
+            if niv >= 80:
+                t += (" El diferencial sigue alto pero ya baja: es la señal típica de que lo peor del estrés ha pasado "
+                      "(condición «crédito girando» de la puerta).")
+            elif niv <= 20:
+                t += " Pero está muy bajo para su historia: complacencia, queda poco margen de mejora."
+        return t
+    if corto == "Liquidez":
+        if sube:
+            return ("La Fed deja más dinero en el sistema financiero: suele apoyar a los activos de riesgo. "
+                    "Relación muy seguida por el mercado, pero con poca evidencia académica sólida.")
+        return ("La Fed retira dinero del sistema financiero: viento en contra para los activos de riesgo. "
+                "Relación muy seguida por el mercado, pero con poca evidencia académica sólida.")
+    return ""
 
 
 def _ritmo_hist(imp, p):
@@ -1480,11 +1617,14 @@ def _ritmo_hist(imp, p):
         return "de las bajadas más fuertes de su historia"
     if imp < 0 and p <= 30:
         return "bajada mayor de lo habitual"
-    return "cambio dentro de lo habitual"
+    return "ritmo dentro de lo habitual"
 
 
-def narrativa_macro(corto, v, color):
-    """Texto con la dinámica de una variable en el mapa macro."""
+UNIDAD_MACRO = {"Inflación": " %", "Crecimiento": "", "Crédito (estrés)": " puntos", "Liquidez": " billones $"}
+
+
+def narrativa_macro(corto, v, color, reg):
+    """Texto en lenguaje de mercado con la dinámica de una variable del mapa macro."""
     fechas, n = v["fechas"], len(v["rx"])
     if n < 2:
         return ""
@@ -1502,30 +1642,28 @@ def narrativa_macro(corto, v, color):
                "BAJANDO, PERO CADA VEZ MÁS DESPACIO" if v["frenando3"] else "BAJANDO")
     else:
         tit = "SIN CAMBIOS"
+    dec = 0 if abs(v["valor"]) >= 1000 else 2
+    uni = UNIDAD_MACRO.get(corto, "")
+    per = f'{v["periodos"]} {"meses" if mensual else "semanas"}'
+    cambio = _con_signo(imp, 2, " %" if v["modo"] == "pct" else " puntos")
     niv = v["nivel"]
-    zona = ("nivel muy alto para su historia" if niv >= 80 else
-            "nivel muy bajo para su historia" if niv <= 20 else "nivel normal para su historia")
     pista = ""
     if niv >= 80 and imp > 0 and v["frenando3"]:
-        pista = "Alta y subiendo cada vez más despacio: es lo típico cerca de un techo."
-    elif niv >= 80 and imp > 0:
-        pista = "En zona alta y todavía acelerando: vigilar el momento en que empiece a frenar."
+        pista = " Alta y subiendo cada vez más despacio: es lo típico cerca de un techo."
     elif niv <= 20 and imp < 0 and v["frenando3"]:
-        pista = "Baja y cayendo cada vez más despacio: es lo típico cerca de un suelo."
-    elif niv <= 20 and imp < 0:
-        pista = "En zona baja y todavía cayendo con fuerza."
-    dec = 0 if abs(v["valor"]) >= 1000 else 2
-    unidad = "\u00a0%" if v["modo"] == "pct" else ""
-    per = f'{v["periodos"]} {"meses" if mensual else "semanas"}'
+        pista = " Baja y cayendo cada vez más despacio: es lo típico cerca de un suelo."
     P = [f'<h3><span class="chip" style="background:{color}"></span>{e(corto)}</h3>',
-         f'<p class="exp-ver">Tendencia: <b>{tit}</b> · {zona} (percentil {fmt(niv, 0)}).'
-         + (f"<br>{pista}" if pista else "") + "</p>",
-         f'<p><span class="et">Dato</span> {fmt(v["valor"], dec)} ({fd(f_(v["fecha"]))}). Al inicio del rastro: '
-         f'{fmt(v["vals"][0], dec)} ({fd(f_(fechas[0]))}, percentil {fmt(v["rx"][0], 0)}).</p>',
-         f'<p><span class="et">Cambio en {per}</span> {_con_signo(imp, 2, unidad)}: {_ritmo_hist(imp, v["nivel_imp"])} '
-         f'(percentil {fmt(v["nivel_imp"], 0)} de sus cambios).</p>',
-         f"<p><span class=\"et\">Recorrido</span> {_recorrido(runs, fechas, f_, sg, pl, CUAD_MACRO, 'en' if mensual else 'el')}</p>",
-         f'<p class="nota">Fase según las reglas: {v["fase"]}. {"Dato mensual: un punto por mes." if mensual else "Cierres semanales."}</p>']
+         f'<p class="exp-ver"><b>En pocas palabras.</b> Está en {fmt(v["valor"], dec)}{uni} ({fd(f_(v["fecha"]))}) y '
+         f'{"sube" if imp > 0 else "baja" if imp < 0 else "no cambia"}: {cambio} en {per}, {_ritmo_hist(imp, v["nivel_imp"])}.{pista}'
+         f'<br>Tendencia: <b>{tit}</b>.</p>',
+         f'<p><span class="et">Qué significa para el mercado</span> {lectura_macro(corto, v, reg)}</p>',
+         f'<p><span class="et">Frente a su historia</span> Percentil {fmt(niv, 0)} de toda su historia (desde {fd(v["desde"])}): '
+         f'más alta que el {fmt(niv, 0)} % de los datos desde entonces. Hace 24 semanas estaba en {fmt(v["vals"][0], dec)}{uni} '
+         f'(percentil {fmt(v["rx"][0], 0)}).</p>',
+         f'<p><span class="et">Cómo ha llegado hasta aquí (últimas 24 semanas)</span></p>'
+         + _recorrido(runs, fechas, f_, sg, pl, CUAD_MACRO, TRAMO_MACRO, mensual),
+         f'<p class="nota">Fase según las reglas: {v["fase"].lower()}. "Nivel típico" = su mediana histórica (percentil 50). '
+         f'{"Dato mensual: un punto por mes." if mensual else "Cierres semanales."}</p>']
     return "".join(P)
 
 
@@ -1610,11 +1748,18 @@ def main():
                 r_ref = (ref_w.loc[fechas[-1]] / ref_w.loc[fechas[0]] - 1) * 100
             except Exception:  # noqa
                 pass
+            # Rentabilidades a 4, 13 y 26 semanas (motor y letras), hasta la última semana cerrada
+            rents = {}
+            pm_, pr_ = W[t].loc[:fechas[-1]], ref_w.loc[:fechas[-1]]
+            for k in (4, 13, 26):
+                if len(pm_) > k and len(pr_) > k:
+                    rents[k] = ((pm_.iloc[-1] / pm_.iloc[-1 - k] - 1) * 100, (pr_.iloc[-1] / pr_.iloc[-1 - k] - 1) * 100)
             motores.append({"t": t, "nombre": nombre, "X": X.iloc[-1], "Y": Y.iloc[-1],
                             "xs": list(X.iloc[-24:].values), "ys": list(Y.iloc[-24:].values),
-                            "fechas": fechas, "r_m": r_m, "r_ref": r_ref,
+                            "fechas": fechas, "r_m": r_m, "r_ref": r_ref, "rents": rents,
                             "dy4": float(Y.iloc[-1] - Y.iloc[-5]),
                             "fase": f, "rsi": extra["rsi"], "alc": extra["alc"], "baj": extra["baj"],
+                            "s_alc": extra["s_alc"], "s_baj": extra["s_baj"],
                             "fecha": X.index[-1]})
 
     # --- Variables
@@ -1699,7 +1844,7 @@ def main():
         crec = pd.concat(enc, axis=1).dropna().mean(axis=1).rolling(3).mean().dropna()
         add(variable_macro("Crecimiento (encuestas Fed, media 3 meses)", crec, "m", 6))
     if baa_w is not None:
-        add(variable_macro("Estrés de crédito (Baa − bono 10 años)", baa_w, "s", 13))
+        add(variable_macro("Estrés de crédito: diferencial Baa − Tesoro 10 años (puntos)", baa_w, "s", 13))
     if liq_w is not None:
         add(variable_macro("Liquidez neta de la Fed (billones $)", liq_w, "s", 13, "pct"))
     for sid, per in (("NFCI", 13), ("STLFSI4", 13), ("T10Y3M", 13), ("DFII10", 13), ("T10YIE", 13)):
@@ -1772,11 +1917,13 @@ def main():
     coinciden = sum(1 for v in votos.values() if direccion is not None and v == direccion)
     conv = "BAJA" if coinciden <= 1 else "MEDIA" if coinciden <= 3 else "ALTA"
     ritmo = {"BAJA": "No construir", "MEDIA": "Completar el tramo en 2–3 meses", "ALTA": "Completar el tramo en 1 mes"}[conv]
-    d_txt = None
+    d_txt = d_txt_html = None
     if "DSPX" in cb and "COR3M" in cb:
         p_d, p_c = pct(cb["DSPX"]), pct(cb["COR3M"])
         d_txt = ("Favorable a selección de valores (alfa)" if (p_d > 60 and p_c < 40)
                  else "Favorable a índice (beta)" if (p_d < 40 and p_c > 60) else "Neutral")
+        d_txt_html = (f'{e(d_txt)} <span class="nota">· dispersión: percentil {fmt(p_d, 0)} (desde {fd(cb["DSPX"].index[0].year)}) · '
+                      f'correlación: percentil {fmt(p_c, 0)} (desde {fd(cb["COR3M"].index[0].year)})</span>')
 
     # --- Calendario y estacionalidad
     eventos, en_blackout = calendario()
@@ -1786,13 +1933,14 @@ def main():
     # HTML
     # ------------------------------------------------------------------------
     H = []
+    rrg_datos = {}
     H.append(CABECERA.replace("{{FECHA}}", f"{AHORA + pd.Timedelta(hours=1):%d-%m-%Y %H:%M}"))
 
     # ===== PESTAÑA 1: DIAGNOSTICADOR
     H.append('<section id="t1" class="pest activa">')
 
     # Condiciones de indexación
-    H.append(f'<h2 class="primero">Condiciones de indexación{i("condiciones")}</h2>')
+    H.append(f'<h2 class="primero">Condiciones de indexación · plazo de 6 a 12 meses{i("condiciones")}</h2>')
     H.append('<table><tr><th>Índice</th><th>Condiciones</th><th>Por qué</th><th>Tendencia</th><th>Fase</th>'
              f'<th>Distancia a media 200 sem.</th><th>Puerta{i("puntos")}</th></tr>')
     for c in conds:
@@ -1801,7 +1949,9 @@ def main():
                  f'<td class="motivo">{e(c["motivo"])}</td><td>{c["tend"]}</td>'
                  f'<td>{e((c["fase"] or "—").capitalize())}</td><td>{fmt(c["dist"], 1, " %")}</td>'
                  f'<td>{c["puntos"]}/6 · tramo {c["tramo"]}</td></tr>')
-    H.append('</table>')
+    H.append('</table><p class="nota">Plazo: de 6 a 12 meses. Se calculan con cierres semanales: tendencia con la media de 40 semanas '
+             '(unos 9 meses), fase del mapa con 26 semanas y puerta con la media de 200 semanas (unos 4 años). '
+             'No sirven para decidir a días o semanas: para eso, la pestaña Opciones.</p>')
 
     # TOP 3
     def lista_top(ms):
@@ -1821,7 +1971,10 @@ def main():
              f'{" · " + fd(format(fecha_ecy, "%m-%Y")) if fecha_ecy is not None else ""}</div></div>')
     vt = "ACTIVO" if comun["veto"] else "no"
     H.append(f'<div class="tarjeta {"alerta" if comun["veto"] else ""}"><div class="t">Veto por crédito{i("veto")}</div><div class="v">{vt}</div>'
-             f'<div class="s">Baa−10a a 13 semanas: {fmt(comun.get("baa_13s"), 1, " %")}</div></div>')
+             f'<div class="s">Diferencial Baa − Tesoro 10 años: {fmt(baa_w.iloc[-1] if baa_w is not None else None, 2)} puntos · '
+             f'{_con_signo(comun.get("baa_13s"))} en 13 semanas'
+             f'{"" if comun.get("baa_13s") is None else (" (se estrecha: menos miedo)" if comun["baa_13s"] < 0 else " (se ensancha: más miedo)")}'
+             f'</div></div>')
     H.append(f'<div class="tarjeta"><div class="t">Convicción{i("conviccion")}</div><div class="v">{conv}</div>'
              f'<div class="s">{e(ritmo)}</div></div>')
     H.append(f'<div class="tarjeta"><div class="t">Sentimiento (0–100){i("sentimiento")}</div><div class="v">{fmt(sent, 0)}</div>'
@@ -1851,7 +2004,7 @@ def main():
     for k, v in votos.items():
         H.append(f'<tr><td>{e(k)}{i(CLAVE_BLOQUE.get(k, ""))}</td><td>{"a favor del riesgo" if v > 0 else "en contra del riesgo" if v < 0 else "neutral"}</td></tr>')
     H.append(f'<tr><td>Dirección del mapa (RV global){i("direccion")}</td><td>{e(fase_acwi or "sin dato")}</td></tr>')
-    H.append(f'<tr><td>D · Beta o alfa{i("b_D")}</td><td>{e(d_txt or "sin dato")}</td></tr>')
+    H.append(f'<tr><td>D · Beta o alfa{i("b_D")}</td><td>{d_txt_html if d_txt else "sin dato"}</td></tr>')
     H.append(f'<tr><td>Sentimiento (réplica Euphoriameter, 0–100){i("sentimiento")}</td><td>{fmt(sent, 0)}</td></tr>')
     H.append('</table>')
 
@@ -1862,21 +2015,24 @@ def main():
              '<label class="periodo" hidden>Periodo <select id="b100-per"><option value="24">24 semanas</option>'
              '<option value="52">1 año</option><option value="156">3 años</option><option value="260">5 años</option></select></label></div>')
     H.append(f'<p class="nota solo-mapa">Eje horizontal: fuerza relativa{i("fuerza")} · eje vertical: impulso{i("impulso")}. '
-             'Rastro de 24 semanas con cierres semanales: □ inicio · ● ahora. Pasa el cursor por un motor para resaltarlo; '
-             '<b>púlsalo para leer su dinámica</b>.</p>')
+             'Rastro de 24 semanas con cierres semanales: □ inicio · ● ahora. La escala se ajusta a los motores marcados '
+             '(por defecto, solo SPY). <b>Pulsa un motor para leer qué dice del mercado.</b></p>')
     H.append('<p class="nota solo-b100" hidden>Cuánto vale hoy lo que valía 100 al inicio del periodo (dividendos incluidos, en dólares). '
              'Línea negra discontinua: letras del Tesoro (BIL). Escala logarítmica. <b>Pulsa una línea para leer la dinámica del motor.</b></p>')
     grupos_presentes = [g for g in COLOR_GRUPO if any(GRUPO.get(m["t"]) == g for m in motores)]
     H.append('<div class="leyenda">' + "".join(
-        f'<label><input type="checkbox" class="fg" value="{e(g)}" checked> <span class="chip" style="background:{COLOR_GRUPO[g]}"></span>{e(g)}</label>'
+        f'<label><input type="checkbox" class="fg" value="{e(g)}"> <span class="chip" style="background:{COLOR_GRUPO[g]}"></span>{e(g)}</label>'
         for g in grupos_presentes) + '<label class="solo-mapa"><input type="checkbox" class="rastros" data-mapa="mapa-motores" checked> <b>Mostrar rastros</b></label></div>')
     H.append('<div class="filtros">' + "".join(
-        f'<label data-tip="{e(m["t"] + " · " + DESC.get(m["t"], ""))}"><input type="checkbox" class="fm" value="{m["t"]}" data-g="{e(GRUPO.get(m["t"], ""))}" checked> {e(m["t"])}</label>'
+        f'<label data-tip="{e(m["t"] + " · " + DESC.get(m["t"], ""))}"><input type="checkbox" class="fm" value="{m["t"]}" data-g="{e(GRUPO.get(m["t"], ""))}"{" checked" if m["t"] == MOTOR_INICIAL else ""}> {e(m["t"])}</label>'
         for m in motores) + '</div>')
-    pts = [{"et": m["t"], "xs": m["xs"], "ys": m["ys"], "g": GRUPO.get(m["t"], ""),
-            "color": COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555"),
-            "tip": m["t"] + " · " + DESC.get(m["t"], "") + " Fase: " + m["fase"].lower() + "."} for m in motores]
-    H.append(f'<div id="mapa-motores" class="solo-mapa" data-exp="mapa-motores">{svg_rrg(pts, "Fuerza relativa", "Impulso")}</div>')
+    rrg_datos["mapa-motores"] = {
+        "c": 100, "q": CUAD_MOTOR, "tx": "Fuerza frente a la liquidez (100 = su media de 6 meses)",
+        "ty": "Impulso (100 = sin cambio en 4 semanas)",
+        "s": [{"k": m["t"], "g": GRUPO.get(m["t"], ""), "c": COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555"),
+               "tip": m["t"] + " · " + DESC.get(m["t"], "") + " Fase: " + m["fase"].lower() + ". Pulsa para ver su dinámica.",
+               "x": [round(float(v), 2) for v in m["xs"]], "y": [round(float(v), 2) for v in m["ys"]]} for m in motores]}
+    H.append('<div id="mapa-motores" class="solo-mapa" data-exp="mapa-motores"></div>')
     H.append('<div id="b100" class="solo-b100" data-exp="mapa-motores" hidden><div class="b100-graf"></div>'
              '<div class="b100-rank"></div></div>')
     exp_motores = {m["t"]: narrativa_motor(m) for m in motores}
@@ -1892,9 +2048,9 @@ def main():
     def agot_txt(m):
         partes = []
         if m["alc"]:
-            partes.append(f'alcista {m["alc"]} de 3')
+            partes.append(f'alcista {m["alc"]} de 4')
         if m["baj"]:
-            partes.append(f'bajista {m["baj"]} de 3')
+            partes.append(f'bajista {m["baj"]} de 4')
         return " · ".join(partes) or "—"
     for m in sorted(motores, key=lambda z: orden.index(z["fase"])):
         g = GRUPO.get(m["t"], "")
@@ -1910,26 +2066,42 @@ def main():
 
     # Mapa macro
     clave = ["Inflación (IPC interanual, %)", "Crecimiento (encuestas Fed, media 3 meses)",
-             "Estrés de crédito (Baa − bono 10 años)", "Liquidez neta de la Fed (billones $)"]
+             "Estrés de crédito: diferencial Baa − Tesoro 10 años (puntos)", "Liquidez neta de la Fed (billones $)"]
     cortos = {clave[0]: "Inflación", clave[1]: "Crecimiento", clave[2]: "Crédito (estrés)", clave[3]: "Liquidez"}
     color_macro = {"Inflación": "#c0392b", "Crecimiento": "#2f6fdb", "Crédito (estrés)": "#a0672a", "Liquidez": "#1f9d55"}
-    pm = [{"et": cortos[k], "xs": mac[k]["rx"], "ys": mac[k]["ry"], "color": color_macro[cortos[k]], "g": cortos[k],
-           "tip": cortos[k] + " · fase " + mac[k]["fase"].lower() + "."}
-          for k in clave if k in mac and len(mac[k]["rx"]) >= 1]
+    reg = regimen_macro(mac, clave)
+    rrg_datos["mapa-macro"] = {
+        "c": 50, "rango": [-4, 104, -4, 104], "q": CUAD_MACRO,
+        "tx": "Nivel: percentil sobre toda su historia (0 = mínimo, 100 = máximo)",
+        "ty": "Impulso: percentil de su cambio reciente sobre toda su historia",
+        "s": [{"k": cortos[k], "g": cortos[k], "c": color_macro[cortos[k]],
+               "tip": cortos[k] + " · fase " + mac[k]["fase"].lower() + ". Pulsa para ver qué significa.",
+               "x": [round(float(v), 1) for v in mac[k]["rx"]], "y": [round(float(v), 1) for v in mac[k]["ry"]]}
+              for k in clave if k in mac and len(mac[k]["rx"]) >= 1]}
+    if reg:
+        H.append(f'<h2>Régimen macro{i("regimen")}</h2>')
+        H.append(f'<div class="tarjeta regimen"><div class="v">{reg["nombre"]}</div>'
+                 f'<div class="s">{e(reg["desc"])} · inflación {fmt(reg["inf"], 1)} % ({fd(format(reg["f_inf"], "%m-%Y"))}) · '
+                 f'encuestas de actividad {fmt(reg["cre"], 1)} ({fd(format(reg["f_cre"], "%m-%Y"))})</div>'
+                 f'<p>{e(reg["lectura"])}</p><p class="nota">{e(reg["favor"])}</p>'
+                 + (f'<p class="nota">Inflación por encima del {fmt(INFLACION_ALTA, 0)} %: el mercado tiende a leer los datos fuertes de '
+                    'actividad como «más tipos» (buenas noticias = malas) y los flojos como «bajadas de tipos» (malas noticias = buenas), '
+                    'mientras no haya recesión.</p>' if reg["inf_alta"] else "")
+                 + '</div>')
     H.append(f'<h2>Mapa macro{i("mapa_macro")}</h2><p class="nota">Eje horizontal: nivel{i("nivel_macro")} · eje vertical: impulso{i("impulso_macro")}. '
-             'Rastro de 24 semanas: □ inicio · ● ahora (los datos mensuales tienen un punto por mes). '
-             '<b>Pulsa una variable para leer su dinámica.</b></p>')
+             'Los dos ejes, de 0 a 100, son percentiles sobre <b>toda la historia</b> de cada variable; el rastro solo enseña el camino '
+             'de las últimas 24 semanas (□ inicio · ● ahora; los datos mensuales tienen un punto por mes). '
+             '<b>Pulsa una variable para leer qué significa para el mercado.</b></p>')
     H.append('<div class="leyenda">' + "".join(
         f'<span><span class="chip" style="background:{c}"></span>{e(g)}</span>' for g, c in color_macro.items()) + '</div>')
-    H.append('<div id="mapa-macro" data-exp="mapa-macro">' + svg_rrg(pm, "Nivel (percentil)", "Impulso (percentil)", centro=50, rango=(0, 100, 0, 100),
-                     cuadrantes=CUAD_MACRO) + '</div>')
-    exp_macro = {cortos[k]: narrativa_macro(cortos[k], mac[k], color_macro[cortos[k]]) for k in clave if k in mac}
+    H.append('<div id="mapa-macro" data-exp="mapa-macro"></div>')
+    exp_macro = {cortos[k]: narrativa_macro(cortos[k], mac[k], color_macro[cortos[k]], reg) for k in clave if k in mac}
     exp_macro = {k: v for k, v in exp_macro.items() if v}
     H.append('<label class="exp-elige">Ver la dinámica de <select class="exp-sel" data-mapa="mapa-macro"><option value="">— elige una variable —</option>'
              + "".join(f'<option value="{e(k)}">{e(k)}</option>' for k in exp_macro) + '</select></label>')
     H.append('<div id="exp-mapa-macro" class="explica" data-mapa="mapa-macro" hidden></div>')
 
-    H.append(f'<h2>Variables{i("variables")}</h2><table class="ord"><tr><th>Variable</th><th>Valor</th><th>Fecha</th><th>Percentil{i("nivel_macro")}</th><th>Cambio reciente{i("impulso_macro")}</th><th>Fase</th></tr>')
+    H.append(f'<h2>Variables{i("variables")}</h2><table class="ord"><tr><th>Variable</th><th>Valor</th><th>Fecha</th><th>Percentil histórico{i("nivel_macro")}</th><th>Cambio reciente{i("impulso_macro")}</th><th>Fase</th></tr>')
     for v in macro:
         f_ref = v["fecha"] + pd.offsets.MonthEnd(0) if v["frecuencia"] == "m" else v["fecha"]
         viejo = not antiguedad_ok(f_ref, "m" if v["frecuencia"] == "m" else "s")
@@ -1937,7 +2109,7 @@ def main():
         per = f'{v["periodos"]} {"meses" if v["frecuencia"] == "m" else "sem."}'
         H.append(f'<tr><td>{e(v["nombre"])}{i(v["nombre"])}</td><td>{fmt(v["valor"], 0 if abs(v["valor"]) >= 1000 else 2)}</td>'
                  f'<td class="{"viejo" if viejo else ""}">{fd(format(v["fecha"], "%d-%m-%Y"))}{" ⚠" if viejo else ""}</td>'
-                 f'<td>{fmt(v["nivel"], 0)}</td><td>{fmt(v["impulso"], 2, unidad)} ({per})</td>'
+                 f'<td>{fmt(v["nivel"], 0)} <span class="nota">desde {fd(v["desde"])}</span></td><td>{fmt(v["impulso"], 2, unidad)} ({per})</td>'
                  f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{v["fase"]}</span></td></tr>')
     H.append('</table><p class="nota">⚠ = dato desfasado.</p>')
     H.append('</section>')
@@ -1950,7 +2122,8 @@ def main():
         signo = "POSITIVA" if gm["gex_mm"] > 0 else "NEGATIVA"
         efecto = "amortigua los movimientos" if gm["gex_mm"] > 0 else "amplifica los movimientos"
         hg = gm["hist"]["gex_mm"].dropna()
-        inten = f"intensidad: percentil {fmt(pct(hg), 0)} de su histórico" if len(hg) >= 20 else "intensidad: histórico aún corto"
+        inten = (f"intensidad: percentil {fmt(pct(hg), 0)} de su histórico propio (desde {fd(format(hg.index[0], '%m-%Y'))})"
+                 if len(hg) >= 20 else "intensidad: histórico aún corto")
         H.append(f'<div class="tarjeta {"alerta" if gm["gex_mm"] < 0 else ""}"><div class="t">Gamma de los creadores de mercado (aprox.){i("gamma")}</div>'
                  f'<div class="v">{signo}</div><div class="s">{efecto} · {inten}</div></div>')
         if gm["giro"]:
@@ -1970,7 +2143,7 @@ def main():
     H.append('</div>')
 
     if pc is not None and len(pc):
-        H.append(f'<h2>Ratio put/call{i("putcall")}</h2><table><tr><th>Tipo</th><th>Último</th><th>Media 10 días</th><th>Percentil (media 10 d.)</th></tr>')
+        H.append(f'<h2>Ratio put/call{i("putcall")}</h2><table><tr><th>Tipo</th><th>Último</th><th>Media 10 días</th><th>Percentil (media 10 d.) sobre su histórico propio</th></tr>')
         nombres_pc = {"total": "Total", "acciones": "Acciones", "indices": "Índices", "spx": "S&P 500"}
         for col, nom in nombres_pc.items():
             if col not in pc.columns:
@@ -2000,7 +2173,7 @@ def main():
             cls = "extremo" if (p3 >= 90 or p3 <= 10) else ""
             H.append(f'<tr><td>{e(k)}</td><td>{fmt(s.iloc[-1], 1, " %")}</td><td>{fmt(ch, 1)}</td>'
                      f'<td class="{cls}">{fmt(p3, 0)}</td><td>{fd(format(s.index[-1], "%d-%m-%Y"))}</td></tr>')
-        H.append('</table><p class="nota">Percentil ≥ 90 o ≤ 10 = posicionamiento extremo (resaltado).</p>')
+        H.append('</table><p class="nota">Percentil de los últimos 3 años ≥ 90 o ≤ 10 = posicionamiento extremo (resaltado).</p>')
     H.append('</section>')
 
     # ===== PESTAÑA 3: CALENDARIO
@@ -2066,6 +2239,8 @@ def main():
     H.append('<div id="modal" class="modal"><div class="caja"><button class="cerrar" aria-label="Cerrar">×</button>'
              '<h3 id="modal-t"></h3><div id="modal-c"></div></div></div>')
     H.append('<script id="info-datos" type="application/json">' + info_json() + '</script>')
+    H.append('<script id="rrg-datos" type="application/json">'
+             + json.dumps(rrg_datos, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>')
     H.append('<script id="exp-datos" type="application/json">'
              + json.dumps({"mapa-motores": exp_motores, "mapa-macro": exp_macro}, ensure_ascii=False).replace("</", "<\\/")
              + '</script>')
@@ -2154,6 +2329,12 @@ h2.primero{margin-top:6px}
 .explica p{margin:6px 0}
 .explica .exp-ver{font-size:1.02em;background:rgba(47,111,219,.07);border-radius:8px;padding:6px 9px}
 .explica .exp-aviso{color:#a0522d;font-weight:600}
+.explica ul.exp-lista{margin:4px 0 6px;padding-left:18px}.explica ul.exp-lista li{margin:2px 0}
+.explica table.exp-tabla{width:auto;margin:4px 0 8px;font-size:.92em;background:none}
+.explica table.exp-tabla th,.explica table.exp-tabla td{padding:2px 14px 2px 0;text-align:right;border:0;background:none;font-variant-numeric:tabular-nums}
+.explica table.exp-tabla th:first-child,.explica table.exp-tabla td:first-child{text-align:left}
+.grafico .tk{font-size:10.5px;fill:#56677a}
+.tarjeta.regimen{max-width:760px}.tarjeta.regimen p{margin:6px 0;font-size:.9em}
 .explica .et{display:inline-block;color:var(--s);font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-right:5px}
 .cerrar-exp{position:absolute;top:6px;right:10px;border:0;background:none;font-size:1.4em;cursor:pointer;color:var(--s);line-height:1}
 [data-exp] svg.grafico{cursor:pointer}
@@ -2209,9 +2390,58 @@ document.querySelectorAll('nav button').forEach(function(b){b.addEventListener('
  document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('activa')});
  document.querySelectorAll('.pest').forEach(function(x){x.classList.remove('activa')});
  b.classList.add('activa');document.getElementById(b.dataset.t).classList.add('activa');});});
-document.querySelectorAll('.fm').forEach(function(c){c.addEventListener('change',function(){
- document.querySelectorAll('#mapa-motores g.serie').forEach(function(g){
-  if(g.getAttribute('data-t')===c.value){g.style.display=c.checked?'':'none';}});});});
+// ---- Mapas de rotación (motores y macro), con escalas numéricas
+(function(){var R={};try{R=JSON.parse(document.getElementById('rrg-datos').textContent)||{};}catch(e){}
+ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+ function num(v){return String(+v.toFixed(2)).replace('.',',');}
+ function paso(m){var c=[0.5,1,2,2.5,5,10,20,25,50];for(var i=0;i<c.length;i++)if(m/c[i]<=4)return c[i];return 100;}
+ function dibujar(id){var cont=document.getElementById(id),D=R[id];if(!cont||!D)return;
+  var ser=D.s||[];
+  if(id==='mapa-motores'){var vis={};document.querySelectorAll('.fm').forEach(function(c){if(c.checked)vis[c.value]=1;});
+   ser=ser.filter(function(z){return vis[z.k];});}
+  if(!ser.length){cont.innerHTML='<p class="nota">Marca algún motor en las casillas de arriba.</p>';return;}
+  var c=D.c,x0,x1,y0,y1;
+  if(D.rango){x0=D.rango[0];x1=D.rango[1];y0=D.rango[2];y1=D.rango[3];}
+  else{var dx=2,dy=2;ser.forEach(function(z){z.x.forEach(function(v){dx=Math.max(dx,Math.abs(v-c));});
+    z.y.forEach(function(v){dy=Math.max(dy,Math.abs(v-c));});});dx*=1.15;dy*=1.15;x0=c-dx;x1=c+dx;y0=c-dy;y1=c+dy;}
+  var W=680,H=520,ml=56,mr=16,mt=16,mb=52;
+  function X(v){return ml+(v-x0)/(x1-x0)*(W-ml-mr);}function Y(v){return H-mb-(v-y0)/(y1-y0)*(H-mt-mb);}
+  var cx=X(c),cy=Y(c),o=['<svg viewBox="0 0 '+W+' '+H+'" class="grafico" role="img">'];
+  o.push('<rect x="'+cx+'" y="'+mt+'" width="'+(W-mr-cx)+'" height="'+(cy-mt)+'" fill="#e8f6ee"/>');
+  o.push('<rect x="'+cx+'" y="'+cy+'" width="'+(W-mr-cx)+'" height="'+(H-mb-cy)+'" fill="#fdf5dc"/>');
+  o.push('<rect x="'+ml+'" y="'+cy+'" width="'+(cx-ml)+'" height="'+(H-mb-cy)+'" fill="#fbe9e7"/>');
+  o.push('<rect x="'+ml+'" y="'+mt+'" width="'+(cx-ml)+'" height="'+(cy-mt)+'" fill="#e7effc"/>');
+  var sx=D.rango?10:paso(x1-c),sy=D.rango?10:paso(y1-c),t;
+  for(t=Math.ceil(x0/sx-1e-9)*sx;t<=x1+1e-9;t+=sx){if(D.rango&&(t<0||t>100))continue;var px=X(t).toFixed(1);
+   o.push('<line x1="'+px+'" y1="'+mt+'" x2="'+px+'" y2="'+(H-mb)+'" stroke="#ffffff" stroke-width="1"/>');
+   o.push('<line x1="'+px+'" y1="'+(H-mb)+'" x2="'+px+'" y2="'+(H-mb+4)+'" stroke="#8a97a8"/>');
+   o.push('<text x="'+px+'" y="'+(H-mb+16)+'" text-anchor="middle" class="tk">'+num(t)+'</text>');}
+  for(t=Math.ceil(y0/sy-1e-9)*sy;t<=y1+1e-9;t+=sy){if(D.rango&&(t<0||t>100))continue;var py=Y(t).toFixed(1);
+   o.push('<line x1="'+ml+'" y1="'+py+'" x2="'+(W-mr)+'" y2="'+py+'" stroke="#ffffff" stroke-width="1"/>');
+   o.push('<line x1="'+(ml-4)+'" y1="'+py+'" x2="'+ml+'" y2="'+py+'" stroke="#8a97a8"/>');
+   o.push('<text x="'+(ml-7)+'" y="'+(+py+3.5)+'" text-anchor="end" class="tk">'+num(t)+'</text>');}
+  o.push('<line x1="'+cx+'" y1="'+mt+'" x2="'+cx+'" y2="'+(H-mb)+'" stroke="#999"/>');
+  o.push('<line x1="'+ml+'" y1="'+cy+'" x2="'+(W-mr)+'" y2="'+cy+'" stroke="#999"/>');
+  var q=D.q;[[q[0],W-mr-6,mt+16,'end','#1f7a45'],[q[1],W-mr-6,H-mb-8,'end','#9a7400'],[q[2],ml+6,H-mb-8,'start','#a33'],
+   [q[3],ml+6,mt+16,'start','#2457b0']].forEach(function(a){o.push('<text x="'+a[1]+'" y="'+a[2]+'" text-anchor="'+a[3]+'" class="cuad" fill="'+a[4]+'">'+esc(a[0])+'</text>');});
+  o.push('<text x="'+(ml+(W-ml-mr)/2)+'" y="'+(H-10)+'" text-anchor="middle" class="eje">'+esc(D.tx)+' →</text>');
+  o.push('<text x="13" y="'+((mt+H-mb)/2)+'" text-anchor="middle" class="eje" transform="rotate(-90 13 '+((mt+H-mb)/2)+')">'+esc(D.ty)+' →</text>');
+  ser.forEach(function(z){var col=z.c,n=z.x.length;
+   o.push('<g class="serie" data-t="'+esc(z.k)+'" data-k="'+esc(z.k)+'" data-g="'+esc(z.g)+'" data-tip="'+esc(z.tip)+'">');
+   o.push('<polyline class="r" points="'+z.x.map(function(v,i){return X(v).toFixed(1)+','+Y(z.y[i]).toFixed(1);}).join(' ')+
+    '" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-opacity="0.55"/>');
+   for(var i=1;i<n-1;i++)o.push('<circle class="r" cx="'+X(z.x[i]).toFixed(1)+'" cy="'+Y(z.y[i]).toFixed(1)+'" r="1.6" fill="'+col+'" fill-opacity="0.45"/>');
+   o.push('<rect class="r" x="'+(X(z.x[0])-3.5).toFixed(1)+'" y="'+(Y(z.y[0])-3.5).toFixed(1)+'" width="7" height="7" fill="#fff" stroke="'+col+'" stroke-width="1.6"/>');
+   var a=X(z.x[n-1]),b=Y(z.y[n-1]);
+   o.push('<circle cx="'+a.toFixed(1)+'" cy="'+b.toFixed(1)+'" r="4.5" fill="'+col+'"/>');
+   o.push(a>W-110?'<text x="'+(a-6).toFixed(1)+'" y="'+(b-5).toFixed(1)+'" text-anchor="end" class="etq">'+esc(z.k)+'</text>'
+    :'<text x="'+(a+6).toFixed(1)+'" y="'+(b-5).toFixed(1)+'" class="etq">'+esc(z.k)+'</text>');
+   o.push('</g>');});
+  o.push('</svg>');cont.innerHTML=o.join('');
+  var cj=document.getElementById('exp-'+id);if(cj&&!cj.hidden&&window.expFijar)window.expFijar(id,cj.getAttribute('data-k'));}
+ window.rrgDibujar=dibujar;dibujar('mapa-motores');dibujar('mapa-macro');
+ var pend=false;document.querySelectorAll('.fm').forEach(function(ch){ch.addEventListener('change',function(){if(pend)return;pend=true;
+  requestAnimationFrame(function(){pend=false;dibujar('mapa-motores');});});});})();
 document.querySelectorAll('table.ord').forEach(function(tb){tb.querySelectorAll('th').forEach(function(th,i){
  th.addEventListener('click',function(){var filas=Array.from(tb.querySelectorAll('tr')).slice(1);
   var asc=th.dataset.asc!=='1';th.dataset.asc=asc?'1':'0';
@@ -2298,7 +2528,7 @@ document.querySelectorAll('table.ord').forEach(function(tb){tb.querySelectorAll(
   if(vmax/vmin<2.2){var span=vmax-vmin,steps=[1,2,2.5,5,10,20,25,50,100],st=100;
    for(var s=0;s<steps.length;s++){if(span/steps[s]<=7){st=steps[s];break;}}
    for(var t=Math.ceil(vmin/st)*st;t<=vmax;t+=st)cand.push(+t.toFixed(4));}
-  else{[1,1.5,2,3,5,7].forEach(function(m){for(var d=0.1;d<=1e4;d*=10){var t=+(m*d).toPrecision(3);if(t>=vmin&&t<=vmax)cand.push(t);}});}
+  else{[1,1.2,1.5,2,2.5,3,4,5,6,7,8].forEach(function(m){for(var d=0.1;d<=1e4;d*=10){var t=+(m*d).toPrecision(3);if(t>=vmin&&t<=vmax)cand.push(t);}});}
   var ticks=[100];
   [cand.filter(function(t){return t>100;}).sort(function(a,b){return a-b;}),
    cand.filter(function(t){return t<100;}).sort(function(a,b){return b-a;})].forEach(function(lst){var last=100;
