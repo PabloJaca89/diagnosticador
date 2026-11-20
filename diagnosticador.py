@@ -144,7 +144,7 @@ INFO = {
 <ul><li>RSI semanal por encima de 70 (alcista) o por debajo de 30 (bajista).</li>
 <li>Distancia a su media de 40 semanas entre el 10 % más alto (alcista) o más bajo (bajista) de toda la historia del fondo.</li>
 <li>Fuerza frente a la liquidez por encima de su percentil 90 (alcista) o por debajo del 10 (bajista), sobre toda la historia del fondo.</li>
-<li><b>Divergencia:</b> el precio está en la zona de máximos de 26 semanas (a menos de un 2 %) pero el RSI ya está 10 puntos o más por debajo de su máximo de esas 26 semanas: sube, pero con menos fuerza. Simétrico en mínimos para la bajista.</li></ul>
+<li><b>Divergencia:</b> el precio está en la zona de máximos de 26 semanas (a menos de un 2 %) pero el RSI ya está 10 puntos o más por debajo de su máximo de esas 26 semanas: sube, pero con menos fuerza. En el lenguaje técnico habitual es una <i>divergencia bajista</i> y cuenta como señal de cansancio de la subida. La simétrica en mínimos es una <i>divergencia alcista</i> y cuenta como agotamiento de la caída.</li></ul>
 <p><b>Lectura.</b> "Alcista 2 de 4" indica una subida muy estirada: riesgo de fin de ciclo. "Bajista 2 de 4" indica una caída muy estirada: posible suelo. Con 2 o más señales, la fase pasa a madurez (o suelo).</p>
 <p><b>Cuidado.</b> Umbrales de criterio propio, no calibrados. La divergencia es una señal técnica clásica con evidencia académica débil.</p>""", []),
     "direccion": ("Dirección del mapa (RV global)", """
@@ -169,9 +169,12 @@ INFO = {
 <li><b>Arranque:</b> fuerza baja pero impulso al alza → construir poco a poco (el margen está al principio).</li>
 <li><b>Aceleración:</b> fuerza e impulso altos → mantener.</li>
 <li><b>Madurez:</b> fuerza alta pero impulso frenando 3 semanas, o 2 señales de agotamiento → empezar a salir antes del clímax.</li>
-<li><b>Giro:</b> fuerza alta e impulso bajo → salir.</li>
-<li><b>Rezagado:</b> fuerza e impulso bajos sin señal de suelo → no tocar.</li></ul>
-<p><b>Agotamiento (↑/↓):</b> número de señales de extremo alcista/bajista (de 4): RSI semanal &gt;70 o &lt;30; distancia a la media de 40 semanas en el 10 % extremo de la historia del fondo; fuerza relativa en el percentil &gt;90 o &lt;10 de la historia del fondo; divergencia entre precio y RSI en 26 semanas.</p>""", []),
+<li><b>Giro a la baja:</b> fuerza alta e impulso bajo: se acaba la tendencia alcista → salir.</li>
+<li><b>Tendencia bajista:</b> fuerza e impulso bajos sin señal de suelo → no tocar.</li></ul>
+<p>El giro al alza (inicio de tendencia alcista) es el <b>arranque</b>; el <b>suelo</b> es la fase previa, todavía sin confirmar.</p>
+<p><b>Agotamiento (↑/↓):</b> número de señales de extremo alcista/bajista (de 4): RSI semanal &gt;70 o &lt;30; distancia a la media de 40 semanas en el 10 % extremo de la historia del fondo; fuerza relativa en el percentil &gt;90 o &lt;10 de la historia del fondo; divergencia entre precio y RSI en 26 semanas.</p>
+<p><b>Distancia a la media de 40 semanas:</b> cuánto está el precio por encima (+) o por debajo (−) de su media de unos 9 meses. Se resalta (▲ o ▼) cuando está en el 10 % más extremo de toda la historia del fondo; pasa el cursor para ver desde qué año.</p>
+<p><b>Divergencia:</b> <i>bajista</i> = el precio marca máximos de 6 meses pero el RSI ya no (la subida pierde fuerza); <i>alcista</i> = el precio marca mínimos de 6 meses pero el RSI ya no (la caída pierde fuerza).</p>""", []),
     "mapa_macro": ("Mapa macro", """
 <p>Sitúa cada variable por su <b>nivel</b> (percentil histórico, eje horizontal) y su <b>impulso</b> (percentil de su cambio reciente, eje vertical). Sirve para ver en qué fase está cada pata del régimen: si está alta y todavía subiendo, alta y frenando, etc.</p>
 <p>Una variable alta y subiendo puede estar cerca de su clímax: el margen está en anticipar el giro, no en seguirla.</p>
@@ -1054,12 +1057,12 @@ def fase_motor(precio_w, rs, X, Y):
         (f"RSI semanal por encima de 70 ({fmt(r, 0)})", r > 70),
         (f"precio muy alejado por encima de su media de 40 semanas (10 % más extremo desde {desde})", pd_ >= 90),
         (f"fuerza frente a la liquidez en máximos (percentil {fmt(prs, 0)} desde {desde})", prs > 90),
-        ("divergencia: precio en máximos de 6 meses, pero con el RSI ya más bajo que en el pico", div_alc)) if ok]
+        ("divergencia bajista: precio en máximos de 6 meses, pero con el RSI ya más bajo que en el pico", div_alc)) if ok]
     s_baj = [n for n, ok in (
         (f"RSI semanal por debajo de 30 ({fmt(r, 0)})", r < 30),
         (f"precio muy alejado por debajo de su media de 40 semanas (10 % más extremo desde {desde})", pd_ <= 10),
         (f"fuerza frente a la liquidez en mínimos (percentil {fmt(prs, 0)} desde {desde})", prs < 10),
-        ("divergencia: precio en mínimos de 6 meses, pero con el RSI ya más alto que en el fondo", div_baj)) if ok]
+        ("divergencia alcista: precio en mínimos de 6 meses, pero con el RSI ya más alto que en el fondo", div_baj)) if ok]
     alc, baj = len(s_alc), len(s_baj)
     if x >= 100 and y < 100:
         f = "GIRO"
@@ -1069,7 +1072,9 @@ def fase_motor(precio_w, rs, X, Y):
         f = "ARRANQUE"
     else:
         f = "SUELO" if (sube3 or baj >= 2) else "REZAGADO"
-    return f, {"rsi": r, "alc": alc, "baj": baj, "s_alc": s_alc, "s_baj": s_baj}
+    return f, {"rsi": r, "alc": alc, "baj": baj, "s_alc": s_alc, "s_baj": s_baj,
+               "dist40": float(dist.iloc[-1]) * 100, "p_dist40": pd_, "desde": desde,
+               "div": "bajista" if div_alc else "alcista" if div_baj else None}
 
 
 CLAVE_COND = {"Precio cerca de la media de 200 semanas": "c_ma200",
@@ -1083,6 +1088,14 @@ ACCION = {
     "SUELO": "Vigilar", "ARRANQUE": "Construir poco a poco", "ACELERACIÓN": "Mantener",
     "MADUREZ": "Empezar a salir", "GIRO": "Salir", "REZAGADO": "No tocar",
 }
+NOMBRE_FASE = {"GIRO": "GIRO A LA BAJA", "REZAGADO": "TENDENCIA BAJISTA"}
+
+
+def nombre_fase(f):
+    """Nombre visible de una fase (internamente se conservan las claves de las reglas)."""
+    return NOMBRE_FASE.get(f, f)
+
+
 COLOR_FASE = {
     "SUELO": "#6b7a90", "ARRANQUE": "#2f6fdb", "ACELERACIÓN": "#1f9d55",
     "MADUREZ": "#d9a400", "GIRO": "#e0661b", "REZAGADO": "#c0392b",
@@ -1414,8 +1427,8 @@ QUE_HACER = {
     "ARRANQUE": "Construir poco a poco: es el principio del ciclo, donde está el margen, pero muchos arranques fallan.",
     "ACELERACIÓN": "Mantener: la tendencia está viva.",
     "MADUREZ": "Empezar a salir: la subida da señales de cansancio antes del clímax.",
-    "GIRO": "Salir: la ventaja frente a la liquidez se está perdiendo.",
-    "REZAGADO": "No tocar: va peor que la liquidez y no hay señales de suelo.",
+    "GIRO": "Salir: la tendencia alcista frente a la liquidez se está acabando.",
+    "REZAGADO": "No tocar: está en tendencia bajista frente a la liquidez y no hay señales de suelo.",
 }
 
 # Qué suele significar para el mercado que cada motor vaya mejor (fuerte) o peor (débil) que la liquidez.
@@ -1583,11 +1596,11 @@ def narrativa_motor(m):
     extra_prov = ""
     if m.get("prov"):
         extra_prov = (f' Las reglas usan solo semanas cerradas (la última, la del {fd(f_(m["fecha_cerrada"]))}).'
-                      + (f' Con los datos provisionales hasta el {fd(f_(fechas[-1]))} pasaría a fase <b>{m["fase_prov"].lower()}</b>: '
+                      + (f' Con los datos provisionales hasta el {fd(f_(fechas[-1]))} pasaría a fase <b>{nombre_fase(m["fase_prov"]).lower()}</b>: '
                          'se confirmará o no con el cierre del viernes.'
                          if m.get("fase_prov") and m["fase_prov"] != m["fase"] else
                          f' Con los datos provisionales hasta el {fd(f_(fechas[-1]))} seguiría en la misma fase.'))
-    P.append(f'<p><span class="et">Qué hacer según las reglas</span> Fase {m["fase"].lower()}. {hacer}{extra_prov}</p>')
+    P.append(f'<p><span class="et">Qué hacer según las reglas</span> Fase {nombre_fase(m["fase"]).lower()}. {hacer}{extra_prov}</p>')
     if avisos:
         P.append('<p class="exp-aviso">' + "<br>".join(avisos) + "</p>")
     # Rentabilidades
@@ -1762,7 +1775,7 @@ def narrativa_macro(corto, v, color, reg):
          f'(percentil {fmt(v["rx"][0], 0)}).</p>',
          f'<p><span class="et">Cómo ha llegado hasta aquí (últimas 24 semanas)</span></p>'
          + _recorrido(runs, fechas, f_, sg, pl, CUAD_MACRO, TRAMO_MACRO, mensual),
-         f'<p class="nota">Fase según las reglas: {v["fase"].lower()}. "Nivel típico" = su mediana histórica (percentil 50). '
+         f'<p class="nota">Fase según las reglas: {nombre_fase(v["fase"]).lower()}. "Nivel típico" = su mediana histórica (percentil 50). '
          f'{"Dato mensual: un punto por mes." if mensual else "Cierres semanales."}</p>']
     return "".join(P)
 
@@ -1919,6 +1932,7 @@ def main():
                             "dy4": float(Y.iloc[-1] - Y.iloc[-5]),
                             "fase": f, "rsi": extra["rsi"], "alc": extra["alc"], "baj": extra["baj"],
                             "s_alc": extra["s_alc"], "s_baj": extra["s_baj"],
+                            "dist40": extra["dist40"], "p_dist40": extra["p_dist40"], "desde": extra["desde"], "div": extra["div"],
                             "fecha": X.index[-1]})
 
     # --- Variables
@@ -2196,7 +2210,7 @@ def main():
         "s": [{"k": m["t"], "g": GRUPO.get(m["t"], ""), "c": COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555"),
                "tip": m["t"] + " · último dato: " + f'{m["fechas"][-1]:%d-%m-%Y}'
                       + (" (provisional, semana en curso)" if m["prov"] else " (semana cerrada)") + ". " + DESC.get(m["t"], "")
-                      + " Fase: " + m["fase"].lower() + ". Pulsa para ver su dinámica.", "p": bool(m["prov"]),
+                      + " Fase: " + nombre_fase(m["fase"]).lower() + ". Pulsa para ver su dinámica.", "p": bool(m["prov"]),
                "x": [round(float(v), 2) for v in m["xs"]], "y": [round(float(v), 2) for v in m["ys"]]} for m in motores]}
     H.append('<div id="mapa-motores" class="solo-mapa" data-exp="mapa-motores"></div>')
     H.append('<div id="b100" class="solo-b100" data-exp="mapa-motores" hidden><div class="b100-graf"></div>'
@@ -2208,7 +2222,26 @@ def main():
              + '</select></label>')
     H.append('<div id="exp-mapa-motores" class="explica" data-mapa="mapa-motores" hidden></div>')
     H.append(f'<table class="ord"><tr><th>Motor</th><th>Nombre</th><th>Grupo</th><th>Fase{i("fases")}</th><th>Qué hacer</th>'
-             f'<th>Fuerza{i("fuerza")}</th><th>Impulso{i("impulso")}</th><th>RSI sem.</th><th>Agotamiento{i("agotamiento")}</th></tr>')
+             f'<th>Fuerza{i("fuerza")}</th><th>Impulso{i("impulso")}</th><th>RSI sem.</th><th>Distancia a su media de 40 sem.{i("agotamiento")}</th><th>Divergencia{i("agotamiento")}</th>'
+             f'<th>Agotamiento{i("agotamiento")}</th></tr>')
+
+    def dist_txt(m):
+        v, p = m.get("dist40"), m.get("p_dist40")
+        if v is None or (isinstance(v, float) and math.isnan(v)):
+            return "—"
+        txt = _con_signo(v, 1)
+        if p is not None and p >= 90:
+            return f'<b class="extremo" data-tip="Entre el 10 % más alto de toda su historia (desde {m["desde"]})">{txt} ▲</b>'
+        if p is not None and p <= 10:
+            return f'<b class="extremo" data-tip="Entre el 10 % más bajo de toda su historia (desde {m["desde"]})">{txt} ▼</b>'
+        return txt
+
+    def div_txt(m):
+        if m.get("div") == "bajista":
+            return '<b class="extremo" data-tip="Precio en máximos de 6 meses, pero el RSI ya no: la subida pierde fuerza">Sí · bajista</b>'
+        if m.get("div") == "alcista":
+            return '<b class="extremo" data-tip="Precio en mínimos de 6 meses, pero el RSI ya no: la caída pierde fuerza">Sí · alcista</b>'
+        return "No"
     orden = ["ARRANQUE", "ACELERACIÓN", "MADUREZ", "GIRO", "SUELO", "REZAGADO"]
 
     def agot_txt(m):
@@ -2222,9 +2255,9 @@ def main():
         g = GRUPO.get(m["t"], "")
         H.append(f'<tr><td><b>{tk(m["t"])}</b></td><td>{e(m["nombre"])}</td>'
                  f'<td><span class="chip" style="background:{COLOR_GRUPO.get(g, "#555")}"></span>{e(g)}</td>'
-                 f'<td><span class="fase" style="background:{COLOR_FASE[m["fase"]]}">{m["fase"]}</span></td>'
+                 f'<td><span class="fase" style="background:{COLOR_FASE[m["fase"]]}">{nombre_fase(m["fase"])}</span></td>'
                  f'<td>{"Solo referencia" if g in EXCLUIR_TOP else ACCION[m["fase"]]}</td><td>{fmt(m["X"], 1)}</td><td>{fmt(m["Y"], 1)}</td>'
-                 f'<td>{fmt(m["rsi"], 0)}</td><td>{agot_txt(m)}</td></tr>')
+                 f'<td>{fmt(m["rsi"], 0)}</td><td>{dist_txt(m)}</td><td>{div_txt(m)}</td><td>{agot_txt(m)}</td></tr>')
     H.append('</table>')
     if motores:
         fp = max((m["fechas"][-1] for m in motores if m["prov"]), default=None)
@@ -2246,7 +2279,7 @@ def main():
         "s": [{"k": cortos[k], "g": cortos[k], "c": color_macro[cortos[k]],
                "tip": cortos[k] + " · último dato: "
                       + format(mac[k]["fecha"], "%m-%Y" if mac[k]["frecuencia"] == "m" else "%d-%m-%Y")
-                      + ". Fase " + mac[k]["fase"].lower() + ". Pulsa para ver qué significa.",
+                      + ". Fase " + nombre_fase(mac[k]["fase"]).lower() + ". Pulsa para ver qué significa.",
                "x": [round(float(v), 1) for v in mac[k]["rx"]], "y": [round(float(v), 1) for v in mac[k]["ry"]]}
               for k in clave if k in mac and len(mac[k]["rx"]) >= 1]}
     if reg:
@@ -2281,7 +2314,7 @@ def main():
         H.append(f'<tr><td>{e(v["nombre"])}{i(v["nombre"])}</td><td>{fmt(v["valor"], 0 if abs(v["valor"]) >= 1000 else 2)}</td>'
                  f'<td class="{"viejo" if viejo else ""}">{fd(format(v["fecha"], "%d-%m-%Y"))}{" ⚠" if viejo else ""}</td>'
                  f'<td>{fmt(v["nivel"], 0)} <span class="nota">desde {fd(v["desde"])}</span></td><td>{fmt(v["impulso"], 2, unidad)} ({per})</td>'
-                 f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{v["fase"]}</span></td></tr>')
+                 f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{nombre_fase(v["fase"])}</span></td></tr>')
     H.append('</table><p class="nota">⚠ = dato desfasado.</p>')
     H.append('</section>')
 
@@ -2386,8 +2419,11 @@ def main():
         H.append('<p class="error"><b>Fuentes con fallo hoy:</b> ' + "; ".join(e(n) for n, _ in ERRORES) + '</p>')
     if AVISOS:
         H.append('<p class="nota"><b>Datos de la copia guardada:</b> ' + "; ".join(e(f"{n} ({m})") for n, m in AVISOS) + '</p>')
-    else:
+    if not ERRORES and not AVISOS:
         H.append('<p>Todas las fuentes se han descargado correctamente.</p>')
+    if ERRORES:
+        H.append('<details><summary>Detalle de los fallos</summary><ul>'
+                 + "".join(f'<li>{e(n)}: <code>{e(m)}</code></li>' for n, m in ERRORES) + '</ul></details>')
     H.append('<details><summary>Última fecha de cada fuente</summary><table>')
     for k in sorted(FECHAS):
         H.append(f'<tr><td>{e(k)}</td><td>{fd(format(pd.Timestamp(FECHAS[k]), "%d-%m-%Y"))}</td></tr>')
@@ -2399,9 +2435,9 @@ def main():
          + f"; valoración EE. UU.={val_txt} (ECY {fmt(ecy, 2)} %); veto={'sí' if comun['veto'] else 'no'}",
          "Top salir: " + ", ".join(m["t"] for m in top_salir) + " · ampliar: " + ", ".join(m["t"] for m in top_ampliar)
          + " · construir: " + ", ".join(m["t"] for m in top_construir),
-         f"Convicción={conv}; votos=" + ", ".join(f"{k}:{v:+d}" for k, v in votos.items()) + f"; dirección RV global={fase_acwi}; beta/alfa={d_txt}; sentimiento={fmt(sent, 0)}",
-         "Motores: " + "; ".join(f"{m['t']}={m['fase']}" for m in motores),
-         "Macro: " + "; ".join(f"{v['nombre']}={v['fase']} (p{fmt(v['nivel'], 0)})" for v in macro)]
+         f"Convicción={conv}; votos=" + ", ".join(f"{k}:{v:+d}" for k, v in votos.items()) + f"; dirección RV global={nombre_fase(fase_acwi) if fase_acwi else None}; beta/alfa={d_txt}; sentimiento={fmt(sent, 0)}",
+         "Motores: " + "; ".join(f"{m['t']}={nombre_fase(m['fase'])}" for m in motores),
+         "Macro: " + "; ".join(f"{v['nombre']}={nombre_fase(v['fase'])} (p{fmt(v['nivel'], 0)})" for v in macro)]
     if gm:
         R.append(f"Gamma={'positiva' if gm['gex_mm'] > 0 else 'negativa'}, giro={fmt(gm['giro'], 0)}, S&P={fmt(gm['spot'], 0)}")
     R.append(f"Blackout estimado={'sí' if en_blackout else 'no'}")
@@ -2502,6 +2538,7 @@ h2.primero{margin-top:6px}
 .explica p{margin:6px 0}
 .explica .exp-ver{font-size:1.02em;background:rgba(47,111,219,.07);border-radius:8px;padding:6px 9px}
 .explica .exp-aviso{color:#a0522d;font-weight:600}
+b.extremo{color:#b04a00}
 .explica ul.exp-lista{margin:4px 0 6px;padding-left:18px}.explica ul.exp-lista li{margin:2px 0}
 .explica table.exp-tabla{width:auto;margin:4px 0 8px;font-size:.92em;background:none}
 .explica table.exp-tabla th,.explica table.exp-tabla td{padding:2px 14px 2px 0;text-align:right;border:0;background:none;font-variant-numeric:tabular-nums}
@@ -2623,7 +2660,7 @@ document.querySelectorAll('table.ord').forEach(function(tb){tb.querySelectorAll(
  th.addEventListener('click',function(){var filas=Array.from(tb.querySelectorAll('tr')).slice(1);
   var asc=th.dataset.asc!=='1';th.dataset.asc=asc?'1':'0';
   filas.sort(function(a,b){var x=a.children[i].innerText,y=b.children[i].innerText;
-   var nx=parseFloat(x.replace(/\./g,'').replace(',','.')),ny=parseFloat(y.replace(/\./g,'').replace(',','.'));
+   var nx=parseFloat(x.replace(/\./g,'').replace(',','.').replace('\u2212','-')),ny=parseFloat(y.replace(/\./g,'').replace(',','.').replace('\u2212','-'));
    if(!isNaN(nx)&&!isNaN(ny))return asc?nx-ny:ny-nx;return asc?x.localeCompare(y):y.localeCompare(x);});
   filas.forEach(function(f){f.parentNode.appendChild(f);});});});});
 // ---- Explicación de la dinámica al pulsar un vector
