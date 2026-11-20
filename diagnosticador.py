@@ -487,6 +487,9 @@ IPC_EEUU = [
 
 ERRORES = []   # (fuente, mensaje)
 BRUTO = {}     # ticker -> cierres sin ajustar (para enlazar el precio provisional con la serie ajustada)
+AVISOS = []    # (fuente, mensaje) datos tomados de la copia guardada
+TIINGO_LIMITE_HORA = 50
+TIINGO_USO = []   # momentos (UTC) de las peticiones a Tiingo de esta ejecución
 FECHAS = {}    # fuente -> última fecha disponible
 
 
@@ -662,6 +665,7 @@ def tiingo(ticker, frecuencia="weekly"):
     clave = os.environ.get("TIINGO_API_KEY", "").strip()
     if not clave:
         raise RuntimeError("falta la clave de Tiingo")
+    TIINGO_USO.append(pd.Timestamp.now(tz="UTC").tz_convert(None))
     r = get(f"https://api.tiingo.com/tiingo/daily/{ticker}/prices",
             params={"startDate": "1990-01-01", "resampleFreq": frecuencia, "token": clave}, intentos=1)
     d = r.json()
@@ -680,6 +684,7 @@ def iex_ultimos():
     clave = os.environ.get("TIINGO_API_KEY", "").strip()
     if not clave:
         raise RuntimeError("falta la clave de Tiingo")
+    TIINGO_USO.append(pd.Timestamp.now(tz="UTC").tz_convert(None))
     d = get("https://api.tiingo.com/iex", params={"token": clave}, intentos=1, timeout=(10, 60)).json()
     if not isinstance(d, list) or not d:
         raise RuntimeError(str(d)[:120])
@@ -798,6 +803,63 @@ def cot(dataset, codigo, largo, corto):
 # ----------------------------------------------------------------------------
 # HISTÓRICOS PROPIOS (put/call y gamma)
 # ----------------------------------------------------------------------------
+
+def tiingo_usadas_ultima_hora():
+    """Peticiones a Tiingo hechas por ejecuciones anteriores en los últimos 61 minutos (registro propio)."""
+    ruta = os.path.join(CARPETA_DATOS, "tiingo_uso.csv")
+    if not os.path.exists(ruta):
+        return 0
+    try:
+        u = pd.read_csv(ruta, parse_dates=["momento"])["momento"]
+        return int((u >= AHORA - pd.Timedelta(minutes=61)).sum())
+    except Exception:  # noqa
+        return 0
+
+
+def tiingo_guardar_uso():
+    ruta = os.path.join(CARPETA_DATOS, "tiingo_uso.csv")
+    os.makedirs(CARPETA_DATOS, exist_ok=True)
+    viejo = pd.Series(dtype="datetime64[ns]")
+    if os.path.exists(ruta):
+        try:
+            viejo = pd.read_csv(ruta, parse_dates=["momento"])["momento"]
+        except Exception:  # noqa
+            pass
+    u = pd.concat([viejo, pd.Series(TIINGO_USO, dtype="datetime64[ns]")])
+    u = u[u >= AHORA - pd.Timedelta(hours=3)].sort_values()
+    pd.DataFrame({"momento": u.dt.strftime("%Y-%m-%d %H:%M:%S")}).to_csv(ruta, index=False)
+
+
+def copia_precios_leer():
+    """Copia guardada de los precios de Tiingo: ticker -> (ajustado, sin ajustar)."""
+    ruta = os.path.join(CARPETA_DATOS, "precios_tiingo.csv")
+    if not os.path.exists(ruta):
+        return {}
+    try:
+        df = pd.read_csv(ruta, parse_dates=["fecha"])
+    except Exception:  # noqa
+        return {}
+    out = {}
+    for t, g in df.groupby("ticker"):
+        g = g.set_index("fecha").sort_index()
+        out[t] = (g["adj"].astype(float).rename(t), g["close"].astype(float).rename(t))
+    return out
+
+
+def copia_precios_guardar(copia):
+    filas = []
+    for t, (adj, cl) in copia.items():
+        df = pd.DataFrame({"adj": adj.round(4), "close": cl.reindex(adj.index).round(4)})
+        df["ticker"] = t
+        filas.append(df)
+    if not filas:
+        return
+    df = pd.concat(filas)
+    df.index.name = "fecha"
+    os.makedirs(CARPETA_DATOS, exist_ok=True)
+    df.reset_index()[["fecha", "ticker", "adj", "close"]].to_csv(os.path.join(CARPETA_DATOS, "precios_tiingo.csv"), index=False,
+                                                                  date_format="%Y-%m-%d")
+
 
 def leer_hist(nombre):
     ruta = os.path.join(CARPETA_DATOS, nombre)
@@ -1715,12 +1777,28 @@ def main():
 
     # --- Descargas
     precios = {}
-    for t in [m for m, _ in MOTORES] + [REFERENCIA] + OTROS_TIINGO:
-        s = seguro(f"Precio {t}", tiingo, t, "daily" if t == "SPY" else "weekly")
+    # Orden por importancia: la referencia y los índices de las condiciones primero
+    primero = [REFERENCIA, "SPY", "URTH", "IEMG", "RSP", "VGK", "ACWI"]
+    orden = primero + [t for t in [m for m, _ in MOTORES] + OTROS_TIINGO if t not in primero]
+    copia = copia_precios_leer()
+    disponibles = TIINGO_LIMITE_HORA - tiingo_usadas_ultima_hora() - 1   # 1 de margen
+    for t in orden:
+        s = None
+        if disponibles >= 2:          # siempre queda 1 para los precios de la semana en curso
+            disponibles -= 1
+            s = seguro(f"Precio {t}", tiingo, t, "daily" if t == "SPY" else "weekly")
+            if s is not None:
+                copia[t] = (s, BRUTO.get(t, s))
+            time.sleep(0.5)
+        if s is None and t in copia:
+            s, bruto = copia[t]
+            BRUTO[t] = bruto
+            motivo = "límite horario de Tiingo" if disponibles < 2 else "descarga fallida"
+            AVISOS.append((f"Precio {t}", f"{motivo}; copia guardada con último dato del {s.index[-1]:%d-%m-%Y}"))
         if s is not None:
             precios[t] = s
             registrar(f"Precio {t}", s[s.index <= HOY])
-        time.sleep(0.5)
+    copia_precios_guardar({t: v for t, v in copia.items() if t in orden})
     fr = {}
     for sid in FRED_SERIES:
         s = seguro(FRED_SERIES[sid], fred, sid)
@@ -1769,7 +1847,12 @@ def main():
 
     # --- Semana en curso (provisional): último cierre disponible, solo para mapas, explicaciones y base 100
     PROV = {}   # ticker -> (fecha real, valor ajustado)
-    ult = seguro("Precios de la semana en curso (Tiingo IEX)", iex_ultimos) if ref_w is not None else None
+    ult = None
+    if ref_w is not None and disponibles >= 1:
+        ult = seguro("Precios de la semana en curso (Tiingo IEX)", iex_ultimos)
+    elif ref_w is not None:
+        AVISOS.append(("Precios de la semana en curso", "límite horario de Tiingo: hoy solo semanas cerradas"))
+    tiingo_guardar_uso()
     for t in [m for m, _ in MOTORES] + [REFERENCIA]:
         if W.get(t) is None:
             continue
@@ -2301,6 +2384,8 @@ def main():
     H.append('<section class="fuentes"><h2>Estado de los datos</h2>')
     if ERRORES:
         H.append('<p class="error"><b>Fuentes con fallo hoy:</b> ' + "; ".join(e(n) for n, _ in ERRORES) + '</p>')
+    if AVISOS:
+        H.append('<p class="nota"><b>Datos de la copia guardada:</b> ' + "; ".join(e(f"{n} ({m})") for n, m in AVISOS) + '</p>')
     else:
         H.append('<p>Todas las fuentes se han descargado correctamente.</p>')
     H.append('<details><summary>Última fecha de cada fuente</summary><table>')
