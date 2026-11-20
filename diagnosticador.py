@@ -116,10 +116,19 @@ INFO = {
 <li><b>Eje vertical (impulso):</b> por encima de 100, esa fuerza está acelerando.</li>
 <li>El giro habitual es en sentido horario: mejorando → liderando → debilitándose → rezagado.</li>
 <li>La cola muestra las últimas 24 semanas (cierres semanales): el cuadrado es el punto de partida y el círculo grande, el momento actual.</li>
-<li>Los colores indican la familia del motor (renta variable, renta fija, materias primas…), no su fase. Puedes ocultar familias o motores con las casillas.</li></ul>
+<li>Los colores indican la familia del motor (renta variable, renta fija, materias primas…), no su fase. Puedes ocultar familias o motores con las casillas.</li>
+<li><b>Pulsa sobre un motor</b> (o elígelo en la lista de debajo) para leer su recorrido y su tendencia explicados con palabras.</li>
+<li>El selector de vista cambia el mapa por una gráfica en base 100 que compara la evolución de los motores entre sí y con las letras del Tesoro.</li></ul>
 <p><b>Cuidado.</b> Los proxies son fondos cotizados en dólares; no reproduce exactamente el RRG comercial (es una marca registrada).</p>""",
         [("StockCharts ChartSchool: RRG", "https://chartschool.stockcharts.com/table-of-contents/chart-analysis/chart-types/relative-rotation-graphs-rrg-charts"),
          ("StockCharts: patrón de rotación", "https://c.stockcharts.com/articles/chartwatchers/2019/04/when-tails-remain-on-one-side-of-a-relative-rotation-graph-what-does-that-mean.html")]),
+    "base100": ("Evolución en base 100", """
+<p>Cada línea muestra en cuánto se ha convertido lo que valía 100 al inicio del periodo elegido, con los dividendos reinvertidos. Todas parten del mismo punto, así que se comparan directamente.</p>
+<ul><li><b>Línea negra discontinua:</b> las letras del Tesoro (BIL), la referencia de liquidez. Lo que queda por debajo lo ha hecho peor que tener el dinero en liquidez.</li>
+<li><b>Escala logarítmica:</b> la misma distancia vertical equivale al mismo porcentaje de subida o bajada, esté la línea arriba o abajo.</li>
+<li>Debajo, la rentabilidad de cada motor en el periodo, de mayor a menor.</li>
+<li>Pulsa sobre una línea para leer la dinámica de ese motor en el mapa de rotación.</li></ul>
+<p><b>Cuidado.</b> Todo en dólares: para un inversor en euros, el efecto divisa se ve con FXE (euro).</p>""", []),
     "fuerza": ("Fuerza relativa", """
 <p>Compara el motor con las letras del Tesoro (liquidez en dólares): se divide su precio entre el de las letras y se mira si esa relación está por encima o por debajo de su media de 26 semanas.</p>
 <p><b>Lectura.</b> Por encima de 100, el motor está batiendo a la liquidez en su tendencia reciente; por debajo de 100, lo hace peor que tener el dinero en liquidez.</p>""", []),
@@ -136,13 +145,14 @@ INFO = {
 <p>Fase en la que está el ACWI (bolsa mundial) en el mapa de rotación. Suelo, arranque o aceleración cuentan como dirección favorable al riesgo; madurez, giro o rezagado, como desfavorable. La convicción mide cuántos bloques coinciden con esta dirección.</p>""", []),
     "top_salir": ("Cerca de fin de ciclo · ir saliendo", """
 <p>Motores en fase de <b>giro</b> (fuerza alta pero impulso ya por debajo de 100) o de <b>madurez</b> (impulso frenando 3 semanas o 2 señales de agotamiento alcista).</p>
-<p>Orden: primero los que están en giro y, dentro de cada fase, los que más impulso han perdido en las últimas 4 semanas.</p>""", []),
+<p>Orden: primero los que están en giro y, dentro de cada fase, los que más impulso han perdido en las últimas 4 semanas.</p>
+<p>No incluye volatilidad (VIXY), managed futures (DBMF) ni anti-beta (BTAL): son coberturas o estrategias, no motores que se roten por tendencia. Siguen en el mapa y en la tabla como referencia.</p>""", []),
     "top_ampliar": ("Tendencia alcista con recorrido · ampliar", """
 <p>Motores en fase de <b>aceleración</b> (fuerza e impulso por encima de 100, sin frenar) y con como mucho una señal de agotamiento alcista: la tendencia está viva y no parece estirada.</p>
-<p>Orden: de mayor a menor impulso.</p>""", []),
+<p>Orden: de mayor a menor impulso. No incluye volatilidad, managed futures ni anti-beta.</p>""", []),
     "top_construir": ("Podrían iniciar tendencia alcista · empezar a construir", """
 <p>Motores en fase de <b>arranque</b>: todavía lo hacen peor que la liquidez (fuerza por debajo de 100), pero su impulso ya es positivo. Es donde está el margen: al principio del ciclo.</p>
-<p>Orden: de mayor a menor impulso. Recuerda construir poco a poco: muchos arranques fallan.</p>""", []),
+<p>Orden: de mayor a menor impulso. Recuerda construir poco a poco: muchos arranques fallan. No incluye volatilidad, managed futures ni anti-beta.</p>""", []),
     "nivel_macro": ("Nivel (percentil histórico)", """
 <p>Qué parte de toda la historia de la variable queda por debajo de su valor actual. 0 = mínimo histórico, 100 = máximo histórico, 50 = mitad de su rango habitual.</p>""", []),
     "impulso_macro": ("Impulso de una variable macro", """
@@ -157,7 +167,8 @@ INFO = {
 <p><b>Agotamiento (↑/↓):</b> número de señales de extremo alcista/bajista: RSI semanal &gt;70 o &lt;30, distancia a la media de 40 semanas en el 10 % extremo de su historia, fuerza relativa en el percentil &gt;90 o &lt;10.</p>""", []),
     "mapa_macro": ("Mapa macro", """
 <p>Sitúa cada variable por su <b>nivel</b> (percentil histórico, eje horizontal) y su <b>impulso</b> (percentil de su cambio reciente, eje vertical). Sirve para ver en qué fase está cada pata del régimen: si está alta y todavía subiendo, alta y frenando, etc.</p>
-<p>Una variable alta y subiendo puede estar cerca de su clímax: el margen está en anticipar el giro, no en seguirla.</p>""", []),
+<p>Una variable alta y subiendo puede estar cerca de su clímax: el margen está en anticipar el giro, no en seguirla.</p>
+<p><b>Pulsa sobre una variable</b> (o elígela en la lista de debajo) para leer su recorrido y su tendencia explicados con palabras.</p>""", []),
     "variables": ("Variables", """
 <p><b>Percentil:</b> qué parte de su historia queda por debajo del valor actual (100 = máximo histórico).</p>
 <p><b>Cambio reciente:</b> 13 semanas para los datos rápidos y 6 meses para los mensuales.</p>
@@ -377,6 +388,9 @@ GRUPO = {
 COLOR_GRUPO = {"Renta variable": "#2f6fdb", "Factores": "#8e44ad", "Renta fija": "#1f9d55",
                "Crédito": "#a0672a", "Materias primas": "#e67e22", "Divisas": "#c0392b",
                "Alternativos": "#16a085"}
+# Familias que no entran en el TOP 3 (coberturas y estrategias, no motores para rotar por tendencia)
+EXCLUIR_TOP = {"Alternativos"}
+B100_SEMANAS = 260          # historia máxima de la vista en base 100 (5 años)
 DESC = {
     "ACWI": "iShares MSCI ACWI: bolsa mundial, países desarrollados y emergentes.",
     "SPY": "SPDR S&P 500: las 500 mayores empresas de EE. UU., ponderadas por tamaño.",
@@ -550,6 +564,17 @@ def fmt(x, dec=2, suf=""):
 
 def e(t):
     return html.escape(str(t))
+
+
+def fd(t):
+    """Fecha con estilo propio (fuente y color distintos del dato)."""
+    return f'<span class="fd">{e(t)}</span>'
+
+
+def con_fechas(t):
+    """Escapa un texto y envuelve en estilo de fecha las fechas dd-mm-aaaa, dd-mm y mm-aaaa que contenga."""
+    return re.sub(r"(?<![\d,.])(\d{2}-\d{2}-\d{4}|\d{2}-\d{4}|\d{2}-\d{2})(?![\d,.])",
+                  lambda mo: f'<span class="fd">{mo.group(1)}</span>', e(t))
 
 
 def i(k):
@@ -956,6 +981,7 @@ def variable_macro(nombre, s, frecuencia, periodos, modo="dif"):
     imp = (s / s.shift(periodos) - 1) * 100 if modo == "pct" else s - s.shift(periodos)
     imp = imp.dropna()
     frenando3 = bool((imp.abs().diff().iloc[-3:] < 0).all())
+    acelera3 = bool((imp.abs().diff().iloc[-3:] > 0).all())
     niv = pct(s)
     ultimo = imp.iloc[-1]
     fase = fase_macro(niv, ultimo, frenando3)
@@ -965,7 +991,9 @@ def variable_macro(nombre, s, frecuencia, periodos, modo="dif"):
     rastro_y = [pct(imp, imp.loc[d]) for d in ventana]
     return {"nombre": nombre, "valor": s.iloc[-1], "fecha": s.index[-1], "nivel": niv,
             "impulso": ultimo, "fase": fase, "frecuencia": frecuencia,
-            "rx": rastro_x, "ry": rastro_y, "modo": modo, "periodos": periodos}
+            "rx": rastro_x, "ry": rastro_y, "modo": modo, "periodos": periodos,
+            "fechas": list(ventana), "vals": [float(s.loc[d]) for d in ventana],
+            "frenando3": frenando3, "acelera3": acelera3, "nivel_imp": pct(imp)}
 
 
 V_MEMORIA = 13
@@ -1150,7 +1178,7 @@ def calendario(dias=120):
         ev.append((dt.date(anio, 10, 31), "Fin del ejercicio fiscal de muchos fondos estadounidenses", "Fiscal"))
         ev.append((dt.date(anio, 12, 1), "Empieza la ventana de ventas por pérdidas fiscales", "Fiscal"))
     for a, b in FOMC:
-        ev.append((dt.date.fromisoformat(b), f"Reunión de la Fed (FOMC) {a[8:]}-{b[8:]}", "Fed"))
+        ev.append((dt.date.fromisoformat(b), f"Reunión de la Fed (FOMC): decisión; empieza el {a[8:]}-{a[5:7]}", "Fed"))
     for f in IPC_EEUU:
         ev.append((dt.date.fromisoformat(f), "IPC EE. UU.", "Datos"))
     ev = sorted({(d, t, c) for d, t, c in ev if hoy <= d <= fin})
@@ -1235,7 +1263,8 @@ def svg_rrg(puntos, titulo_x, titulo_y, centro=100.0, rango=None, ancho=680, alt
     s.append(f'<text x="{ancho / 2}" y="{alto - 8}" text-anchor="middle" class="eje">{e(titulo_x)} →</text>')
     s.append(f'<text x="14" y="{alto / 2}" text-anchor="middle" class="eje" transform="rotate(-90 14 {alto / 2})">{e(titulo_y)} →</text>')
     for p in puntos:
-        s.append(f'<g class="serie" data-t="{e(p["et"])}" data-g="{e(p.get("g", ""))}" data-tip="{e(p.get("tip", p["et"]))}">')
+        s.append(f'<g class="serie" data-t="{e(p["et"])}" data-k="{e(p["et"])}" data-g="{e(p.get("g", ""))}" '
+                 f'data-tip="{e(p.get("tip", p["et"]) + " Pulsa para ver su dinámica.")}">')
         pts = " ".join(f"{X(a):.1f},{Y(b):.1f}" for a, b in zip(p["xs"], p["ys"]))
         s.append(f'<polyline class="r" points="{pts}" fill="none" stroke="{p["color"]}" stroke-width="1.6" stroke-opacity="0.55"/>')
         for a, b in zip(p["xs"][1:-1], p["ys"][1:-1]):
@@ -1272,6 +1301,232 @@ def svg_linea(serie, alto=120, ancho=680, color="#2f6fdb", ref=None):
         out.append(f'<line x1="0" x2="{ancho}" y1="{yr:.1f}" y2="{yr:.1f}" stroke="#bbb" stroke-dasharray="4 4"/>')
     out.append(f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="1.8"/></svg>')
     return "".join(out)
+
+
+# ----------------------------------------------------------------------------
+# EXPLICACIONES DE LOS MAPAS (texto al pulsar sobre un vector)
+# ----------------------------------------------------------------------------
+
+CUAD_MOTOR = ("LIDERANDO", "DEBILITÁNDOSE", "REZAGADO", "MEJORANDO")
+CUAD_MACRO = ("ALTO Y SUBIENDO", "ALTO Y BAJANDO", "BAJO Y BAJANDO", "BAJO Y SUBIENDO")
+
+# (cuadrante actual, ¿impulso subiendo en 4 semanas?) -> (tendencia, explicación)
+VEREDICTO_MOTOR = {
+    ("LIDERANDO", True): ("ALCISTA Y ACELERANDO",
+                          "Bate a la liquidez y la ventaja crece cada semana."),
+    ("LIDERANDO", False): ("ALCISTA, PERDIENDO EMPUJE",
+                           "Sigue batiendo a la liquidez, pero la ventaja crece cada vez menos. "
+                           "Si el impulso baja de 100 pasará a debilitándose."),
+    ("DEBILITÁNDOSE", False): ("ALCISTA AGOTÁNDOSE",
+                               "Sigue por encima de la liquidez, pero pierde ventaja cada semana: va camino de rezagado."),
+    ("DEBILITÁNDOSE", True): ("PAUSA DENTRO DE UNA SUBIDA",
+                              "Pierde ventaja, pero el impulso vuelve a subir: puede volver a liderando sin pasar por rezagado."),
+    ("REZAGADO", False): ("BAJISTA Y EMPEORANDO",
+                          "Lo hace peor que la liquidez y cada vez peor."),
+    ("REZAGADO", True): ("BAJISTA, PERO FRENANDO",
+                         "Sigue peor que la liquidez, pero cada vez menos. Si el impulso supera 100 pasará a mejorando."),
+    ("MEJORANDO", True): ("ALCISTA EN FORMACIÓN",
+                          "Todavía por debajo de la liquidez, pero acercándose. Si la fuerza supera 100 pasará a liderando."),
+    ("MEJORANDO", False): ("MEJORA QUE PIERDE FUELLE",
+                           "Sigue mejorando, pero cada vez más despacio: riesgo de volver a rezagado sin llegar a liderar."),
+}
+
+
+NOTA_ALTERNATIVO = {
+    "VIXY": "En la volatilidad, una tendencia alcista significa que aumenta el miedo en el mercado.",
+    "BTAL": "En el anti-beta, una tendencia alcista suele coincidir con caídas de la bolsa o con rotación hacia valores defensivos.",
+}
+
+
+def cuadrante(x, y, centro, nombres):
+    if x >= centro:
+        return nombres[0] if y >= centro else nombres[1]
+    return nombres[3] if y >= centro else nombres[2]
+
+
+def _tramos(qs):
+    """Agrupa la secuencia de cuadrantes en tramos [cuadrante, inicio, duración].
+    Una escapada de un solo periodo entre dos tramos del mismo cuadrante se considera ruido."""
+    runs = []
+    for k, q in enumerate(qs):
+        if runs and runs[-1][0] == q:
+            runs[-1][2] += 1
+        else:
+            runs.append([q, k, 1])
+    j = 1
+    while j < len(runs) - 1:
+        if runs[j][2] == 1 and runs[j - 1][0] == runs[j + 1][0]:
+            runs[j - 1][2] += 1 + runs[j + 1][2]
+            del runs[j:j + 2]
+            j = max(1, j - 1)
+        else:
+            j += 1
+    return runs
+
+
+def _recorrido(runs, fechas, fmt_f, sg, pl, nombres, prep="el"):
+    """Describe el paso por los cuadrantes. nombres: (arriba-dcha, abajo-dcha, abajo-izda, arriba-izda)."""
+    def u(L):
+        return f"{L} {sg if L == 1 else pl}"
+    if len(runs) == 1:
+        return f"Todo el rastro ({'desde el' if prep == 'el' else 'desde'} {fd(fmt_f(fechas[0]))}) en <b>{runs[0][0]}</b>."
+    if len(runs) <= 3:
+        q0, _, L0 = runs[0]
+        partes = [f"Al inicio del rastro ({fd(fmt_f(fechas[0]))}) estaba en <b>{q0}</b> ({u(L0)})"]
+        for q, k, L in runs[1:-1]:
+            partes.append(f"pasó a <b>{q}</b> {prep} {fd(fmt_f(fechas[k]))} ({u(L)})")
+        q, k, L = runs[-1]
+        txt = ", ".join(partes) + f" y entró en <b>{q}</b> {prep} {fd(fmt_f(fechas[k]))}, donde lleva {u(L)}."
+    else:
+        txt = " → ".join(f"<b>{q}</b> ({fd(fmt_f(fechas[k]))}, {u(L)})" for q, k, L in runs) + "."
+    # Sentido de los cambios: el ciclo habitual es horario (arriba-izda → arriba-dcha → abajo-dcha → abajo-izda)
+    ciclo = [nombres[3], nombres[0], nombres[1], nombres[2]]
+    h = a = 0
+    for (q1, _, _), (q2, _, _) in zip(runs[:-1], runs[1:]):
+        d = (ciclo.index(q2) - ciclo.index(q1)) % 4
+        h += d == 1
+        a += d != 1
+    if a == 0:
+        txt += " Ha seguido el giro habitual del ciclo (sentido horario)."
+    elif a >= h:
+        txt += " Va y viene entre cuadrantes, a menudo contra el giro habitual: tendencia poco clara."
+    else:
+        txt += " Sobre todo en el giro habitual del ciclo (sentido horario), con algún retroceso."
+    return txt
+
+
+def _con_signo(x, dec=1, suf="\u00a0%"):
+    if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))):
+        return "—"
+    return ("+" if x >= 0 else "−") + fmt(abs(x), dec, suf)
+
+
+def narrativa_motor(m):
+    """Texto con la dinámica de un motor en el mapa de rotación."""
+    t, xs, ys, fechas = m["t"], m["xs"], m["ys"], m["fechas"]
+    n = len(xs)
+    if n < 6:
+        return ""
+    f_ = (lambda d: f"{d:%d-%m-%Y}")
+    qs = [cuadrante(x, y, 100, CUAD_MOTOR) for x, y in zip(xs, ys)]
+    runs = _tramos(qs)
+    q = qs[-1]
+    dx, dy = xs[-1] - xs[-5], ys[-1] - ys[-5]
+    tit, txt = VEREDICTO_MOTOR[(q, dy > 0)]
+    color = COLOR_GRUPO.get(GRUPO.get(t, ""), "#555")
+    accion = "solo referencia" if GRUPO.get(t) in EXCLUIR_TOP else ACCION[m["fase"]].lower()
+    P = [f'<h3><span class="chip" style="background:{color}"></span>{e(t)} · {e(m["nombre"])}</h3>',
+         f'<p class="exp-ver">Tendencia frente a la liquidez: <b>{tit}</b><br>{txt}</p>']
+    avisos = []
+    if math.hypot(xs[-1] - 100, ys[-1] - 100) < 1.0:
+        avisos.append("Está muy cerca del centro del mapa: señal débil, puede cambiar de cuadrante con poco movimiento.")
+    elif math.hypot(dx, dy) < 0.4:
+        avisos.append("Casi sin movimiento en las últimas 4 semanas: señal débil.")
+    if m.get("alc", 0) >= 2:
+        avisos.append(f"Subida muy estirada ({m['alc']} de 3 señales de agotamiento): riesgo de fin de ciclo.")
+    if m.get("baj", 0) >= 2:
+        avisos.append(f"Caída muy estirada ({m['baj']} de 3 señales de agotamiento): posible zona de suelo.")
+    if avisos:
+        P.append('<p class="exp-aviso">' + " ".join(avisos) + "</p>")
+    if t in NOTA_ALTERNATIVO:
+        P.append(f'<p class="nota">{NOTA_ALTERNATIVO[t]}</p>')
+    P.append(f"<p><span class=\"et\">Recorrido</span> {_recorrido(runs, fechas, f_, 'semana', 'semanas', CUAD_MOTOR)}</p>")
+    # Últimas 4 semanas
+    pasos = [math.hypot(xs[k] - xs[k - 4], ys[k] - ys[k - 4]) for k in range(4, n)]
+    tipico = float(np.median(pasos)) if pasos else 0.0
+    d4 = math.hypot(dx, dy)
+    if d4 < 0.4:
+        mov = "prácticamente parado"
+    else:
+        if dx >= 0 and dy >= 0:
+            rumbo, destino = "arriba y a la derecha", "LIDERANDO"
+        elif dx >= 0:
+            rumbo, destino = "abajo y a la derecha", "DEBILITÁNDOSE"
+        elif dy < 0:
+            rumbo, destino = "abajo y a la izquierda", "REZAGADO"
+        else:
+            rumbo, destino = "arriba y a la izquierda", "MEJORANDO"
+        ciclo = ["MEJORANDO", "LIDERANDO", "DEBILITÁNDOSE", "REZAGADO"]
+        salto = (ciclo.index(destino) - ciclo.index(q)) % 4
+        rumbo += (f" (más adentro de {q})" if salto == 0 else
+                  " (hacia el centro del mapa)" if salto == 2 else f" (hacia {destino})")
+        ritmo = ", más deprisa de lo habitual" if tipico and d4 > 1.5 * tipico else \
+                ", más despacio de lo habitual" if tipico and d4 < 0.6 * tipico else ""
+        mov = f"se mueve {rumbo}{ritmo}"
+    P.append(f"<p><span class=\"et\">Últimas 4 semanas</span> {mov[0].upper() + mov[1:]}. Fuerza de {fmt(xs[-5], 1)} a {fmt(xs[-1], 1)}; "
+             f"impulso de {fmt(ys[-5], 1)} a {fmt(ys[-1], 1)}.</p>")
+    arriba = sum(1 for x in xs if x >= 100)
+    if arriba == n:
+        pers = "Todo el rastro por encima de 100 en fuerza: ventaja persistente frente a la liquidez."
+    elif arriba == 0:
+        pers = "Todo el rastro por debajo de 100 en fuerza: debilidad persistente frente a la liquidez."
+    else:
+        pers = f"Por encima de 100 en fuerza {arriba} de las {n} semanas del rastro."
+    P.append(f"<p><span class=\"et\">Constancia</span> {pers}</p>")
+    if m.get("r_m") is not None and m.get("r_ref") is not None:
+        P.append(f"<p><span class=\"et\">Rentabilidad desde el inicio del rastro</span> ({fd(f_(fechas[0]))}): {e(t)} {_con_signo(m['r_m'])} · "
+                 f"letras del Tesoro {_con_signo(m['r_ref'])}.</p>")
+    P.append(f'<p class="nota">Fase según las reglas: {m["fase"]} → {accion}. Rastro de cierres semanales; '
+             f'última semana cerrada: {fd(f_(fechas[-1]))}.</p>')
+    return "".join(P)
+
+
+def _ritmo_hist(imp, p):
+    if imp > 0 and p >= 90:
+        return "de las subidas más fuertes de su historia"
+    if imp > 0 and p >= 70:
+        return "subida mayor de lo habitual"
+    if imp < 0 and p <= 10:
+        return "de las bajadas más fuertes de su historia"
+    if imp < 0 and p <= 30:
+        return "bajada mayor de lo habitual"
+    return "cambio dentro de lo habitual"
+
+
+def narrativa_macro(corto, v, color):
+    """Texto con la dinámica de una variable en el mapa macro."""
+    fechas, n = v["fechas"], len(v["rx"])
+    if n < 2:
+        return ""
+    mensual = v["frecuencia"] == "m"
+    f_ = (lambda d: f"{d:%m-%Y}") if mensual else (lambda d: f"{d:%d-%m-%Y}")
+    sg, pl = ("mes", "meses") if mensual else ("semana", "semanas")
+    qs = [cuadrante(x, y, 50, CUAD_MACRO) for x, y in zip(v["rx"], v["ry"])]
+    runs = _tramos(qs)
+    imp = v["impulso"]
+    if imp > 0:
+        tit = ("SUBIENDO CADA VEZ MÁS DEPRISA" if v["acelera3"] else
+               "SUBIENDO, PERO CADA VEZ MÁS DESPACIO" if v["frenando3"] else "SUBIENDO")
+    elif imp < 0:
+        tit = ("BAJANDO CADA VEZ MÁS DEPRISA" if v["acelera3"] else
+               "BAJANDO, PERO CADA VEZ MÁS DESPACIO" if v["frenando3"] else "BAJANDO")
+    else:
+        tit = "SIN CAMBIOS"
+    niv = v["nivel"]
+    zona = ("nivel muy alto para su historia" if niv >= 80 else
+            "nivel muy bajo para su historia" if niv <= 20 else "nivel normal para su historia")
+    pista = ""
+    if niv >= 80 and imp > 0 and v["frenando3"]:
+        pista = "Alta y subiendo cada vez más despacio: es lo típico cerca de un techo."
+    elif niv >= 80 and imp > 0:
+        pista = "En zona alta y todavía acelerando: vigilar el momento en que empiece a frenar."
+    elif niv <= 20 and imp < 0 and v["frenando3"]:
+        pista = "Baja y cayendo cada vez más despacio: es lo típico cerca de un suelo."
+    elif niv <= 20 and imp < 0:
+        pista = "En zona baja y todavía cayendo con fuerza."
+    dec = 0 if abs(v["valor"]) >= 1000 else 2
+    unidad = "\u00a0%" if v["modo"] == "pct" else ""
+    per = f'{v["periodos"]} {"meses" if mensual else "semanas"}'
+    P = [f'<h3><span class="chip" style="background:{color}"></span>{e(corto)}</h3>',
+         f'<p class="exp-ver">Tendencia: <b>{tit}</b> · {zona} (percentil {fmt(niv, 0)}).'
+         + (f"<br>{pista}" if pista else "") + "</p>",
+         f'<p><span class="et">Dato</span> {fmt(v["valor"], dec)} ({fd(f_(v["fecha"]))}). Al inicio del rastro: '
+         f'{fmt(v["vals"][0], dec)} ({fd(f_(fechas[0]))}, percentil {fmt(v["rx"][0], 0)}).</p>',
+         f'<p><span class="et">Cambio en {per}</span> {_con_signo(imp, 2, unidad)}: {_ritmo_hist(imp, v["nivel_imp"])} '
+         f'(percentil {fmt(v["nivel_imp"], 0)} de sus cambios).</p>',
+         f"<p><span class=\"et\">Recorrido</span> {_recorrido(runs, fechas, f_, sg, pl, CUAD_MACRO, 'en' if mensual else 'el')}</p>",
+         f'<p class="nota">Fase según las reglas: {v["fase"]}. {"Dato mensual: un punto por mes." if mensual else "Cierres semanales."}</p>']
+    return "".join(P)
 
 
 # ----------------------------------------------------------------------------
@@ -1348,8 +1603,16 @@ def main():
             XY = pd.concat([X, Y], axis=1).dropna()
             X, Y = XY.iloc[:, 0], XY.iloc[:, 1]
             f, extra = fase_motor(W[t].loc[:rs.index[-1]], rs, X, Y)
+            fechas = list(X.index[-24:])
+            r_m = r_ref = None
+            try:
+                r_m = (W[t].loc[fechas[-1]] / W[t].loc[fechas[0]] - 1) * 100
+                r_ref = (ref_w.loc[fechas[-1]] / ref_w.loc[fechas[0]] - 1) * 100
+            except Exception:  # noqa
+                pass
             motores.append({"t": t, "nombre": nombre, "X": X.iloc[-1], "Y": Y.iloc[-1],
                             "xs": list(X.iloc[-24:].values), "ys": list(Y.iloc[-24:].values),
+                            "fechas": fechas, "r_m": r_m, "r_ref": r_ref,
                             "dy4": float(Y.iloc[-1] - Y.iloc[-5]),
                             "fase": f, "rsi": extra["rsi"], "alc": extra["alc"], "baj": extra["baj"],
                             "fecha": X.index[-1]})
@@ -1386,12 +1649,32 @@ def main():
     else:
         val_txt = "BARATA"
 
-    # TOP 3
-    top_salir = sorted([m for m in motores if m["fase"] in ("GIRO", "MADUREZ")],
+    # TOP 3 (sin coberturas ni estrategias: volatilidad, managed futures, anti-beta)
+    cand_top = [m for m in motores if GRUPO.get(m["t"]) not in EXCLUIR_TOP]
+    top_salir = sorted([m for m in cand_top if m["fase"] in ("GIRO", "MADUREZ")],
                        key=lambda z: (0 if z["fase"] == "GIRO" else 1, z["dy4"]))[:3]
-    top_ampliar = sorted([m for m in motores if m["fase"] == "ACELERACIÓN" and m["alc"] <= 1],
+    top_ampliar = sorted([m for m in cand_top if m["fase"] == "ACELERACIÓN" and m["alc"] <= 1],
                          key=lambda z: -z["Y"])[:3]
-    top_construir = sorted([m for m in motores if m["fase"] == "ARRANQUE"], key=lambda z: -z["Y"])[:3]
+    top_construir = sorted([m for m in cand_top if m["fase"] == "ARRANQUE"], key=lambda z: -z["Y"])[:3]
+
+    # Vista en base 100 (cierres semanales normalizados; nunca precios)
+    b100 = None
+    if ref_w is not None and motores:
+        idx = ref_w.index[-(B100_SEMANAS + 1):]
+        ser = {}
+        for t in [m["t"] for m in motores] + [REFERENCIA]:
+            s = W.get(t)
+            if s is None:
+                continue
+            s = s.reindex(idx)
+            v = s.dropna()
+            if v.empty:
+                continue
+            s = (s / v.iloc[0] * 100).round(2)
+            ser[t] = [None if pd.isna(a) else float(a) for a in s.values]
+        b100 = {"f": [f"{d:%Y-%m-%d}" for d in idx], "s": ser, "ref": REFERENCIA,
+                "c": {m["t"]: COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555") for m in motores},
+                "n": {**{m["t"]: m["nombre"] for m in motores}, REFERENCIA: "Letras del Tesoro"}}
 
     # Liquidez neta de la Fed (millones de $)
     liq_w = None
@@ -1535,7 +1818,7 @@ def main():
     H.append('<div class="tarjetas" style="margin-top:10px">')
     H.append(f'<div class="tarjeta"><div class="t">Valoración EE. UU. (ECY){i("valoracion")}</div><div class="v">{val_txt}</div>'
              f'<div class="s">ECY {fmt(ecy, 2, " %")} · CAPE {fmt(cape, 1)}'
-             f'{" · " + format(fecha_ecy, "%m-%Y") if fecha_ecy is not None else ""}</div></div>')
+             f'{" · " + fd(format(fecha_ecy, "%m-%Y")) if fecha_ecy is not None else ""}</div></div>')
     vt = "ACTIVO" if comun["veto"] else "no"
     H.append(f'<div class="tarjeta {"alerta" if comun["veto"] else ""}"><div class="t">Veto por crédito{i("veto")}</div><div class="v">{vt}</div>'
              f'<div class="s">Baa−10a a 13 semanas: {fmt(comun.get("baa_13s"), 1, " %")}</div></div>')
@@ -1574,19 +1857,34 @@ def main():
 
     # Mapa motores
     H.append(f'<h2>Mapa de rotación de motores{i("mapa")}</h2>')
-    H.append(f'<p class="nota">Eje horizontal: fuerza relativa{i("fuerza")} · eje vertical: impulso{i("impulso")}. '
-             'Rastro de 24 semanas con cierres semanales: □ inicio · ● ahora. Pasa el cursor por un motor para resaltarlo y ver qué es.</p>')
+    H.append('<div class="vista">Vista: <label><input type="radio" name="vista-motores" value="mapa" checked> Mapa de rotación</label>'
+             f'<label><input type="radio" name="vista-motores" value="b100"> Evolución en base 100</label>{i("base100")}'
+             '<label class="periodo" hidden>Periodo <select id="b100-per"><option value="24">24 semanas</option>'
+             '<option value="52">1 año</option><option value="156">3 años</option><option value="260">5 años</option></select></label></div>')
+    H.append(f'<p class="nota solo-mapa">Eje horizontal: fuerza relativa{i("fuerza")} · eje vertical: impulso{i("impulso")}. '
+             'Rastro de 24 semanas con cierres semanales: □ inicio · ● ahora. Pasa el cursor por un motor para resaltarlo; '
+             '<b>púlsalo para leer su dinámica</b>.</p>')
+    H.append('<p class="nota solo-b100" hidden>Cuánto vale hoy lo que valía 100 al inicio del periodo (dividendos incluidos, en dólares). '
+             'Línea negra discontinua: letras del Tesoro (BIL). Escala logarítmica. <b>Pulsa una línea para leer la dinámica del motor.</b></p>')
     grupos_presentes = [g for g in COLOR_GRUPO if any(GRUPO.get(m["t"]) == g for m in motores)]
     H.append('<div class="leyenda">' + "".join(
         f'<label><input type="checkbox" class="fg" value="{e(g)}" checked> <span class="chip" style="background:{COLOR_GRUPO[g]}"></span>{e(g)}</label>'
-        for g in grupos_presentes) + '<label><input type="checkbox" class="rastros" data-mapa="mapa-motores" checked> <b>Mostrar rastros</b></label></div>')
+        for g in grupos_presentes) + '<label class="solo-mapa"><input type="checkbox" class="rastros" data-mapa="mapa-motores" checked> <b>Mostrar rastros</b></label></div>')
     H.append('<div class="filtros">' + "".join(
         f'<label data-tip="{e(m["t"] + " · " + DESC.get(m["t"], ""))}"><input type="checkbox" class="fm" value="{m["t"]}" data-g="{e(GRUPO.get(m["t"], ""))}" checked> {e(m["t"])}</label>'
         for m in motores) + '</div>')
     pts = [{"et": m["t"], "xs": m["xs"], "ys": m["ys"], "g": GRUPO.get(m["t"], ""),
             "color": COLOR_GRUPO.get(GRUPO.get(m["t"], ""), "#555"),
             "tip": m["t"] + " · " + DESC.get(m["t"], "") + " Fase: " + m["fase"].lower() + "."} for m in motores]
-    H.append(f'<div id="mapa-motores">{svg_rrg(pts, "Fuerza relativa", "Impulso")}</div>')
+    H.append(f'<div id="mapa-motores" class="solo-mapa" data-exp="mapa-motores">{svg_rrg(pts, "Fuerza relativa", "Impulso")}</div>')
+    H.append('<div id="b100" class="solo-b100" data-exp="mapa-motores" hidden><div class="b100-graf"></div>'
+             '<div class="b100-rank"></div></div>')
+    exp_motores = {m["t"]: narrativa_motor(m) for m in motores}
+    exp_motores = {k: v for k, v in exp_motores.items() if v}
+    H.append('<label class="exp-elige">Ver la dinámica de <select class="exp-sel" data-mapa="mapa-motores"><option value="">— elige un motor —</option>'
+             + "".join(f'<option value="{e(m["t"])}">{e(m["t"])} · {e(m["nombre"])}</option>' for m in motores if m["t"] in exp_motores)
+             + '</select></label>')
+    H.append('<div id="exp-mapa-motores" class="explica" data-mapa="mapa-motores" hidden></div>')
     H.append(f'<table class="ord"><tr><th>Motor</th><th>Nombre</th><th>Grupo</th><th>Fase{i("fases")}</th><th>Qué hacer</th>'
              f'<th>Fuerza{i("fuerza")}</th><th>Impulso{i("impulso")}</th><th>RSI sem.</th><th>Agotamiento{i("agotamiento")}</th></tr>')
     orden = ["ARRANQUE", "ACELERACIÓN", "MADUREZ", "GIRO", "SUELO", "REZAGADO"]
@@ -1603,11 +1901,12 @@ def main():
         H.append(f'<tr><td><b>{tk(m["t"])}</b></td><td>{e(m["nombre"])}</td>'
                  f'<td><span class="chip" style="background:{COLOR_GRUPO.get(g, "#555")}"></span>{e(g)}</td>'
                  f'<td><span class="fase" style="background:{COLOR_FASE[m["fase"]]}">{m["fase"]}</span></td>'
-                 f'<td>{ACCION[m["fase"]]}</td><td>{fmt(m["X"], 1)}</td><td>{fmt(m["Y"], 1)}</td>'
+                 f'<td>{"Solo referencia" if g in EXCLUIR_TOP else ACCION[m["fase"]]}</td><td>{fmt(m["X"], 1)}</td><td>{fmt(m["Y"], 1)}</td>'
                  f'<td>{fmt(m["rsi"], 0)}</td><td>{agot_txt(m)}</td></tr>')
     H.append('</table>')
     if motores:
-        H.append(f'<p class="nota">Semana cerrada: {motores[0]["fecha"]:%d-%m-%Y}. Proxies en dólares (el euro se ve con FXE). Stock picking: ver bloque D. Market neutral: sin proxy.</p>')
+        H.append(f'<p class="nota">Semana cerrada: {fd(format(motores[0]["fecha"], "%d-%m-%Y"))}. Proxies en dólares (el euro se ve con FXE). '
+                 'Stock picking: ver bloque D. Market neutral: sin proxy. Volatilidad, managed futures y anti-beta: solo referencia (no entran en el TOP 3).</p>')
 
     # Mapa macro
     clave = ["Inflación (IPC interanual, %)", "Crecimiento (encuestas Fed, media 3 meses)",
@@ -1615,14 +1914,20 @@ def main():
     cortos = {clave[0]: "Inflación", clave[1]: "Crecimiento", clave[2]: "Crédito (estrés)", clave[3]: "Liquidez"}
     color_macro = {"Inflación": "#c0392b", "Crecimiento": "#2f6fdb", "Crédito (estrés)": "#a0672a", "Liquidez": "#1f9d55"}
     pm = [{"et": cortos[k], "xs": mac[k]["rx"], "ys": mac[k]["ry"], "color": color_macro[cortos[k]], "g": cortos[k],
-           "tip": cortos[k] + " · fase " + mac[k]["fase"].lower()}
+           "tip": cortos[k] + " · fase " + mac[k]["fase"].lower() + "."}
           for k in clave if k in mac and len(mac[k]["rx"]) >= 1]
     H.append(f'<h2>Mapa macro{i("mapa_macro")}</h2><p class="nota">Eje horizontal: nivel{i("nivel_macro")} · eje vertical: impulso{i("impulso_macro")}. '
-             'Rastro de 24 semanas: □ inicio · ● ahora (los datos mensuales tienen un punto por mes).</p>')
+             'Rastro de 24 semanas: □ inicio · ● ahora (los datos mensuales tienen un punto por mes). '
+             '<b>Pulsa una variable para leer su dinámica.</b></p>')
     H.append('<div class="leyenda">' + "".join(
         f'<span><span class="chip" style="background:{c}"></span>{e(g)}</span>' for g, c in color_macro.items()) + '</div>')
-    H.append('<div id="mapa-macro">' + svg_rrg(pm, "Nivel (percentil)", "Impulso (percentil)", centro=50, rango=(0, 100, 0, 100),
-                     cuadrantes=("ALTO Y SUBIENDO", "ALTO Y BAJANDO", "BAJO Y BAJANDO", "BAJO Y SUBIENDO")) + '</div>')
+    H.append('<div id="mapa-macro" data-exp="mapa-macro">' + svg_rrg(pm, "Nivel (percentil)", "Impulso (percentil)", centro=50, rango=(0, 100, 0, 100),
+                     cuadrantes=CUAD_MACRO) + '</div>')
+    exp_macro = {cortos[k]: narrativa_macro(cortos[k], mac[k], color_macro[cortos[k]]) for k in clave if k in mac}
+    exp_macro = {k: v for k, v in exp_macro.items() if v}
+    H.append('<label class="exp-elige">Ver la dinámica de <select class="exp-sel" data-mapa="mapa-macro"><option value="">— elige una variable —</option>'
+             + "".join(f'<option value="{e(k)}">{e(k)}</option>' for k in exp_macro) + '</select></label>')
+    H.append('<div id="exp-mapa-macro" class="explica" data-mapa="mapa-macro" hidden></div>')
 
     H.append(f'<h2>Variables{i("variables")}</h2><table class="ord"><tr><th>Variable</th><th>Valor</th><th>Fecha</th><th>Percentil{i("nivel_macro")}</th><th>Cambio reciente{i("impulso_macro")}</th><th>Fase</th></tr>')
     for v in macro:
@@ -1631,7 +1936,7 @@ def main():
         unidad = " %" if v["modo"] == "pct" else ""
         per = f'{v["periodos"]} {"meses" if v["frecuencia"] == "m" else "sem."}'
         H.append(f'<tr><td>{e(v["nombre"])}{i(v["nombre"])}</td><td>{fmt(v["valor"], 0 if abs(v["valor"]) >= 1000 else 2)}</td>'
-                 f'<td class="{"viejo" if viejo else ""}">{v["fecha"]:%d-%m-%Y}{" ⚠" if viejo else ""}</td>'
+                 f'<td class="{"viejo" if viejo else ""}">{fd(format(v["fecha"], "%d-%m-%Y"))}{" ⚠" if viejo else ""}</td>'
                  f'<td>{fmt(v["nivel"], 0)}</td><td>{fmt(v["impulso"], 2, unidad)} ({per})</td>'
                  f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{v["fase"]}</span></td></tr>')
     H.append('</table><p class="nota">⚠ = dato desfasado.</p>')
@@ -1660,7 +1965,8 @@ def main():
         sk = cb["SKEW"]
         sk1 = sk[sk.index >= sk.index[-1] - pd.Timedelta(days=365)]
         H.append(f'<div class="tarjeta"><div class="t">SKEW{i("skew")}</div><div class="v">{fmt(sk.iloc[-1], 0)}</div>'
-                 f'<div class="s">percentil {fmt(pct(sk), 0)} histórico (desde 1990) · {fmt(pct(sk1), 0)} último año · {sk.index[-1]:%d-%m}</div></div>')
+                 f'<div class="s">percentil {fmt(pct(sk), 0)} histórico (desde {fd(sk.index[0].year)}) · {fmt(pct(sk1), 0)} último año · '
+                 f'{fd(format(sk.index[-1], "%d-%m-%Y"))}</div></div>')
     H.append('</div>')
 
     if pc is not None and len(pc):
@@ -1675,7 +1981,8 @@ def main():
             m10 = s.rolling(10).mean().dropna()
             pp = fmt(pct(m10), 0) if len(m10) >= 60 else "historia corta"
             H.append(f'<tr><td>{nom}</td><td>{fmt(s.iloc[-1], 2)}</td><td>{fmt(m10.iloc[-1] if len(m10) else None, 2)}</td><td>{pp}</td></tr>')
-        H.append(f'</table><p class="nota">Último dato: {pc.index[-1]:%d-%m-%Y}. Percentil alto = mucha cobertura (miedo); bajo = complacencia. Historia desde {pc.index[0]:%m-%Y}.</p>')
+        H.append(f'</table><p class="nota">Último dato: {fd(format(pc.index[-1], "%d-%m-%Y"))}. Percentil alto = mucha cobertura (miedo); '
+                 f'bajo = complacencia. Historia desde {fd(format(pc.index[0], "%m-%Y"))}.</p>')
         if "acciones" in pc.columns:
             H.append(svg_linea(pc["acciones"].rolling(10).mean().dropna().iloc[-250:]))
             H.append('<p class="nota">Put/call de acciones, media de 10 días, último año.</p>')
@@ -1692,7 +1999,7 @@ def main():
             p3 = pct(s3)
             cls = "extremo" if (p3 >= 90 or p3 <= 10) else ""
             H.append(f'<tr><td>{e(k)}</td><td>{fmt(s.iloc[-1], 1, " %")}</td><td>{fmt(ch, 1)}</td>'
-                     f'<td class="{cls}">{fmt(p3, 0)}</td><td>{s.index[-1]:%d-%m-%Y}</td></tr>')
+                     f'<td class="{cls}">{fmt(p3, 0)}</td><td>{fd(format(s.index[-1], "%d-%m-%Y"))}</td></tr>')
         H.append('</table><p class="nota">Percentil ≥ 90 o ≤ 10 = posicionamiento extremo (resaltado).</p>')
     H.append('</section>')
 
@@ -1706,11 +2013,12 @@ def main():
     H.append('<h2>Próximos 120 días</h2><table><tr><th>Fecha</th><th>Evento</th><th>Tipo</th></tr>')
     dias_sem = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
     for d, t, c in eventos:
-        H.append(f'<tr><td>{dias_sem[d.weekday()]} {d:%d-%m-%Y}</td><td>{e(t)}</td><td><span class="tipo">{e(c)}</span>{i(c)}</td></tr>')
+        H.append(f'<tr><td>{fd(dias_sem[d.weekday()] + " " + format(d, "%d-%m-%Y"))}</td><td>{con_fechas(t)}</td>'
+                 f'<td><span class="tipo">{e(c)}</span>{i(c)}</td></tr>')
     H.append('</table>')
     if "meses" in est:
         nm = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
-        H.append(f'<h2>Estacionalidad del S&P 500 (desde {est["desde"]}){i("estacionalidad")}</h2>'
+        H.append(f'<h2>Estacionalidad del S&amp;P 500 (desde {fd(est["desde"])}){i("estacionalidad")}</h2>'
                  '<table><tr><th>Mes</th><th>Media</th><th>Mediana</th><th>% meses positivos</th></tr>')
         for mes, fila in est["meses"].iterrows():
             marca = ' class="hoy"' if mes in (HOY.month, HOY.month % 12 + 1) else ""
@@ -1724,7 +2032,7 @@ def main():
         H.append('</table>')
     if "cambio_mes" in est:
         a, b, desde = est["cambio_mes"]
-        H.append(f'<p class="nota">Cambio de mes (último día + 3 primeros, desde {desde}): media diaria {fmt(a, 3, " %")} frente a {fmt(b, 3, " %")} el resto de días.{i("cambio_mes")}</p>')
+        H.append(f'<p class="nota">Cambio de mes (último día + 3 primeros, desde {fd(desde)}): media diaria {fmt(a, 3, " %")} frente a {fmt(b, 3, " %")} el resto de días.{i("cambio_mes")}</p>')
     H.append('<p class="nota">Evidencia académica de la estacionalidad: débil e inestable.</p>')
     H.append('</section>')
 
@@ -1736,7 +2044,7 @@ def main():
         H.append('<p>Todas las fuentes se han descargado correctamente.</p>')
     H.append('<details><summary>Última fecha de cada fuente</summary><table>')
     for k in sorted(FECHAS):
-        H.append(f'<tr><td>{e(k)}</td><td>{pd.Timestamp(FECHAS[k]):%d-%m-%Y}</td></tr>')
+        H.append(f'<tr><td>{e(k)}</td><td>{fd(format(pd.Timestamp(FECHAS[k]), "%d-%m-%Y"))}</td></tr>')
     H.append('</table></details></section>')
 
     # ===== Resumen en texto (para lectura automática)
@@ -1753,11 +2061,16 @@ def main():
     R.append(f"Blackout estimado={'sí' if en_blackout else 'no'}")
     if ERRORES:
         R.append("Fallos: " + ", ".join(n for n, _ in ERRORES))
-    H.append('<pre class="resumen">' + e("\n".join(R)) + '</pre>')
+    H.append('<pre class="resumen">' + con_fechas("\n".join(R)) + '</pre>')
 
     H.append('<div id="modal" class="modal"><div class="caja"><button class="cerrar" aria-label="Cerrar">×</button>'
              '<h3 id="modal-t"></h3><div id="modal-c"></div></div></div>')
     H.append('<script id="info-datos" type="application/json">' + info_json() + '</script>')
+    H.append('<script id="exp-datos" type="application/json">'
+             + json.dumps({"mapa-motores": exp_motores, "mapa-macro": exp_macro}, ensure_ascii=False).replace("</", "<\\/")
+             + '</script>')
+    H.append('<script id="b100-datos" type="application/json">'
+             + json.dumps(b100, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>')
     H.append(PIE)
     with open(os.path.join(CARPETA_WEB, "index.html"), "w", encoding="utf-8") as f:
         f.write("".join(H))
@@ -1771,11 +2084,14 @@ CABECERA = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diagnosticador de mercados</title>
 <style>
-html.tema-azul{--pagina:linear-gradient(170deg,#eef5fc 0%,#dce9f6 55%,#cfe0f2 100%);--panel:rgba(255,255,255,.72);--th:rgba(225,236,248,.95);--b:#c9d8e8;--f:#1b2a3a;--s:#56677a;--acento:#2f6fdb}
-html.tema-gris{--pagina:linear-gradient(170deg,#f4f5f7 0%,#e6e9ee 100%);--panel:rgba(255,255,255,.8);--th:#eceff3;--b:#d8dde3;--f:#1d2733;--s:#5b6776;--acento:#4a5d75}
-html.tema-blanco{--pagina:#ffffff;--panel:#f6f8fa;--th:#f6f8fa;--b:#e3e7ec;--f:#1d2733;--s:#5b6776;--acento:#2f6fdb}
-html.tema-arena{--pagina:linear-gradient(170deg,#fbf8f2 0%,#f1eadc 100%);--panel:rgba(255,255,255,.75);--th:#f3ecdf;--b:#e2d7c3;--f:#2b2620;--s:#6c6253;--acento:#a0672a}
+html.tema-azul{--pagina:linear-gradient(170deg,#eef5fc 0%,#dce9f6 55%,#cfe0f2 100%);--panel:rgba(255,255,255,.72);--th:rgba(225,236,248,.95);--b:#c9d8e8;--f:#1b2a3a;--s:#56677a;--acento:#2f6fdb;--fd:#7a4fa8}
+html.tema-gris{--pagina:linear-gradient(170deg,#f4f5f7 0%,#e6e9ee 100%);--panel:rgba(255,255,255,.8);--th:#eceff3;--b:#d8dde3;--f:#1d2733;--s:#5b6776;--acento:#4a5d75;--fd:#7a4fa8}
+html.tema-blanco{--pagina:#ffffff;--panel:#f6f8fa;--th:#f6f8fa;--b:#e3e7ec;--f:#1d2733;--s:#5b6776;--acento:#2f6fdb;--fd:#7a4fa8}
+html.tema-arena{--pagina:linear-gradient(170deg,#fbf8f2 0%,#f1eadc 100%);--panel:rgba(255,255,255,.75);--th:#f3ecdf;--b:#e2d7c3;--f:#2b2620;--s:#6c6253;--acento:#a0672a;--fd:#8a4f7d}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+.fd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-size:.84em;color:var(--fd);font-style:normal;font-weight:400;white-space:nowrap;letter-spacing:-.02em}
+td.viejo .fd{color:#c0392b}
 html{background:var(--pagina);background-attachment:fixed;min-height:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--f);background:transparent;margin:0 auto;padding:14px;max-width:1100px;font-size:15px;line-height:1.4}
 header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
@@ -1829,11 +2145,36 @@ h2.primero{margin-top:6px}
 .fuentes-info{font-size:.85em;color:#56677a;border-top:1px solid #e3e7ec;padding-top:8px;margin-top:10px}
 .fuentes-info a{color:#2f6fdb}
 .resumen{white-space:pre-wrap;font-size:.75em;color:var(--s);background:var(--panel);padding:8px;border-radius:8px;margin-top:16px}
+.vista{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:.88em;margin:2px 0 6px}
+.vista label{cursor:pointer;white-space:nowrap}
+.vista select,.exp-elige select{font-size:1em;border:1px solid var(--b);border-radius:6px;background:var(--panel);color:var(--f);padding:2px 4px;max-width:100%}
+.exp-elige{display:block;font-size:.85em;color:var(--s);margin:6px 0 2px}
+.explica{background:var(--panel);border:1px solid var(--b);border-left:4px solid var(--acento);border-radius:10px;padding:10px 14px;margin:6px 0 14px;max-width:760px;position:relative;font-size:.9em;line-height:1.5}
+.explica h3{margin:0 28px 6px 0;font-size:1.05em}
+.explica p{margin:6px 0}
+.explica .exp-ver{font-size:1.02em;background:rgba(47,111,219,.07);border-radius:8px;padding:6px 9px}
+.explica .exp-aviso{color:#a0522d;font-weight:600}
+.explica .et{display:inline-block;color:var(--s);font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-right:5px}
+.cerrar-exp{position:absolute;top:6px;right:10px;border:0;background:none;font-size:1.4em;cursor:pointer;color:var(--s);line-height:1}
+[data-exp] svg.grafico{cursor:pointer}
+.grafico g.serie>*:not(text){pointer-events:none}
+.grafico.fijando g.serie{opacity:.15}.grafico.fijando g.serie.fija{opacity:1}
+.grafico g.serie.fija polyline{stroke-width:3;stroke-opacity:.95}.grafico g.serie.fija text{font-size:13px}
+.grafico g.serie.activa path.l,.grafico g.serie.fija path.l{stroke-width:3;stroke-opacity:1}
+.grafico g.serie.ref{cursor:default}
+.grafico .ytk{font-size:10.5px;fill:#56677a}
+.grafico .fdt{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-size:10.5px;fill:var(--fd)}
+.grafico .etq2{font-size:10.5px;font-weight:600}
+.b100-rank ol{columns:3 210px;column-gap:18px;margin:4px 0 6px;padding-left:24px;font-size:.84em}
+.b100-rank li{break-inside:avoid;margin:1px 0}
+.b100-rank li.ref{font-weight:700}
+.b100-rank .v{font-variant-numeric:tabular-nums;font-weight:600}
+.b100-rank .mas{color:#1f7a45}.b100-rank .menos{color:#c0392b}
 </style>
 <script>try{var t=localStorage.getItem('tema');if(t){document.documentElement.className='tema-'+t;}}catch(e){}</script>
 </head><body>
 <header><h1>Diagnosticador de mercados</h1>
-<span class="fecha">Actualizado {{FECHA}} (hora peninsular aprox.)</span>
+<span class="fecha">Actualizado <span class="fd">{{FECHA}}</span> (hora peninsular aprox.)</span>
 <label class="apariencia">Apariencia
 <select id="tema"><option value="azul">Azul suave</option><option value="gris">Gris claro</option><option value="arena">Arena</option><option value="blanco">Blanco</option></select></label>
 </header>
@@ -1862,9 +2203,6 @@ PIE = r"""
  document.querySelectorAll('.fg').forEach(function(c){c.addEventListener('change',function(){
   document.querySelectorAll('.fm[data-g="'+c.value+'"]').forEach(function(m){m.checked=c.checked;
    m.dispatchEvent(new Event('change'));});});});})();
-document.querySelectorAll('.grafico g.serie').forEach(function(g){var svg=g.ownerSVGElement;
- g.addEventListener('mouseenter',function(){svg.classList.add('resaltando');g.classList.add('activa');});
- g.addEventListener('mouseleave',function(){svg.classList.remove('resaltando');g.classList.remove('activa');});});
 document.querySelectorAll('.rastros').forEach(function(c){c.addEventListener('change',function(){
  var m=document.getElementById(c.getAttribute('data-mapa'));if(m)m.classList.toggle('sin-rastro',!c.checked);});});
 document.querySelectorAll('nav button').forEach(function(b){b.addEventListener('click',function(){
@@ -1881,6 +2219,129 @@ document.querySelectorAll('table.ord').forEach(function(tb){tb.querySelectorAll(
    var nx=parseFloat(x.replace(/\./g,'').replace(',','.')),ny=parseFloat(y.replace(/\./g,'').replace(',','.'));
    if(!isNaN(nx)&&!isNaN(ny))return asc?nx-ny:ny-nx;return asc?x.localeCompare(y):y.localeCompare(x);});
   filas.forEach(function(f){f.parentNode.appendChild(f);});});});});
+// ---- Explicación de la dinámica al pulsar un vector
+(function(){var EXP={};try{EXP=JSON.parse(document.getElementById('exp-datos').textContent)||{};}catch(e){}
+ function fijar(mapa,k){document.querySelectorAll('[data-exp="'+mapa+'"] svg.grafico').forEach(function(svg){
+   svg.classList.toggle('fijando',!!k);
+   svg.querySelectorAll('g.serie').forEach(function(g){g.classList.toggle('fija',!!k&&g.getAttribute('data-k')===k);});});}
+ function sel(mapa){return document.querySelector('select.exp-sel[data-mapa="'+mapa+'"]');}
+ function mostrar(mapa,k){var caja=document.getElementById('exp-'+mapa);var d=(EXP[mapa]||{})[k];if(!caja||!d)return;
+  caja.innerHTML='<button class="cerrar-exp" aria-label="Cerrar">×</button>'+d;caja.hidden=false;caja.setAttribute('data-k',k);
+  var s=sel(mapa);if(s)s.value=k;fijar(mapa,k);
+  var r=caja.getBoundingClientRect();if(r.top<0||r.bottom>window.innerHeight)caja.scrollIntoView({behavior:'smooth',block:'nearest'});}
+ function cerrar(mapa){var caja=document.getElementById('exp-'+mapa);if(caja){caja.hidden=true;caja.removeAttribute('data-k');}
+  var s=sel(mapa);if(s)s.value='';fijar(mapa,null);}
+ window.expFijar=fijar;
+ // Serie más cercana al cursor (punto actual, rastro o línea), no la que esté dibujada encima
+ function nums(s){return s.trim().split(/[\s,]+/).map(Number);}
+ function trozos(g){var out={pt:null,lin:[]},c=g.querySelector('circle[r="4.5"]'),pl=g.querySelector('polyline.r'),pa=g.querySelector('path.l');
+  if(c)out.pt=[+c.getAttribute('cx'),+c.getAttribute('cy')];
+  if(pl&&!g.closest('.sin-rastro')){var v=nums(pl.getAttribute('points')),a=[];for(var i=0;i+1<v.length;i+=2)a.push([v[i],v[i+1]]);out.lin.push(a);}
+  if(pa){pa.getAttribute('d').split('M').forEach(function(sp){if(!sp.trim())return;var a=[];
+   sp.split('L').forEach(function(q){var v=nums(q);if(v.length>=2)a.push([v[0],v[1]]);});out.lin.push(a);});}
+  return out;}
+ function dseg(p,a,b){var dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy,t=L?((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L:0;
+  t=Math.max(0,Math.min(1,t));var x=a[0]+t*dx-p[0],y=a[1]+t*dy-p[1];return Math.sqrt(x*x+y*y);}
+ function cercana(svg,ev,gEtq){var m=svg.getScreenCTM();if(!m)return null;var pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;
+  var p=pt.matrixTransform(m.inverse()),p2=[p.x,p.y],esc=Math.abs(m.a||1),gP=null,dP=Infinity,gL=null,dL=Infinity;
+  svg.querySelectorAll('g.serie').forEach(function(g){if(g.style.display==='none')return;var z=trozos(g);
+   if(z.pt){var d=Math.hypot(z.pt[0]-p2[0],z.pt[1]-p2[1]);if(d<dP){dP=d;gP=g;}}
+   z.lin.forEach(function(a){for(var i=1;i<a.length;i++){var d=dseg(p2,a[i-1],a[i]);if(d<dL){dL=d;gL=g;}}});});
+  // Prioridad: punto actual (círculo grande), etiqueta pulsada, rastros y líneas
+  if(gP&&dP*esc<=9)return gP;if(gEtq)return gEtq;if(gL&&dL*esc<=14)return gL;if(gP&&dP*esc<=14)return gP;return null;}
+ function serieEn(ev){var t=ev.target;if(!t.closest)return null;var c=t.closest('[data-exp]');if(!c)return null;
+  var svg=t.closest('svg.grafico')||c.querySelector('svg.grafico');if(!svg)return null;
+  var g=t.closest('g.serie'),etq=(g&&t.tagName.toLowerCase()==='text')?g:null;return {c:c,svg:svg,g:cercana(svg,ev,etq)};}
+ var tip=null,mostrandoTip=false;
+ document.querySelectorAll('[data-exp]').forEach(function(c){
+  c.addEventListener('mousemove',function(ev){var r=serieEn(ev);if(!r)return;tip=tip||document.getElementById('tip');
+   r.svg.querySelectorAll('g.serie.activa').forEach(function(x){if(x!==r.g)x.classList.remove('activa');});
+   if(r.g){r.svg.classList.add('resaltando');r.g.classList.add('activa');
+    if(tip){tip.textContent=r.g.getAttribute('data-tip')||'';tip.style.display='block';mostrandoTip=true;}}
+   else{r.svg.classList.remove('resaltando');if(tip&&mostrandoTip){tip.style.display='none';mostrandoTip=false;}}});
+  c.addEventListener('mouseleave',function(){c.querySelectorAll('svg.grafico').forEach(function(s){s.classList.remove('resaltando');
+   s.querySelectorAll('g.serie.activa').forEach(function(x){x.classList.remove('activa');});});
+   if(tip&&mostrandoTip){tip.style.display='none';mostrandoTip=false;}});
+  c.addEventListener('click',function(ev){var t0=document.getElementById('tip');if(t0)t0.style.display='none';mostrandoTip=false;
+   var r=serieEn(ev);if(!r||!r.g)return;var k=r.g.getAttribute('data-k');if(!k)return;
+   var mapa=c.getAttribute('data-exp'),caja=document.getElementById('exp-'+mapa);
+   if(caja&&!caja.hidden&&caja.getAttribute('data-k')===k)cerrar(mapa);else mostrar(mapa,k);});});
+ document.addEventListener('click',function(ev){if(!ev.target.closest)return;
+  var x=ev.target.closest('.cerrar-exp');if(x)cerrar(x.parentNode.getAttribute('data-mapa'));});
+ window.addEventListener('scroll',function(){var t0=document.getElementById('tip');if(t0)t0.style.display='none';mostrandoTip=false;},{passive:true});
+ document.querySelectorAll('select.exp-sel').forEach(function(s){s.addEventListener('change',function(){
+  var mapa=s.getAttribute('data-mapa');if(s.value)mostrar(mapa,s.value);else cerrar(mapa);});});})();
+// ---- Vista en base 100
+(function(){var D=null;try{D=JSON.parse(document.getElementById('b100-datos').textContent);}catch(e){}
+ var caja=document.getElementById('b100'),per=document.getElementById('b100-per');if(!caja||!per)return;
+ var graf=caja.querySelector('.b100-graf'),rank=caja.querySelector('.b100-rank');
+ function num(x,d){return x.toFixed(d).replace('.',',');}
+ function pctTxt(v){var p=v-100;return (p>=0?'+':'−')+num(Math.abs(p),1)+'\u00a0%';}
+ function fch(iso,dia){var p=iso.split('-');return dia?(p[2]+'-'+p[1]+'-'+p[0]):(p[1]+'-'+p[0]);}
+ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+ function visibles(){var v=[];document.querySelectorAll('.fm').forEach(function(c){if(c.checked&&D.s[c.value])v.push(c.value);});return v;}
+ function dibujar(){if(caja.hidden)return;
+  if(!D||!D.f||D.f.length<2){graf.innerHTML='<p class="nota">Sin datos suficientes.</p>';rank.innerHTML='';return;}
+  var N=parseInt(per.value,10)||24,F=D.f.slice(-(N+1)),n=F.length;
+  var tks=visibles();if(D.s[D.ref])tks.push(D.ref);
+  var L=[];tks.forEach(function(t){var a=D.s[t].slice(-(N+1)),b=null,i0=0;
+   for(var i=0;i<a.length;i++){if(a[i]!=null){b=a[i];i0=i;break;}}if(b==null)return;
+   var v=a.map(function(x){return x==null?null:x/b*100;}),fin=null;
+   for(var j=v.length-1;j>=0;j--){if(v[j]!=null){fin=v[j];break;}}
+   L.push({t:t,v:v,i0:i0,fin:fin,ref:t===D.ref});});
+  var lo=100,hi=100;L.forEach(function(l){l.v.forEach(function(x){if(x!=null){if(x<lo)lo=x;if(x>hi)hi=x;}});});
+  var ll=Math.log(lo),lh=Math.log(hi),pad=(lh-ll)*0.06||0.02;ll-=pad;lh+=pad;
+  var W=760,H=430,ml=44,mr=114,mt=12,mb=28;
+  function X(i){return ml+i/(n-1)*(W-ml-mr);}
+  function Y(v){return mt+(lh-Math.log(v))/(lh-ll)*(H-mt-mb);}
+  var vmin=Math.exp(ll),vmax=Math.exp(lh),cand=[];
+  if(vmax/vmin<2.2){var span=vmax-vmin,steps=[1,2,2.5,5,10,20,25,50,100],st=100;
+   for(var s=0;s<steps.length;s++){if(span/steps[s]<=7){st=steps[s];break;}}
+   for(var t=Math.ceil(vmin/st)*st;t<=vmax;t+=st)cand.push(+t.toFixed(4));}
+  else{[1,1.5,2,3,5,7].forEach(function(m){for(var d=0.1;d<=1e4;d*=10){var t=+(m*d).toPrecision(3);if(t>=vmin&&t<=vmax)cand.push(t);}});}
+  var ticks=[100];
+  [cand.filter(function(t){return t>100;}).sort(function(a,b){return a-b;}),
+   cand.filter(function(t){return t<100;}).sort(function(a,b){return b-a;})].forEach(function(lst){var last=100;
+   lst.forEach(function(t){if(Math.abs(Y(t)-Y(last))>=20){ticks.push(t);last=t;}});});
+  var o=['<svg viewBox="0 0 '+W+' '+H+'" class="grafico b100svg" role="img">'];
+  ticks.forEach(function(t){var y=Y(t).toFixed(1);
+   o.push('<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y+'" y2="'+y+'" stroke="'+(t===100?'#7d8a9c':'#d5dde7')+'" stroke-width="1"'+(t===100?' stroke-dasharray="3 3"':'')+'/>');
+   o.push('<text x="'+(ml-6)+'" y="'+(+y+3.5)+'" text-anchor="end" class="ytk">'+String(t).replace('.',',')+'</text>');});
+  var nx=Math.min(6,n);for(var k=0;k<nx;k++){var ix=Math.round(k*(n-1)/(nx-1)),xx=X(ix).toFixed(1);
+   o.push('<line x1="'+xx+'" x2="'+xx+'" y1="'+(H-mb)+'" y2="'+(H-mb+4)+'" stroke="#7d8a9c"/>');
+   o.push('<text x="'+xx+'" y="'+(H-mb+17)+'" text-anchor="'+(k===0?'start':k===nx-1?'end':'middle')+'" class="fdt">'+fch(F[ix],N<=52)+'</text>');}
+  var et=L.map(function(l){return {t:l.t,y:Y(l.fin)};}).sort(function(a,b){return a.y-b.y;}),gap=11;
+  for(var q=1;q<et.length;q++)if(et[q].y<et[q-1].y+gap)et[q].y=et[q-1].y+gap;
+  if(et.length&&et[et.length-1].y>H-mb){et[et.length-1].y=H-mb;for(q=et.length-2;q>=0;q--)if(et[q].y>et[q+1].y-gap)et[q].y=et[q+1].y-gap;}
+  var pos={};et.forEach(function(z){pos[z.t]=z.y;});
+  L.sort(function(a,b){return (a.ref?1:0)-(b.ref?1:0);});
+  L.forEach(function(l){var d='',pen=false;l.v.forEach(function(x,i){if(x==null){pen=false;return;}
+    d+=(pen?'L':'M')+X(i).toFixed(1)+','+Y(x).toFixed(1);pen=true;});
+   var col=l.ref?'#1b2a3a':(D.c[l.t]||'#555'),nom=D.n[l.t]||l.t,ye=Y(l.fin),yl=pos[l.t];
+   var tip=l.t+' · '+nom+': '+pctTxt(l.fin)+' en el periodo'+(l.i0>0?' (sus datos empiezan más tarde)':'')+'.'+(l.ref?' Referencia de liquidez.':' Pulsa para ver su dinámica.');
+   o.push('<g class="serie'+(l.ref?' ref':'')+'"'+(l.ref?'':' data-k="'+esc(l.t)+'"')+' data-tip="'+esc(tip)+'">');
+   o.push('<path class="l" d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+(l.ref?2.2:1.5)+'"'+(l.ref?' stroke-dasharray="6 4"':' stroke-opacity="0.85"')+'/>');
+   o.push('<circle cx="'+(W-mr).toFixed(1)+'" cy="'+ye.toFixed(1)+'" r="2" fill="'+col+'"/>');
+   if(Math.abs(yl-ye)>1.5)o.push('<line x1="'+(W-mr+3).toFixed(1)+'" y1="'+ye.toFixed(1)+'" x2="'+(W-mr+20).toFixed(1)+'" y2="'+yl.toFixed(1)+'" stroke="'+col+'" stroke-width="0.7" stroke-opacity="0.55" stroke-dasharray="1.5 2"/>');
+   o.push('<text x="'+(W-mr+22)+'" y="'+(yl+3.5).toFixed(1)+'" class="etq2" fill="'+col+'">'+esc(l.t)+' '+pctTxt(l.fin)+'</text></g>');});
+  o.push('</svg>');graf.innerHTML=o.join('');
+  var refFin=null;L.forEach(function(l){if(l.ref)refFin=l.fin;});
+  var R=L.slice().sort(function(a,b){return b.fin-a.fin;});
+  rank.innerHTML='<p class="nota">Rentabilidad en el periodo (<span class="fd">'+fch(F[0],true)+'</span> → <span class="fd">'+fch(F[n-1],true)+
+   '</span>), de mayor a menor. Verde: mejor que las letras del Tesoro; rojo: peor.</p><ol>'+R.map(function(l){
+   var col=l.ref?'#1b2a3a':(D.c[l.t]||'#555'),cls=l.ref||refFin==null?'':(l.fin>=refFin?'mas':'menos');
+   return '<li'+(l.ref?' class="ref"':'')+'><span class="chip" style="background:'+col+'"></span><b>'+esc(l.t)+'</b> '+esc(D.n[l.t]||'')+
+    ' <span class="v '+cls+'">'+pctTxt(l.fin)+'</span></li>';}).join('')+'</ol>';
+  var c=document.getElementById('exp-mapa-motores');if(c&&!c.hidden&&window.expFijar)window.expFijar('mapa-motores',c.getAttribute('data-k'));}
+ function vista(v){var b=v==='b100';
+  document.querySelectorAll('.solo-mapa').forEach(function(x){x.hidden=b;});
+  document.querySelectorAll('.solo-b100').forEach(function(x){x.hidden=!b;});
+  var p=document.querySelector('.vista .periodo');if(p)p.hidden=!b;if(b)dibujar();}
+ document.querySelectorAll('input[name="vista-motores"]').forEach(function(r){r.addEventListener('change',function(){if(r.checked)vista(r.value);});});
+ per.addEventListener('change',dibujar);
+ var pend=false;document.querySelectorAll('.fm').forEach(function(c){c.addEventListener('change',function(){if(pend)return;pend=true;
+  requestAnimationFrame(function(){pend=false;dibujar();});});});
+ var r0=document.querySelector('input[name="vista-motores"]:checked');if(r0&&r0.value==='b100')vista('b100');})();
 </script>
 </body></html>
 """
