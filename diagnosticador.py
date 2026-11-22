@@ -42,7 +42,7 @@ INFO = {
 <p>Valoración, para cada índice, de si es buen momento para tenerlo indexado. Se decide en este orden:</p>
 <ul><li><b>Tendencia</b> (media de 40 semanas): alcista si el precio está por encima de su media y esta sube; bajista si está por debajo y baja; si no, lateral.</li>
 <li><b>Muy malas:</b> tendencia bajista y, además, crédito deteriorándose con rapidez o precio todavía a más de un 10 % de su media de 200 semanas (le queda recorrido a la baja).</li>
-<li><b>Malas:</b> tendencia alcista pero con señales de fin de ciclo (fase de madurez o giro, o 2 señales de agotamiento); o sin tendencia, con el impulso débil y lejos de la zona de suelo.</li>
+<li><b>Malas:</b> tendencia alcista pero con señales de fin de ciclo (fase de madurez o giro, o una señal de cansancio de las que cuentan); o sin tendencia, con el impulso débil y lejos de la zona de suelo.</li>
 <li><b>Regular-pesimista:</b> bajista pero ya cerca de la zona de suelo, sin señales suficientes; o sin tendencia y con el impulso débil.</li>
 <li><b>Regular-optimista:</b> sin tendencia pero con el impulso mejorando; tendencia alcista pero perdiendo fuerza frente a la liquidez (fase de rezagado o suelo en el mapa); o bajista cerca del suelo con la puerta en tramo 2 o más.</li>
 <li><b>Buenas:</b> tendencia alcista sana: fase de arranque o aceleración en el mapa y sin señales de fin de ciclo.</li>
@@ -68,9 +68,15 @@ INFO = {
 
     "conviccion": ("Grado de convicción", """
 <p><b>Qué es.</b> Cuántos bloques independientes (régimen, estrés, liquidez y valoración/técnico/sentimiento) apuntan en la misma dirección que el mapa de la renta variable global.</p>
-<ul><li>0–1 coincidencias: baja → no construir.</li><li>2–3: media → completar el tramo en 2–3 meses.</li><li>4: alta → completar el tramo en 1 mes.</li></ul>
+<ul><li><b>Ninguna</b> (0 de 4) y <b>baja</b> (1 de 4) → no construir.</li><li><b>Media</b> (2 de 4) y <b>alta</b> (3 de 4) → completar el tramo en 2–3 meses.</li><li><b>Total</b> (4 de 4) → completar el tramo en 1 mes.</li></ul>
 <p><b>Cuidado.</b> Regla de criterio propio. A 6-12 meses ninguna señal tiene gran capacidad predictiva.</p>""", []),
 
+    "dist200": ("Distancia a la media de 200 semanas", """
+<p>Se calcula con los <b>cierres semanales sin ajustar por dividendos</b>, como los gráficos habituales (TradingView, por ejemplo), y con la media simple de las últimas 200 semanas.</p>
+<ul><li><b>Precio sobre su media:</b> cuánto está el precio por encima de la media, en % de la media: (precio ÷ media − 1).</li>
+<li><b>Caída hasta la media:</b> cuánto tendría que caer el precio para tocarla, en % del precio: (1 − media ÷ precio). Es lo que mide la herramienta «regla» de TradingView si se traza desde el precio hasta la media.</li></ul>
+<p>Ejemplo: precio 120 y media 100 → el precio está un 20 % por encima, pero bastaría una caída del 16,7 % para tocar la media.</p>
+<p>Se usa la última semana cerrada (viernes). Puede diferir unas décimas de un gráfico si este usa otro proveedor o el precio en directo.</p>""", []),
     "c_ma200": ("Precio cerca de la media de 200 semanas", """
 <p>La media de 200 semanas (unos 4 años) es una referencia de muy largo plazo. Históricamente los grandes suelos se han formado cerca de ella o por debajo.</p>
 <p><b>En esta web.</b> Se cumple si el cierre semanal del índice está como mucho un 5 % por encima de su propia media de 200 semanas, o por debajo, en alguna de las últimas 13 semanas. Al lado se muestra la distancia actual.</p>
@@ -140,21 +146,27 @@ INFO = {
 <p>Velocidad a la que cambia la fuerza relativa: compara la fuerza actual con la de hace 4 semanas.</p>
 <p><b>Lectura.</b> Por encima de 100, la fuerza está mejorando (acelera); por debajo, empeorando (frena). El impulso suele girar antes que la fuerza: por eso anticipa las rotaciones.</p>""", []),
     "agotamiento": ("Señales de agotamiento", """
-<p>Cuántas de estas cuatro señales de extremo se dan ahora (de 0 a 4):</p>
-<ul><li>RSI semanal por encima de 70 (alcista) o por debajo de 30 (bajista).</li>
+<p>Cuatro señales de extremo, en las dos direcciones. <b>Solo cuentan para la fase las que han funcionado</b> en una comprobación con los precios de cada fondo desde su creación (rentabilidad a 12 meses después de la señal frente a la de una semana cualquiera):</p>
+<ul><li><b>Cansancio de la subida:</b> cuenta el RSI semanal por encima de 75 solo en bonos largos (TLT) y la divergencia bajista en bolsa (renta variable y factores).</li>
+<li><b>Agotamiento de la caída:</b> cuentan el RSI semanal por debajo de 30 y la divergencia alcista en bolsa, y el RSI por debajo de 30 en renta fija y crédito.</li>
+<li><b>Materias primas, divisas y alternativos:</b> no cuenta ninguna.</li>
+<li>Con <b>1 señal que cuente</b>, la fase pasa a madurez (o a suelo). Las demás se muestran como información.</li></ul>
+<p><b>Por qué.</b> A 1–12 meses las tendencias suelen continuar: estar muy estirado al alza no ha anticipado caídas en bolsa ni en materias primas (después rindieron igual o más). La sobreventa, en cambio, sí ha anticipado rebotes en bolsa (RSI &lt; 30: unos 10 puntos más de rentabilidad a 12 meses que lo normal, mejor en 11 de 13 motores).</p>
+<p><b>Las cuatro señales:</b></p>
+<ul><li>RSI semanal por encima de 75 (alcista) o por debajo de 30 (bajista). El listón es asimétrico a propósito: en tendencia alcista la sobrecompra puede durar mucho (un RSI de 70 se ha dado en el 12,6 % de las semanas del SPY desde 1993; uno de 75, en el 5,0 %), mientras que la sobreventa tiene más poder como señal de rebote. Comprobación histórica (SPY desde 1993, 16 episodios): un RSI semanal por encima de 75 no ha anticipado caídas a 6-12 meses en la bolsa; sí en los bonos largos (TLT, 6 episodios).</li>
 <li>Distancia a su media de 40 semanas entre el 10 % más alto (alcista) o más bajo (bajista) de toda la historia del fondo.</li>
 <li>Fuerza frente a la liquidez por encima de su percentil 90 (alcista) o por debajo del 10 (bajista), sobre toda la historia del fondo.</li>
 <li><b>Divergencia:</b> el precio está en la zona de máximos de 26 semanas (a menos de un 2 %) pero el RSI ya está 10 puntos o más por debajo de su máximo de esas 26 semanas: sube, pero con menos fuerza. En el lenguaje técnico habitual es una <i>divergencia bajista</i> y cuenta como señal de cansancio de la subida. La simétrica en mínimos es una <i>divergencia alcista</i> y cuenta como agotamiento de la caída.</li></ul>
-<p><b>Lectura.</b> "Alcista 2 de 4" indica una subida muy estirada: riesgo de fin de ciclo. "Bajista 2 de 4" indica una caída muy estirada: posible suelo. Con 2 o más señales, la fase pasa a madurez (o suelo).</p>
-<p><b>Cuidado.</b> Umbrales de criterio propio, no calibrados. La divergencia es una señal técnica clásica con evidencia académica débil.</p>""", []),
+<p><b>Cuidado.</b> Muestras pequeñas (entre 1 y 23 episodios por fondo) y periodo mayoritariamente alcista: inclinan las probabilidades, no aseguran. Umbrales de criterio propio, no calibrados.</p>""",
+        [("Moskowitz, Ooi y Pedersen (2012): Time series momentum, Journal of Financial Economics", "https://papers.ssrn.com/abstract=2089463")]),
     "direccion": ("Dirección del mapa (RV global)", """
 <p>Fase en la que está el ACWI (bolsa mundial) en el mapa de rotación. Suelo, arranque o aceleración cuentan como dirección favorable al riesgo; madurez, giro o rezagado, como desfavorable. La convicción mide cuántos bloques coinciden con esta dirección.</p>""", []),
     "top_salir": ("Cerca de fin de ciclo · ir saliendo", """
-<p>Motores en fase de <b>giro</b> (fuerza alta pero impulso ya por debajo de 100) o de <b>madurez</b> (impulso frenando 3 semanas o 2 señales de agotamiento alcista).</p>
+<p>Motores en fase de <b>giro</b> (fuerza alta pero impulso ya por debajo de 100) o de <b>madurez</b> (impulso frenando 3 semanas o una señal de cansancio de las que cuentan).</p>
 <p>Orden: primero los que están en giro y, dentro de cada fase, los que más impulso han perdido en las últimas 4 semanas.</p>
 <p>No incluye volatilidad (VIXY), managed futures (DBMF) ni anti-beta (BTAL): son coberturas o estrategias, no motores que se roten por tendencia. Siguen en el mapa y en la tabla como referencia.</p>""", []),
     "top_ampliar": ("Tendencia alcista con recorrido · ampliar", """
-<p>Motores en fase de <b>aceleración</b> (fuerza e impulso por encima de 100, sin frenar) y con como mucho una señal de agotamiento alcista: la tendencia está viva y no parece estirada.</p>
+<p>Motores en fase de <b>aceleración</b> (fuerza e impulso por encima de 100, sin frenar) y sin señales de cansancio de las que cuentan: la tendencia está viva.</p>
 <p>Orden: de mayor a menor impulso. No incluye volatilidad, managed futures ni anti-beta.</p>""", []),
     "top_construir": ("Podrían iniciar tendencia alcista · empezar a construir", """
 <p>Motores en fase de <b>arranque</b>: todavía lo hacen peor que la liquidez (fuerza por debajo de 100), pero su impulso ya es positivo. Es donde está el margen: al principio del ciclo.</p>
@@ -165,14 +177,14 @@ INFO = {
     "impulso_macro": ("Impulso de una variable macro", """
 <p>Cambio de la variable en las últimas 13 semanas (datos semanales y diarios) o en los últimos 6 meses (datos mensuales). En el mapa se expresa como percentil de ese cambio sobre <b>todos los cambios de su historia</b>: por encima de 50, la variable sube más deprisa de lo habitual; por debajo, baja o sube menos de lo habitual.</p>""", []),
     "fases": ("Fases y qué hacer", """
-<ul><li><b>Suelo:</b> fuerza e impulso bajos, pero el impulso sube 3 semanas o hay agotamiento bajista → vigilar.</li>
+<ul><li><b>Suelo:</b> fuerza e impulso bajos, pero el impulso sube 3 semanas o hay una señal de agotamiento de la caída de las que cuentan → vigilar.</li>
 <li><b>Arranque:</b> fuerza baja pero impulso al alza → construir poco a poco (el margen está al principio).</li>
 <li><b>Aceleración:</b> fuerza e impulso altos → mantener.</li>
-<li><b>Madurez:</b> fuerza alta pero impulso frenando 3 semanas, o 2 señales de agotamiento → empezar a salir antes del clímax.</li>
+<li><b>Madurez:</b> fuerza alta pero impulso frenando 3 semanas, o una señal de cansancio de las que cuentan → empezar a salir antes del clímax.</li>
 <li><b>Giro a la baja:</b> fuerza alta e impulso bajo: se acaba la tendencia alcista → salir.</li>
 <li><b>Tendencia bajista:</b> fuerza e impulso bajos sin señal de suelo → no tocar.</li></ul>
 <p>El giro al alza (inicio de tendencia alcista) es el <b>arranque</b>; el <b>suelo</b> es la fase previa, todavía sin confirmar.</p>
-<p><b>Agotamiento (↑/↓):</b> número de señales de extremo alcista/bajista (de 4): RSI semanal &gt;70 o &lt;30; distancia a la media de 40 semanas en el 10 % extremo de la historia del fondo; fuerza relativa en el percentil &gt;90 o &lt;10 de la historia del fondo; divergencia entre precio y RSI en 26 semanas.</p>
+<p><b>Agotamiento que cuenta:</b> señales de cansancio de la subida o de agotamiento de la caída que cuentan para la fase en ese tipo de activo (ver la ⓘ de agotamiento); "+n sin validar" son señales activas que solo se muestran como información.</p>
 <p><b>Distancia a la media de 40 semanas:</b> cuánto está el precio por encima (+) o por debajo (−) de su media de unos 9 meses. Se resalta (▲ o ▼) cuando está en el 10 % más extremo de toda la historia del fondo; pasa el cursor para ver desde qué año.</p>
 <p><b>Divergencia:</b> <i>bajista</i> = el precio marca máximos de 6 meses pero el RSI ya no (la subida pierde fuerza); <i>alcista</i> = el precio marca mínimos de 6 meses pero el RSI ya no (la caída pierde fuerza).</p>""", []),
     "mapa_macro": ("Mapa macro", """
@@ -399,7 +411,7 @@ OTROS_TIINGO = ["CPER", "URTH", "IEMG"]
 
 # Índices para las condiciones de indexación: (ticker, nombre, ¿EE. UU.?)
 INDICES_COND = [("URTH", "MSCI World", False), ("SPY", "S&P 500", True),
-                ("RSP", "S&P 500 equiponderado", True), ("VGK", "Europa", False),
+                ("RSP", "S&P 500 equiponderado", True), ("QQQ", "Nasdaq 100", True), ("VGK", "Europa", False),
                 ("IEMG", "Emergentes (MSCI EM IMI)", False)]
 
 GRUPO = {
@@ -415,7 +427,24 @@ COLOR_GRUPO = {"Renta variable": "#2f6fdb", "Factores": "#8e44ad", "Renta fija":
                "Alternativos": "#16a085"}
 # Familias que no entran en el TOP 3 (coberturas y estrategias, no motores para rotar por tendencia)
 EXCLUIR_TOP = {"Alternativos"}
-MOTOR_INICIAL = "SPY"       # único motor marcado al abrir la página
+MOTOR_INICIAL = "SPY"
+RSI_SOBRECOMPRA = 75        # señal de cansancio de la subida (asimétrica: la sobreventa sigue en 30)
+RSI_SOBREVENTA = 30
+# Señales de agotamiento que CUENTAN para la fase (las que han funcionado en la comprobación con datos
+# del 22-11-2026). Clave: ticker o familia. rsi · dist · rs · div. Las demás solo se muestran como información.
+SENALES_VALIDAS = {
+    "alc": {"TLT": {"rsi"}, "Renta variable": {"div"}, "Factores": {"div"}},
+    "baj": {"Renta variable": {"rsi", "div"}, "Factores": {"rsi", "div"}, "Renta fija": {"rsi"}, "Crédito": {"rsi"}},
+}
+FAMILIA_EXTRA = {"URTH": "Renta variable", "IEMG": "Renta variable"}   # índices de las condiciones que no son motores
+NOMBRE_SENAL = {"rsi": "RSI", "dist": "distancia a la media", "rs": "fuerza extrema", "div": "divergencia"}
+
+
+def senales_validas(t, lado):
+    d = SENALES_VALIDAS[lado]
+    if t in d:
+        return d[t]
+    return d.get(GRUPO.get(t) or FAMILIA_EXTRA.get(t, ""), set())       # único motor marcado al abrir la página
 B100_SEMANAS = 260          # historia máxima de la vista en base 100 (5 años)
 DESC = {
     "ACWI": "iShares MSCI ACWI: bolsa mundial, países desarrollados y emergentes.",
@@ -510,7 +539,7 @@ class NoEncontrado(Exception):
     pass
 
 
-def get(url, params=None, intentos=2, espera=2, timeout=(10, 30)):
+def get(url, params=None, intentos=2, espera=2, timeout=(10, 30), cabeceras=None):
     from urllib.parse import urlparse
     host = urlparse(url).netloc
     if host in SERVIDOR_CAIDO:
@@ -518,7 +547,7 @@ def get(url, params=None, intentos=2, espera=2, timeout=(10, 30)):
     ultimo = ""
     for i in range(intentos):
         try:
-            r = requests.get(url, params=params, headers=UA, timeout=timeout)
+            r = requests.get(url, params=params, headers={**UA, **(cabeceras or {})}, timeout=timeout)
             if r.status_code == 200:
                 SERVIDOR_FALLOS[host] = 0
                 return r
@@ -951,7 +980,9 @@ def _gamma_bs(S, K, T, iv):
 
 
 def gamma_spx(spy_ultimo=None):
-    d = get("https://cdn-api.cboe.com/api/global/delayed_quotes/options/_SPX.json", timeout=120).json()
+    d = get("https://cdn-api.cboe.com/api/global/delayed_quotes/options/_SPX.json", timeout=120,
+            cabeceras={"Referer": "https://www.cboe.com/delayed_quotes/spx/quote_table", "Origin": "https://www.cboe.com",
+                       "Accept": "application/json, text/plain, */*", "Accept-Language": "en-US,en;q=0.9"}).json()
     datos = d["data"]
     op = pd.DataFrame(datos["options"])
     m = op["option"].str.extract(r"^([A-Z]+)(\d{6})([CP])(\d{8})$")
@@ -1037,7 +1068,7 @@ def rrg(precio_w, ref_w):
     return rs, X.dropna(), Y.dropna()
 
 
-def fase_motor(precio_w, rs, X, Y):
+def fase_motor(precio_w, rs, X, Y, t=None):
     x, y = X.iloc[-1], Y.iloc[-1]
     dy = Y.diff().iloc[-3:]
     sube3 = bool((dy > 0).all())
@@ -1054,7 +1085,7 @@ def fase_motor(precio_w, rs, X, Y):
     div_baj = bool(precio_w.iloc[-1] <= 1.02 * c26.min() and r >= r26.min() + 10)
     desde = precio_w.index[0].year
     s_alc = [n for n, ok in (
-        (f"RSI semanal por encima de 70 ({fmt(r, 0)})", r > 70),
+        (f"RSI semanal por encima de {RSI_SOBRECOMPRA} ({fmt(r, 0)})", r > RSI_SOBRECOMPRA),
         (f"precio muy alejado por encima de su media de 40 semanas (10 % más extremo desde {desde})", pd_ >= 90),
         (f"fuerza frente a la liquidez en máximos (percentil {fmt(prs, 0)} desde {desde})", prs > 90),
         ("divergencia bajista: precio en máximos de 6 meses, pero con el RSI ya más bajo que en el pico", div_alc)) if ok]
@@ -1064,16 +1095,23 @@ def fase_motor(precio_w, rs, X, Y):
         (f"fuerza frente a la liquidez en mínimos (percentil {fmt(prs, 0)} desde {desde})", prs < 10),
         ("divergencia alcista: precio en mínimos de 6 meses, pero con el RSI ya más alto que en el fondo", div_baj)) if ok]
     alc, baj = len(s_alc), len(s_baj)
+    f_alc = {"rsi": bool(r > RSI_SOBRECOMPRA), "dist": bool(pd_ >= 90), "rs": bool(prs > 90), "div": div_alc}
+    f_baj = {"rsi": bool(r < RSI_SOBREVENTA), "dist": bool(pd_ <= 10), "rs": bool(prs < 10), "div": div_baj}
+    v_alc, v_baj = senales_validas(t, "alc"), senales_validas(t, "baj")
+    c_alc = [k for k in sorted(v_alc) if f_alc[k]]
+    c_baj = [k for k in sorted(v_baj) if f_baj[k]]
     if x >= 100 and y < 100:
         f = "GIRO"
     elif x >= 100:
-        f = "MADUREZ" if (baja3 or alc >= 2) else "ACELERACIÓN"
+        f = "MADUREZ" if (baja3 or c_alc) else "ACELERACIÓN"
     elif y >= 100:
         f = "ARRANQUE"
     else:
-        f = "SUELO" if (sube3 or baj >= 2) else "REZAGADO"
+        f = "SUELO" if (sube3 or c_baj) else "REZAGADO"
     return f, {"rsi": r, "alc": alc, "baj": baj, "s_alc": s_alc, "s_baj": s_baj,
-               "dist40": float(dist.iloc[-1]) * 100, "p_dist40": pd_, "desde": desde,
+               "c_alc": c_alc, "c_baj": c_baj, "v_alc": sorted(v_alc), "v_baj": sorted(v_baj), "f_alc": f_alc, "f_baj": f_baj,
+               "dist40": float(dist.iloc[-1]) * 100, "p_dist40": pd_, "desde": desde, "p_rs": prs,
+               "div_alc": div_alc, "div_baj": div_baj,
                "div": "bajista" if div_alc else "alcista" if div_baj else None}
 
 
@@ -1177,12 +1215,13 @@ def puerta_comun(baa_w, ratio_vix_w):
 
 def puerta_indice(px_w, comun):
     """Puntos de la puerta para un índice: su media de 200 semanas y su RSI + condiciones comunes."""
-    res = {"ma200": None, "rsi": None, "dist": None, "rsi_v": None, "puntos": 0, "tramo": 0}
+    res = {"ma200": None, "rsi": None, "dist": None, "caida": None, "rsi_v": None, "puntos": 0, "tramo": 0}
     V = V_MEMORIA
     if px_w is not None and len(px_w) > 210:
         ma = px_w.rolling(200).mean()
         res["ma200"] = bool((px_w <= 1.05 * ma).iloc[-V:].any())
         res["dist"] = (px_w.iloc[-1] / ma.iloc[-1] - 1) * 100
+        res["caida"] = (1 - ma.iloc[-1] / px_w.iloc[-1]) * 100
     if px_w is not None and len(px_w) > 30:
         rr = rsi(px_w)
         res["rsi"] = bool((rr.iloc[-V:] < 30).any())
@@ -1199,26 +1238,28 @@ COLOR_NIVEL = {"MUY MALAS": "#8e1b1b", "MALAS": "#d9534f", "REGULAR-PESIMISTA": 
                "REGULAR-OPTIMISTA": "#9cbf4a", "BUENAS": "#2e9d55", "MUY BUENAS": "#146b37"}
 
 
-def condicion_indice(px_w, ref_w, comun, ecy, es_eeuu):
+def condicion_indice(px_w, ref_w, comun, ecy, es_eeuu, pr_w=None, t=None):
+    """px_w: cierres ajustados (fuerza relativa); pr_w: cierres sin ajustar (medias, RSI, distancias)."""
     if px_w is None or len(px_w) < 60:
         return None
-    ma40 = px_w.rolling(40).mean()
+    pr_w = px_w if pr_w is None else pr_w
+    ma40 = pr_w.rolling(40).mean()
     pendiente = ma40.iloc[-1] / ma40.iloc[-5] - 1
-    cierre = px_w.iloc[-1]
+    cierre = pr_w.iloc[-1]
     if cierre > ma40.iloc[-1] and pendiente > 0:
         tend = "alcista"
     elif cierre < ma40.iloc[-1] and pendiente < 0:
         tend = "bajista"
     else:
         tend = "lateral"
-    fase, extra, Yv = None, {"alc": 0}, 100.0
+    fase, extra, Yv = None, {"alc": 0, "c_alc": []}, 100.0
     if ref_w is not None:
         rs, X, Y = rrg(px_w, ref_w)
         XY = pd.concat([X, Y], axis=1).dropna()
         if len(XY) >= 12:
-            fase, extra = fase_motor(px_w.loc[:rs.index[-1]], rs, XY.iloc[:, 0], XY.iloc[:, 1])
+            fase, extra = fase_motor(pr_w.loc[:rs.index[-1]], rs, XY.iloc[:, 0], XY.iloc[:, 1], t)
             Yv = float(XY.iloc[-1, 1])
-    pu = puerta_indice(px_w, comun)
+    pu = puerta_indice(pr_w, comun)
     dist = pu["dist"]
     lejos = dist is None or dist > 10
     valor_ok = (not es_eeuu) or (ecy is not None and ecy >= 3)
@@ -1233,7 +1274,7 @@ def condicion_indice(px_w, ref_w, comun, ecy, es_eeuu):
         else:
             n, m = "REGULAR-PESIMISTA", "Bajista, cerca de la zona de suelo: esperar señales"
     elif tend == "alcista":
-        if fase in ("MADUREZ", "GIRO") or extra.get("alc", 0) >= 2:
+        if fase in ("MADUREZ", "GIRO") or extra.get("c_alc"):
             n, m = "MALAS", f"Tendencia alcista con señales de fin de ciclo (fase {fase.lower() if fase else 'sin dato'})"
         elif fase in ("REZAGADO", "SUELO"):
             n, m = "REGULAR-OPTIMISTA", "Tendencia alcista, pero perdiendo fuerza frente a la liquidez"
@@ -1384,6 +1425,49 @@ def svg_linea(serie, alto=120, ancho=680, color="#2f6fdb", ref=None):
         out.append(f'<line x1="0" x2="{ancho}" y1="{yr:.1f}" y2="{yr:.1f}" stroke="#bbb" stroke-dasharray="4 4"/>')
     out.append(f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="1.8"/></svg>')
     return "".join(out)
+
+
+def svg_historico(serie, media, txt_media, unidad="", ancho=720, alto=260, color="#8a4b2d"):
+    """Gráfica con ejes (años y valores), línea de la media y último dato marcado."""
+    s = serie.dropna()
+    if len(s) < 10:
+        return ""
+    ml, mr, mt, mb = 46, 92, 12, 26
+    lo, hi = float(min(s.min(), media)), float(max(s.max(), media))
+    pad = (hi - lo) * 0.06 or 0.1
+    lo, hi = lo - pad, hi + pad
+    t0, t1 = s.index[0].value, s.index[-1].value
+
+    def X(d):
+        return ml + (d.value - t0) / (t1 - t0) * (ancho - ml - mr)
+
+    def Y(v):
+        return mt + (hi - v) / (hi - lo) * (alto - mt - mb)
+    o = [f'<svg viewBox="0 0 {ancho} {alto}" class="grafico historico" role="img">']
+    rango = hi - lo
+    paso = next(p for p in (0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 20, 50, 100) if rango / p <= 6)
+    v = math.ceil(lo / paso) * paso
+    while v <= hi:
+        o.append(f'<line x1="{ml}" x2="{ancho - mr}" y1="{Y(v):.1f}" y2="{Y(v):.1f}" stroke="#d5dde7"/>'
+                 f'<text x="{ml - 6}" y="{Y(v) + 3.5:.1f}" text-anchor="end" class="ytk">{fmt(v, 2 if paso < 1 else 0)}</text>')
+        v += paso
+    anios = sorted({d.year for d in s.index})
+    salto = 1 if len(anios) <= 10 else 2 if len(anios) <= 20 else 5
+    for a in anios:
+        d = pd.Timestamp(f"{a}-01-01")
+        if d < s.index[0] or a % salto:
+            continue
+        o.append(f'<line x1="{X(d):.1f}" x2="{X(d):.1f}" y1="{alto - mb}" y2="{alto - mb + 4}" stroke="#7d8a9c"/>'
+                 f'<text x="{X(d):.1f}" y="{alto - mb + 16}" text-anchor="middle" class="fdt">{a}</text>')
+    pts = " ".join(f"{X(d):.1f},{Y(x):.1f}" for d, x in s.items())
+    o.append(f'<line x1="{ml}" x2="{ancho - mr}" y1="{Y(media):.1f}" y2="{Y(media):.1f}" stroke="#1b2a3a" stroke-dasharray="6 4" stroke-width="1.4"/>')
+    o.append(f'<text x="{ancho - mr + 6}" y="{Y(media) + 3.5:.1f}" class="etq2" fill="#1b2a3a">{e(txt_media)}</text>')
+    o.append(f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="1.6"/>')
+    xu, yu = X(s.index[-1]), Y(s.iloc[-1])
+    o.append(f'<circle cx="{xu:.1f}" cy="{yu:.1f}" r="4" fill="{color}"/>'
+             f'<text x="{xu + 6:.1f}" y="{yu - 6:.1f}" class="etq2" fill="{color}">{fmt(s.iloc[-1], 2)}{e(unidad)}</text>')
+    o.append('</svg>')
+    return "".join(o)
 
 
 # ----------------------------------------------------------------------------
@@ -1589,10 +1673,6 @@ def narrativa_motor(m):
         avisos.append("Está muy cerca del punto neutro: señal débil, puede cambiar de situación con poco movimiento.")
     elif math.hypot(dx, dy) < 0.4:
         avisos.append("Casi sin movimiento en el último mes: señal débil.")
-    if m.get("s_alc"):
-        avisos.append(f"Señales de cansancio de la subida ({len(m['s_alc'])} de 4): {'; '.join(m['s_alc'])}.")
-    if m.get("s_baj"):
-        avisos.append(f"Señales de agotamiento de la caída ({len(m['s_baj'])} de 4): {'; '.join(m['s_baj'])}.")
     extra_prov = ""
     if m.get("prov"):
         extra_prov = (f' Las reglas usan solo semanas cerradas (la última, la del {fd(f_(m["fecha_cerrada"]))}).'
@@ -1603,6 +1683,7 @@ def narrativa_motor(m):
     P.append(f'<p><span class="et">Qué hacer según las reglas</span> Fase {nombre_fase(m["fase"]).lower()}. {hacer}{extra_prov}</p>')
     if avisos:
         P.append('<p class="exp-aviso">' + "<br>".join(avisos) + "</p>")
+    P.append(_senales_html(m))
     # Rentabilidades
     rents = m.get("rents") or {}
     if rents:
@@ -1622,6 +1703,51 @@ def narrativa_motor(m):
              f'con su media de los últimos 6 meses. Fuerza ahora {fmt(xs[-1], 1)} (100 = esa media); impulso {fmt(ys[-1], 1)} '
              f'(100 = sin cambio en 4 semanas; hace 4 semanas, {fmt(ys[-5], 1)}).</p>')
     return "".join(P)
+
+
+def _senales_html(m):
+    """Las 4 señales de agotamiento con su valor actual, su umbral y si cuentan para la fase en este motor."""
+    if m.get("rsi") is None or "f_alc" not in m:
+        return ""
+    subida = m.get("alc", 0) > 0 or (m.get("baj", 0) == 0 and m["xs"][-1] >= 100)
+    r, d, pd_, prs, dsd = m["rsi"], m.get("dist40"), m.get("p_dist40"), m.get("p_rs"), m.get("desde")
+    lado = "alc" if subida else "baj"
+    activas, validas = m["f_" + lado], set(m["v_" + lado])
+
+    def fila(k, nombre, como, valor):
+        cuenta = '<b>cuenta</b>' if k in validas else '<span class="nota">solo información</span>'
+        return (f'<tr><td>{"✔" if activas[k] else "—"}</td><td><b>{nombre}</b><br><span class="nota">{como}</span></td>'
+                f'<td>{valor}<br>{cuenta}</td></tr>')
+    if subida:
+        tit = "Señales de cansancio de la subida"
+        filas = [fila("rsi", "RSI semanal muy alto", f"RSI de 14 semanas por encima de {RSI_SOBRECOMPRA}", f"RSI {fmt(r, 0)}"),
+                 fila("dist", "Precio muy alejado por encima de su media",
+                      f"distancia a la media de 40 semanas entre el 10 % más alto de su historia (desde {dsd})",
+                      f"{_con_signo(d)} · percentil {fmt(pd_, 0)}"),
+                 fila("rs", "Fuerza frente a la liquidez en máximos",
+                      f"cociente motor ÷ letras del Tesoro por encima de su percentil 90 (desde {dsd})", f"percentil {fmt(prs, 0)}"),
+                 fila("div", "Divergencia bajista",
+                      "precio a menos de un 2 % de su máximo de 26 semanas y RSI 10 puntos o más por debajo de su máximo de 26 semanas",
+                      "sí" if activas["div"] else "no")]
+    else:
+        tit = "Señales de agotamiento de la caída"
+        filas = [fila("rsi", "RSI semanal muy bajo", f"RSI de 14 semanas por debajo de {RSI_SOBREVENTA}", f"RSI {fmt(r, 0)}"),
+                 fila("dist", "Precio muy alejado por debajo de su media",
+                      f"distancia a la media de 40 semanas entre el 10 % más bajo de su historia (desde {dsd})",
+                      f"{_con_signo(d)} · percentil {fmt(pd_, 0)}"),
+                 fila("rs", "Fuerza frente a la liquidez en mínimos",
+                      f"cociente motor ÷ letras del Tesoro por debajo de su percentil 10 (desde {dsd})", f"percentil {fmt(prs, 0)}"),
+                 fila("div", "Divergencia alcista",
+                      "precio a menos de un 2 % de su mínimo de 26 semanas y RSI 10 puntos o más por encima de su mínimo de 26 semanas",
+                      "sí" if activas["div"] else "no")]
+    n_c = len(m["c_" + lado])
+    if validas:
+        resumen = (f'· Cuentan para la fase en este tipo de activo: {len(validas)} de 4 (activas ahora: {n_c}). '
+                   f'Con 1 activa, la fase pasa a {"madurez" if subida else "suelo"}.')
+    else:
+        resumen = '· En este tipo de activo no cuenta ninguna para la fase: no han funcionado en las pruebas con datos.'
+    return (f'<p><span class="et">{tit}</span> <span class="nota">{resumen} Semana cerrada, precio sin dividendos.</span></p>'
+            f'<table class="exp-tabla senales">{"".join(filas)}</table>')
 
 
 NOTA_ALTERNATIVO = {
@@ -1791,7 +1917,7 @@ def main():
     # --- Descargas
     precios = {}
     # Orden por importancia: la referencia y los índices de las condiciones primero
-    primero = [REFERENCIA, "SPY", "URTH", "IEMG", "RSP", "VGK", "ACWI"]
+    primero = [REFERENCIA, "SPY", "URTH", "IEMG", "RSP", "QQQ", "VGK", "ACWI"]
     orden = primero + [t for t in [m for m, _ in MOTORES] + OTROS_TIINGO if t not in primero]
     copia = copia_precios_leer()
     disponibles = TIINGO_LIMITE_HORA - tiingo_usadas_ultima_hora() - 1   # 1 de margen
@@ -1880,6 +2006,26 @@ def main():
         PROV = {}
     ETQ_PROV = ULTIMO_VIERNES + pd.Timedelta(days=7)   # etiqueta semanal de la semana en curso
 
+    PROV_B = {}  # ticker -> precio provisional sin ajustar
+    for t in PROV:
+        if t == "SPY" and "SPY" in BRUTO and len(BRUTO["SPY"]):
+            PROV_B[t] = float(BRUTO["SPY"].iloc[-1])
+        elif ult and t in ult:
+            PROV_B[t] = ult[t][1]
+
+    def precio(t):
+        """Cierres semanales SIN ajustar por dividendos (como los gráficos habituales, p. ej. TradingView).
+        Se usan para medias móviles, RSI y divergencias; la fuerza relativa usa los ajustados."""
+        b = semanal(BRUTO[t]) if t in BRUTO else None
+        if b is None or not len(b) or W.get(t) is None:
+            return W.get(t)
+        return b.reindex(W[t].index).ffill()
+
+    def precio_ext(t):
+        if t in PROV_B:
+            return pd.concat([precio(t), pd.Series([PROV_B[t]], index=[ETQ_PROV])])
+        return precio(t)
+
     def extendida(t):
         if t in PROV:
             return pd.concat([W[t], pd.Series([PROV[t][1]], index=[ETQ_PROV])])
@@ -1897,7 +2043,7 @@ def main():
                 continue
             XY = pd.concat([X, Y], axis=1).dropna()
             X, Y = XY.iloc[:, 0], XY.iloc[:, 1]
-            f, extra = fase_motor(W[t].loc[:rs.index[-1]], rs, X, Y)
+            f, extra = fase_motor(precio(t).loc[:rs.index[-1]], rs, X, Y, t)
             prov = t in PROV
             f_prov = None
             if prov:
@@ -1905,7 +2051,7 @@ def main():
                 XYp = pd.concat([X_p, Y_p], axis=1).dropna()
                 if len(XYp) and XYp.index[-1] == ETQ_PROV:
                     X_v, Y_v = XYp.iloc[:, 0], XYp.iloc[:, 1]
-                    f_prov = fase_motor(extendida(t).loc[:rs_p.index[-1]], rs_p, X_v, Y_v)[0]
+                    f_prov = fase_motor(precio_ext(t).loc[:rs_p.index[-1]], rs_p, X_v, Y_v, t)[0]
                 else:
                     prov = False
             if not prov:
@@ -1931,8 +2077,10 @@ def main():
                             "prov": prov, "fase_prov": f_prov, "fecha_cerrada": X.index[-1],
                             "dy4": float(Y.iloc[-1] - Y.iloc[-5]),
                             "fase": f, "rsi": extra["rsi"], "alc": extra["alc"], "baj": extra["baj"],
-                            "s_alc": extra["s_alc"], "s_baj": extra["s_baj"],
+                            "s_alc": extra["s_alc"], "s_baj": extra["s_baj"], "c_alc": extra["c_alc"], "c_baj": extra["c_baj"],
+                            "v_alc": extra["v_alc"], "v_baj": extra["v_baj"], "f_alc": extra["f_alc"], "f_baj": extra["f_baj"],
                             "dist40": extra["dist40"], "p_dist40": extra["p_dist40"], "desde": extra["desde"], "div": extra["div"],
+                            "p_rs": extra["p_rs"], "div_alc": extra["div_alc"], "div_baj": extra["div_baj"],
                             "fecha": X.index[-1]})
 
     # --- Variables
@@ -1952,7 +2100,7 @@ def main():
     comun = puerta_comun(baa_w, ratio_vix_w)
     conds = []
     for t, nom, eeuu in INDICES_COND:
-        c = condicion_indice(W.get(t), ref_w, comun, ecy, eeuu)
+        c = condicion_indice(W.get(t), ref_w, comun, ecy, eeuu, precio(t) if W.get(t) is not None else None, t)
         if c:
             c.update({"t": t, "nombre": nom})
             conds.append(c)
@@ -1971,7 +2119,7 @@ def main():
     cand_top = [m for m in motores if GRUPO.get(m["t"]) not in EXCLUIR_TOP]
     top_salir = sorted([m for m in cand_top if m["fase"] in ("GIRO", "MADUREZ")],
                        key=lambda z: (0 if z["fase"] == "GIRO" else 1, z["dy4"]))[:3]
-    top_ampliar = sorted([m for m in cand_top if m["fase"] == "ACELERACIÓN" and m["alc"] <= 1],
+    top_ampliar = sorted([m for m in cand_top if m["fase"] == "ACELERACIÓN" and not m["c_alc"]],
                          key=lambda z: -z["Y"])[:3]
     top_construir = sorted([m for m in cand_top if m["fase"] == "ARRANQUE"], key=lambda z: -z["Y"])[:3]
 
@@ -2057,7 +2205,8 @@ def main():
     if vix_w is not None:
         comp.append(100 - pct(vix_w))
     if acwi_w is not None and len(acwi_w) > 210:
-        dist = (acwi_w / acwi_w.rolling(200).mean() - 1).dropna()
+        acwi_p = precio("ACWI") if "ACWI" in W else acwi_w
+        dist = (acwi_p / acwi_p.rolling(200).mean() - 1).dropna()
         comp.append(pct(dist))
     if comp:
         sent = float(np.mean(comp))
@@ -2092,8 +2241,10 @@ def main():
     if fase_acwi:
         direccion = 1 if fase_acwi in ("SUELO", "ARRANQUE", "ACELERACIÓN") else -1
     coinciden = sum(1 for v in votos.values() if direccion is not None and v == direccion)
-    conv = "BAJA" if coinciden <= 1 else "MEDIA" if coinciden <= 3 else "ALTA"
-    ritmo = {"BAJA": "No construir", "MEDIA": "Completar el tramo en 2–3 meses", "ALTA": "Completar el tramo en 1 mes"}[conv]
+    conv = ["NINGUNA", "BAJA", "MEDIA", "ALTA", "TOTAL"][min(coinciden, 4)]
+    ritmo = ("No construir" if coinciden <= 1 else "Completar el tramo en 2–3 meses" if coinciden <= 3
+             else "Completar el tramo en 1 mes")
+    conv_n = min(coinciden, 4)
     d_txt = d_txt_html = None
     if "DSPX" in cb and "COR3M" in cb:
         p_d, p_c = pct(cb["DSPX"]), pct(cb["COR3M"])
@@ -2119,12 +2270,13 @@ def main():
     # Condiciones de indexación
     H.append(f'<h2 class="primero">Condiciones de indexación · plazo de 6 a 12 meses{i("condiciones")}</h2>')
     H.append('<table><tr><th>Índice</th><th>Condiciones</th><th>Por qué</th><th>Tendencia</th><th>Fase</th>'
-             f'<th>Distancia a media 200 sem.</th><th>Puerta{i("puntos")}</th></tr>')
+             f'<th>Sobre la media de 200 sem.{i("dist200")}</th><th>Caída hasta ella{i("dist200")}</th><th>Puerta{i("puntos")}</th></tr>')
     for c in conds:
         H.append(f'<tr><td><b>{e(c["nombre"])}</b> ({tk(c["t"])})</td>'
                  f'<td><span class="nivel" style="background:{COLOR_NIVEL[c["nivel"]]}">{c["nivel"]}</span></td>'
                  f'<td class="motivo">{e(c["motivo"])}</td><td>{c["tend"]}</td>'
-                 f'<td>{e((c["fase"] or "—").capitalize())}</td><td>{fmt(c["dist"], 1, " %")}</td>'
+                 f'<td>{e(nombre_fase(c["fase"]).capitalize() if c["fase"] else "—")}</td><td>{_con_signo(c["dist"])}</td>'
+                 f'<td>{"ya por debajo" if c["pu"].get("caida") is not None and c["pu"]["caida"] < 0 else fmt(c["pu"].get("caida"), 1, " %")}</td>'
                  f'<td>{c["puntos"]}/6 · tramo {c["tramo"]}</td></tr>')
     H.append('</table><p class="nota">Plazo: de 6 a 12 meses. Se calculan con cierres semanales: tendencia con la media de 40 semanas '
              '(unos 9 meses), fase del mapa con 26 semanas y puerta con la media de 200 semanas (unos 4 años). '
@@ -2153,7 +2305,7 @@ def main():
              f'{"" if comun.get("baa_13s") is None else (" (se estrecha: menos miedo)" if comun["baa_13s"] < 0 else " (se ensancha: más miedo)")}'
              f'</div></div>')
     H.append(f'<div class="tarjeta"><div class="t">Convicción{i("conviccion")}</div><div class="v">{conv}</div>'
-             f'<div class="s">{e(ritmo)}</div></div>')
+             f'<div class="s">{conv_n} de 4 bloques coinciden · {e(ritmo)}</div></div>')
     H.append(f'<div class="tarjeta"><div class="t">Sentimiento (0–100){i("sentimiento")}</div><div class="v">{fmt(sent, 0)}</div>'
              f'<div class="s">0 = miedo · 100 = euforia</div></div>')
     H.append('</div>')
@@ -2165,6 +2317,15 @@ def main():
         return f'<td class="{"si" if v else ""}">{"SÍ" if v else "no"}{(" · " + dato) if dato else ""}</td>'
     rv = comun.get("ratio_vix")
     rv_txt = "" if rv is None else f'VIX/VIX3M {fmt(rv, 2)}: {"contango, lo normal" if rv < 1 else "invertida, miedo agudo"}'
+    if baa_w is not None and len(baa_w.loc["2008":]) > 20:
+        b08 = baa_w.loc["2008":]
+        media08 = float(b08.mean())
+        H.append(f'<h2>Diferencial de crédito Baa − Tesoro 10 años desde 2008{i("Estrés de crédito: diferencial Baa − Tesoro 10 años (puntos)")}</h2>')
+        H.append(f'<p class="nota">Puntos porcentuales, cierres semanales. Ahora {fmt(baa_w.iloc[-1], 2)} '
+                 f'({fd(format(baa_w.index[-1], "%d-%m-%Y"))}); media desde 2008: {fmt(media08, 2)}; '
+                 f'percentil {fmt(pct(b08), 0)} desde 2008. Línea discontinua: media desde 2008. '
+                 'Por encima de la media = más miedo al crédito de lo habitual; por debajo = menos.</p>')
+        H.append(svg_historico(b08, media08, f"media {fmt(media08, 2)}"))
     H.append(f'<h2>Puerta de indexación{i("puntos")}</h2>')
     H.append(f'<table><tr><th>Índice</th><th>Cerca de la media de 200 sem. (2){i("c_ma200")}</th>'
              f'<th>Crédito girando (2){i("c_credito")}</th><th>VIX vuelve a contango (1){i("c_vix")}</th>'
@@ -2223,7 +2384,7 @@ def main():
     H.append('<div id="exp-mapa-motores" class="explica" data-mapa="mapa-motores" hidden></div>')
     H.append(f'<table class="ord"><tr><th>Motor</th><th>Nombre</th><th>Grupo</th><th>Fase{i("fases")}</th><th>Qué hacer</th>'
              f'<th>Fuerza{i("fuerza")}</th><th>Impulso{i("impulso")}</th><th>RSI sem.</th><th>Distancia a su media de 40 sem.{i("agotamiento")}</th><th>Divergencia{i("agotamiento")}</th>'
-             f'<th>Agotamiento{i("agotamiento")}</th></tr>')
+             f'<th>Agotamiento que cuenta{i("agotamiento")}</th></tr>')
 
     def dist_txt(m):
         v, p = m.get("dist40"), m.get("p_dist40")
@@ -2246,11 +2407,15 @@ def main():
 
     def agot_txt(m):
         partes = []
-        if m["alc"]:
-            partes.append(f'alcista {m["alc"]} de 4')
-        if m["baj"]:
-            partes.append(f'bajista {m["baj"]} de 4')
-        return " · ".join(partes) or "—"
+        if m["c_alc"]:
+            partes.append('<b class="extremo">cansancio</b> (' + ", ".join(NOMBRE_SENAL[k] for k in m["c_alc"]) + ')')
+        if m["c_baj"]:
+            partes.append('<b class="extremo">suelo</b> (' + ", ".join(NOMBRE_SENAL[k] for k in m["c_baj"]) + ')')
+        txt = " · ".join(partes) or "—"
+        info = m["alc"] + m["baj"] - len(m["c_alc"]) - len(m["c_baj"])
+        if info:
+            txt += f' <span class="nota">+{info} sin validar</span>'
+        return txt
     for m in sorted(motores, key=lambda z: orden.index(z["fase"])):
         g = GRUPO.get(m["t"], "")
         H.append(f'<tr><td><b>{tk(m["t"])}</b></td><td>{e(m["nombre"])}</td>'
@@ -2542,7 +2707,12 @@ b.extremo{color:#b04a00}
 .explica ul.exp-lista{margin:4px 0 6px;padding-left:18px}.explica ul.exp-lista li{margin:2px 0}
 .explica table.exp-tabla{width:auto;margin:4px 0 8px;font-size:.92em;background:none}
 .explica table.exp-tabla th,.explica table.exp-tabla td{padding:2px 14px 2px 0;text-align:right;border:0;background:none;font-variant-numeric:tabular-nums}
+.explica table.senales{display:table;width:100%;table-layout:fixed;overflow:visible}
+.explica table.senales td:first-child{width:22px}.explica table.senales td:last-child{width:150px}
+.explica table.senales td{text-align:left;vertical-align:top;padding-bottom:4px}
+.explica table.senales td:last-child{white-space:nowrap;text-align:right}
 .explica table.exp-tabla th:first-child,.explica table.exp-tabla td:first-child{text-align:left}
+svg.historico{max-width:760px;width:100%;background:var(--panel);border-radius:8px}
 .grafico .tk{font-size:10.5px;fill:#56677a}
 .tarjeta.regimen{max-width:760px}.tarjeta.regimen p{margin:6px 0;font-size:.9em}
 .explica .et{display:inline-block;color:var(--s);font-size:.78em;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-right:5px}
