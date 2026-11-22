@@ -67,7 +67,7 @@ INFO = {
         [("Serie BAA10Y (FRED)", FRED + "BAA10Y")]),
 
     "conviccion": ("Grado de convicción", """
-<p><b>Qué es.</b> Cuántos bloques independientes (régimen, estrés, liquidez y valoración/técnico/sentimiento) apuntan en la misma dirección que el mapa de la renta variable global.</p>
+<p><b>Qué es.</b> Cuántos bloques independientes (ciclo económico, estrés, liquidez y valoración/técnico/sentimiento) apuntan en la misma dirección que el mapa de la renta variable global.</p>
 <ul><li><b>Ninguna</b> (0 de 4) y <b>baja</b> (1 de 4) → no construir.</li><li><b>Media</b> (2 de 4) y <b>alta</b> (3 de 4) → completar el tramo en 2–3 meses.</li><li><b>Total</b> (4 de 4) → completar el tramo en 1 mes.</li></ul>
 <p><b>Cuidado.</b> Regla de criterio propio. A 6-12 meses ninguna señal tiene gran capacidad predictiva.</p>""", []),
 
@@ -96,7 +96,7 @@ INFO = {
 <p>El RSI (índice de fuerza relativa, J. Welles Wilder, 1978) compara subidas y bajadas recientes en una escala de 0 a 100. Por debajo de 30 se considera sobreventa.</p>
 <p><b>En esta web.</b> RSI de 14 semanas de cada índice por debajo de 30 en alguna de las últimas 13 semanas. En datos semanales es una señal rara, típica de caídas fuertes.</p>""", []),
 
-    "b_A": ("Bloque A · Régimen", """
+    "b_A": ("Bloque A · Ciclo económico", """
 <p>Dirección de la economía. Vota a favor del riesgo si las encuestas industriales de la Fed (Filadelfia y Nueva York) mejoran a 3 meses y las peticiones de subsidio bajan. Vota en contra si la regla de Sahm llega a 0,5 o si ambas empeoran.</p>""", []),
     "b_B": ("Bloque B · Estrés", """
 <p>Tensión financiera. A favor del riesgo si el diferencial de crédito baja a 13 semanas y el VIX está en contango. En contra si el diferencial sube y el VIX está invertido.</p>""", []),
@@ -104,7 +104,7 @@ INFO = {
 <p>A favor del riesgo si la liquidez neta de la Fed sube a 13 semanas y las condiciones financieras (NFCI) se relajan. En contra si ocurre lo contrario.</p>
 <p><b>Cuidado.</b> La relación liquidez-bolsa es una idea muy popular desde 2020, con poca evidencia académica sólida.</p>""", []),
     "b_EFG": ("Bloque E+F+G · Valoración, técnico y sentimiento", """
-<p>Usa el indicador de sentimiento (réplica del Euphoriameter). Por encima de 80 vota en contra del riesgo (euforia); por debajo de 20, a favor (miedo).</p>""", []),
+<p>Usa el sentimiento con ECY (valoración, calma del VIX y distancia del S&amp;P 500 a su media de 200 semanas). Por encima de 80 vota en contra del riesgo (euforia); por debajo de 20, a favor (miedo).</p>""", []),
     "b_D": ("Bloque D · Beta o alfa", """
 <p>No vota. Indica si el entorno favorece seleccionar valores o comprar el índice.</p>
 <ul><li>Dispersión alta (DSPX) y correlación baja (COR3M): los valores se mueven distinto entre sí → más margen para la selección (alfa).</li>
@@ -113,10 +113,40 @@ INFO = {
 <p><b>Cuidado.</b> Es el bloque con evidencia más débil: los informes SPIVA muestran que la mayoría de gestores activos no bate al índice a largo plazo.</p>""",
         [("Cboe: correlación implícita", "https://cboe.com/us/indices/implied/"),
          ("Cboe: índice de dispersión", "https://www.cboe.com/us/indices/dispersion")]),
-    "sentimiento": ("Sentimiento (réplica del Euphoriameter)", """
-<p>Media de tres percentiles, cada uno sobre toda su historia disponible: valoración (CAPE, desde 1881), calma (VIX invertido, desde 1990) y distancia del ACWI a su media de 200 semanas (desde que hay 200 semanas de datos, 2012). De 0 (miedo) a 100 (euforia).</p>
-<p><b>Por qué una réplica.</b> El Euphoriameter original no tiene datos descargables, y el índice NAAIM, que iba a usarse, pasó a ser de pago.</p>
-<p><b>Cuidado.</b> Sus componentes se solapan con la valoración y el técnico: cuenta como un único input.</p>""", []),
+    "sentimiento": ("Sentimiento sin CAPE", """
+<p><b>Qué es.</b> Media de dos percentiles, cada uno sobre toda su historia disponible: calma (VIX invertido, desde 1990) y distancia del S&amp;P 500 a su media de 200 semanas (desde 1997). Cierres semanales. De 0 (miedo) a 100 (euforia).</p>
+<p><b>Por qué sin CAPE.</b> Desde 2016 la bolsa de EE. UU. está siempre entre el 10&nbsp;% más cara de su historia: con el CAPE dentro, el indicador no bajaba de 29–42 ni en los suelos de 2018, 2020, 2022 o 2025. La valoración ya tiene su propio bloque.</p>
+<p><b>Miedo (por debajo de 20) → construir poco a poco.</b> Desde 1997, 17 avisos: rentabilidad mediana del S&amp;P 500 a 12 meses del +20,9&nbsp;% (una semana cualquiera: +13,7&nbsp;%).</p>
+<p><b>Cuidado.</b> 6 de esos 17 avisos llegaron dentro de los mercados bajistas de 2000–2002 y 2008: la bolsa siguió cayendo hasta un 45&nbsp;% más y tardó hasta 3 años en recuperar. A 5 años, la mediana fue peor que la de una semana cualquiera (+48,9&nbsp;% frente a +65,3&nbsp;%). Por eso no sirve para entrar de golpe.</p>""", []),
+    "plan": ("Plan de entrada", """
+<p>Resume, en un orden fijo, qué hacer con la indexación:</p>
+<ul><li><b>1. Capitulación a largo.</b> Si está activa, manda sobre todo lo demás: todo a la indexación (aceptando que aún podría caer un 30–40&nbsp;% más, como en 2008).</li>
+<li><b>2. Cuánto (puerta).</b> Si no hay capitulación a largo, la puerta de cada índice dice cuántos tercios de la posición se pueden construir.</li>
+<li><b>3. A qué ritmo (convicción).</b> Cuántos bloques coinciden con la dirección del mapa: 0–1 no construir; 2–3 completar el tramo en 2–3 meses; 4 en 1 mes.</li>
+<li><b>Apoyo: miedo.</b> Sentimiento sin CAPE por debajo de 20: refuerza la puerta, pero solo para construir poco a poco.</li>
+<li><b>Freno: veto por crédito.</b> Si está activo, la puerta no pasa del tramo 1.</li></ul>
+<p>La capitulación a corto no forma parte del plan: es para la parte especulativa (apartado Táctico).</p>""", []),
+    "cap_corto": ("Capitulación a corto (rebote)", """
+<p><b>Qué es.</b> Se activa cuando el mismo día se cumplen al menos 6 de estos 8 indicios de pánico en el S&amp;P 500 (cierres diarios):</p>
+<ul><li>VIX de 30 o más.</li>
+<li>VIX al menos 1,5 veces su media de 50 sesiones (pico de miedo).</li>
+<li>RSI diario por debajo de 30.</li>
+<li>RSI semanal por debajo de 30.</li>
+<li>Caída del 10&nbsp;% o más en 20 sesiones.</li>
+<li>Precio un 8&nbsp;% o más por debajo de su media de 50 sesiones.</li>
+<li>Sentimiento sin CAPE (con cierres diarios) por debajo de 20.</li>
+<li>Ese sentimiento cae 1,5 desviaciones típicas o más en 20 sesiones.</li></ul>
+<p><b>Qué ha pasado después (14 avisos desde 1997):</b></p>
+<ul><li><b>A 3 meses: de media, +10,6&nbsp;%</b> (mediana +10,8&nbsp;%; subió en el 79&nbsp;% de los casos). Una semana cualquiera: +3,7&nbsp;%.</li>
+<li>A 1 mes: de media +5,6&nbsp;% (subió en el 86&nbsp;% de los casos). Una semana cualquiera: +1,4&nbsp;%.</li></ul>
+<p><b>⚠ Peligroso a un año vista en tendencias bajistas.</b> 4 de los 14 avisos acabaron en pérdidas a 12 meses (octubre 2000: −18&nbsp;%; septiembre 2001: −15&nbsp;%; enero 2008: −34&nbsp;%; septiembre 2008: −2&nbsp;%), todos dentro de los mercados bajistas largos de 2000–2002 y 2008. Es una señal para rebotes de 1 a 3 meses con la parte especulativa de la cartera, no para quedarse.</p>
+<p><b>Fallos a corto.</b> Septiembre 2008: −16&nbsp;% al mes, llegando a −25&nbsp;%. Marzo 2020: llegó a −18&nbsp;% antes de rebotar (+18,6&nbsp;% a 3 meses).</p>
+<p><b>Cuidado.</b> Muestra pequeña (14 casos) y el umbral de 6 se eligió viendo los resultados. Solo se ha medido vender a 1 o 3 meses; no se han probado stops ni otras salidas.</p>""", []),
+    "cap_largo": ("Capitulación a largo (todo a la indexación)", """
+<p><b>Qué es.</b> Sentimiento con ECY por debajo de 20. Media de tres percentiles sobre toda su historia: valoración (ECY de Shiller invertido: ECY bajo = cara), calma (VIX invertido) y distancia del S&amp;P 500 a su media de 200 semanas. Cierres semanales.</p>
+<p><b>Qué ha pasado después (4 avisos desde 1997: septiembre 2002, febrero 2003, octubre 2008 y marzo 2020).</b> Todos en positivo a 3 y 5 años. Rentabilidad mediana a 5 años: +81&nbsp;% (una semana cualquiera: +65&nbsp;%).</p>
+<p><b>⚠ Cuidado.</b> En octubre de 2008 la bolsa aún cayó un 37&nbsp;% más y tardó un año en volver al precio del aviso: un "todo de golpe" exige aguantar eso. Con 4 casos en 30 años, la regla es prometedora pero no está probada.</p>""",
+        [("Shiller: datos del ECY", "https://shillerdata.com/")]),
 
     # ---------------- Mapas ----------------
     "mapa": ("Mapa de rotación de motores", """
@@ -182,7 +212,7 @@ INFO = {
 <li><b>Aceleración:</b> fuerza e impulso altos → mantener.</li>
 <li><b>Madurez:</b> fuerza alta pero impulso frenando 3 semanas, o una señal de cansancio de las que cuentan → empezar a salir antes del clímax.</li>
 <li><b>Giro a la baja:</b> fuerza alta e impulso bajo: se acaba la tendencia alcista → salir.</li>
-<li><b>Tendencia bajista:</b> fuerza e impulso bajos sin señal de suelo → no tocar.</li></ul>
+<li><b>Bajista frente a la liquidez:</b> fuerza e impulso bajos sin señal de suelo → no tocar.</li></ul>
 <p>El giro al alza (inicio de tendencia alcista) es el <b>arranque</b>; el <b>suelo</b> es la fase previa, todavía sin confirmar.</p>
 <p><b>Agotamiento que cuenta:</b> señales de cansancio de la subida o de agotamiento de la caída que cuentan para la fase en ese tipo de activo (ver la ⓘ de agotamiento); "+n sin validar" son señales activas que solo se muestran como información.</p>
 <p><b>Distancia a la media de 40 semanas:</b> cuánto está el precio por encima (+) o por debajo (−) de su media de unos 9 meses. Se resalta (▲ o ▼) cuando está en el 10 % más extremo de toda la historia del fondo; pasa el cursor para ver desde qué año.</p>
@@ -606,6 +636,40 @@ def pct(s, valor=None):
         return np.nan
     v = s.iloc[-1] if valor is None else valor
     return float((s <= v).mean() * 100)
+
+
+def capitulacion_corto(spy_d, vix_d):
+    """Indicios de capitulación a corto con cierres diarios del S&P 500 (sin ajustar) y del VIX."""
+    if spy_d is None or vix_d is None or len(spy_d) < 1300 or len(vix_d) < 1300:
+        return None
+    c = spy_d[spy_d.index <= HOY].dropna()
+    v = vix_d[vix_d.index <= HOY].dropna()
+    comun = c.index.intersection(v.index)
+    c, v = c.loc[comun], v.loc[comun]
+    if len(c) < 1300:
+        return None
+    v_pct = v.expanding().rank(pct=True) * 100
+    dist = (c / c.rolling(1000).mean() - 1).dropna()
+    d_pct = dist.expanding().rank(pct=True) * 100
+    sent = ((100 - v_pct) + d_pct).dropna() / 2
+    d20 = sent.diff(20)
+    z20 = d20 / d20.expanding(250).std()
+    rsi_d = rsi(c)
+    rsi_w = rsi(c.resample("W-FRI").last()).reindex(c.index, method="ffill")
+    vx, media50v = float(v.iloc[-1]), float(v.rolling(50).mean().iloc[-1])
+    r20 = float(c.iloc[-1] / c.iloc[-21] - 1) * 100
+    d50 = float(c.iloc[-1] / c.rolling(50).mean().iloc[-1] - 1) * 100
+    st, zz = float(sent.iloc[-1]), float(z20.iloc[-1])
+    rd, rw = float(rsi_d.iloc[-1]), float(rsi_w.iloc[-1])
+    crit = [("VIX de 30 o más", f"VIX {fmt(vx, 1)}", vx >= 30),
+            ("VIX al menos 1,5 veces su media de 50 sesiones", f"{fmt(vx / media50v, 2)} veces", vx / media50v >= 1.5),
+            ("RSI diario por debajo de 30", f"RSI {fmt(rd, 0)}", rd < 30),
+            ("RSI semanal por debajo de 30", f"RSI {fmt(rw, 0)}", rw < 30),
+            ("Caída del 10 % o más en 20 sesiones", _con_signo(r20), r20 <= -10),
+            ("Precio un 8 % o más por debajo de su media de 50 sesiones", _con_signo(d50), d50 <= -8),
+            ("Sentimiento sin CAPE (cierres diarios) por debajo de 20", fmt(st, 0), st < 20),
+            ("Ese sentimiento cae 1,5 desviaciones típicas o más en 20 sesiones", _con_signo(zz, 1, " desv. típicas"), zz <= -1.5)]
+    return {"fecha": c.index[-1], "n": sum(1 for _, _, x in crit if x), "crit": crit}
 
 
 def rsi(s, n=14):
@@ -1119,14 +1183,14 @@ CLAVE_COND = {"Precio cerca de la media de 200 semanas": "c_ma200",
               "Crédito girando a la baja desde su pico": "c_credito",
               "VIX vuelve a contango tras inversión": "c_vix",
               "RSI semanal en sobreventa": "c_rsi"}
-CLAVE_BLOQUE = {"A · Régimen": "b_A", "B · Estrés": "b_B", "C · Liquidez": "b_C",
+CLAVE_BLOQUE = {"A · Ciclo económico": "b_A", "B · Estrés": "b_B", "C · Liquidez": "b_C",
                 "E+F+G · Valoración, técnico y sentimiento": "b_EFG"}
 
 ACCION = {
     "SUELO": "Vigilar", "ARRANQUE": "Construir poco a poco", "ACELERACIÓN": "Mantener",
     "MADUREZ": "Empezar a salir", "GIRO": "Salir", "REZAGADO": "No tocar",
 }
-NOMBRE_FASE = {"GIRO": "GIRO A LA BAJA", "REZAGADO": "TENDENCIA BAJISTA"}
+NOMBRE_FASE = {"GIRO": "GIRO A LA BAJA", "REZAGADO": "BAJISTA FRENTE A LA LIQUIDEZ"}
 
 
 def nombre_fase(f):
@@ -2088,7 +2152,6 @@ def main():
     vix_w = semanal(cb.get("VIX"))
     vix3_w = semanal(cb.get("VIX3M"))
     ratio_vix_w = (vix_w / vix3_w).dropna() if (vix_w is not None and vix3_w is not None) else None
-    acwi_w = W.get("ACWI")
 
     ecy = cape = fecha_ecy = None
     if sh is not None:
@@ -2197,19 +2260,22 @@ def main():
         add(variable_macro("Equiponderado / capitalización (RSP/SPY)", (W["RSP"] / W["SPY"]).dropna(), "s", 13, "pct"))
     mac = {v["nombre"]: v for v in macro}
 
-    # --- Sentimiento (réplica Euphoriameter)
-    sent = None
-    comp = []
-    if sh is not None:
-        comp.append(pct(sh["CAPE"].dropna()))
-    if vix_w is not None:
-        comp.append(100 - pct(vix_w))
-    if acwi_w is not None and len(acwi_w) > 210:
-        acwi_p = precio("ACWI") if "ACWI" in W else acwi_w
-        dist = (acwi_p / acwi_p.rolling(200).mean() - 1).dropna()
-        comp.append(pct(dist))
-    if comp:
-        sent = float(np.mean(comp))
+    # --- Sentimiento sin CAPE, sentimiento con ECY y capitulación (decisión 22-11-2026)
+    p_calma = p_dist = p_ecy = None
+    if vix_w is not None and len(vix_w):
+        p_calma = 100 - pct(vix_w)
+    spy_w = precio("SPY") if W.get("SPY") is not None else None
+    if spy_w is not None and len(spy_w) > 210:
+        p_dist = pct((spy_w / spy_w.rolling(200).mean() - 1).dropna())
+    if sh is not None and "ECY" in sh and sh["ECY"].notna().any():
+        p_ecy = 100 - pct(sh["ECY"].dropna())
+    sent = float(np.mean([p_calma, p_dist])) if None not in (p_calma, p_dist) else None
+    sent_ecy = float(np.mean([p_ecy, p_calma, p_dist])) if None not in (p_ecy, p_calma, p_dist) else None
+    cap_c = None
+    try:
+        cap_c = capitulacion_corto(BRUTO.get("SPY"), cb.get("VIX"))
+    except Exception as ex:  # noqa
+        AVISOS.append(("Capitulación a corto", f"no se pudo calcular: {ex}"))
 
     # --- Convicción
     votos = {}
@@ -2220,11 +2286,11 @@ def main():
         mejora_c = crec_v["impulso"] > 0
         mejora_s = sub_v["impulso"] < 0
         if (sahm is not None and sahm >= 0.5) or (not mejora_c and not mejora_s):
-            votos["A · Régimen"] = -1
+            votos["A · Ciclo económico"] = -1
         elif mejora_c and mejora_s:
-            votos["A · Régimen"] = 1
+            votos["A · Ciclo económico"] = 1
         else:
-            votos["A · Régimen"] = 0
+            votos["A · Ciclo económico"] = 0
     if baa_w is not None and ratio_vix_w is not None and len(baa_w) > 14:
         sube = baa_w.iloc[-1] > baa_w.iloc[-14]
         rv = ratio_vix_w.iloc[-1]
@@ -2234,8 +2300,8 @@ def main():
         l_sube = liq_w.iloc[-1] > liq_w.iloc[-14]
         n_baja = nf.iloc[-1] < nf.iloc[-14]
         votos["C · Liquidez"] = 1 if (l_sube and n_baja) else -1 if (not l_sube and not n_baja) else 0
-    if sent is not None:
-        votos["E+F+G · Valoración, técnico y sentimiento"] = -1 if sent > 80 else 1 if sent < 20 else 0
+    if sent_ecy is not None:
+        votos["E+F+G · Valoración, técnico y sentimiento"] = -1 if sent_ecy > 80 else 1 if sent_ecy < 20 else 0
     fase_acwi = next((m["fase"] for m in motores if m["t"] == "ACWI"), None)
     direccion = None
     if fase_acwi:
@@ -2267,67 +2333,89 @@ def main():
     # ===== PESTAÑA 1: DIAGNOSTICADOR
     H.append('<section id="t1" class="pest activa">')
 
-    # Condiciones de indexación
-    H.append(f'<h2 class="primero">Condiciones de indexación · plazo de 6 a 12 meses{i("condiciones")}</h2>')
+    # ===== INDEXACIÓN: condiciones, plan de entrada, contexto y detalle
+    H.append(f'<h2 class="primero">Indexación · condiciones por índice (plazo de 6 a 12 meses){i("condiciones")}</h2>')
     H.append('<table><tr><th>Índice</th><th>Condiciones</th><th>Por qué</th><th>Tendencia</th><th>Fase</th>'
              f'<th>Sobre la media de 200 sem.{i("dist200")}</th><th>Caída hasta ella{i("dist200")}</th><th>Puerta{i("puntos")}</th></tr>')
     for c in conds:
         H.append(f'<tr><td><b>{e(c["nombre"])}</b> ({tk(c["t"])})</td>'
                  f'<td><span class="nivel" style="background:{COLOR_NIVEL[c["nivel"]]}">{c["nivel"]}</span></td>'
                  f'<td class="motivo">{e(c["motivo"])}</td><td>{c["tend"]}</td>'
-                 f'<td>{e(nombre_fase(c["fase"]).capitalize() if c["fase"] else "—")}</td><td>{_con_signo(c["dist"])}</td>'
+                 f'<td class="fase">{e(nombre_fase(c["fase"]).capitalize() if c["fase"] else "—")}</td><td>{_con_signo(c["dist"])}</td>'
                  f'<td>{"ya por debajo" if c["pu"].get("caida") is not None and c["pu"]["caida"] < 0 else fmt(c["pu"].get("caida"), 1, " %")}</td>'
                  f'<td>{c["puntos"]}/6 · tramo {c["tramo"]}</td></tr>')
-    H.append('</table><p class="nota">Plazo: de 6 a 12 meses. Se calculan con cierres semanales: tendencia con la media de 40 semanas '
-             '(unos 9 meses), fase del mapa con 26 semanas y puerta con la media de 200 semanas (unos 4 años). '
-             'No sirven para decidir a días o semanas: para eso, la pestaña Opciones.</p>')
+    H.append('</table><p class="nota">Tendencia: precio frente a su media de 40 semanas (unos 9 meses). Fase: fuerza frente a la liquidez '
+             'en el mapa de rotación (26 semanas). Puerta: condiciones de suelo con la media de 200 semanas (unos 4 años). '
+             'Cierres semanales; no sirven para decidir a días o semanas.</p>')
 
-    # TOP 3
-    def lista_top(ms):
-        if not ms:
-            return '<p class="nota">Ningún motor cumple ahora el criterio.</p>'
-        return "<ol>" + "".join(f'<li>{tk(m["t"])} <span class="nota">{e(m["nombre"])}</span></li>' for m in ms) + "</ol>"
-    H.append('<div class="tarjetas tops">')
-    H.append(f'<div class="tarjeta top salir"><div class="t">Cerca de fin de ciclo · ir saliendo{i("top_salir")}</div>{lista_top(top_salir)}</div>')
-    H.append(f'<div class="tarjeta top ampliar"><div class="t">Tendencia alcista con recorrido · ampliar{i("top_ampliar")}</div>{lista_top(top_ampliar)}</div>')
-    H.append(f'<div class="tarjeta top construir"><div class="t">Podrían iniciar tendencia alcista · empezar a construir{i("top_construir")}</div>{lista_top(top_construir)}</div>')
-    H.append('</div>')
+    # Plan de entrada (orden fijo)
+    cap_l = sent_ecy is not None and sent_ecy < 20
+    miedo = sent is not None and sent < 20
+    tramos = [(c["nombre"], c["tramo"]) for c in conds if c["tramo"]]
+    pasos = [
+        ("1 · Capitulación a largo", "cap_largo", cap_l,
+         "SÍ → todo a la indexación. Aún podría caer un 30–40 % más, como en 2008." if cap_l else
+         (f"no (sentimiento con ECY {fmt(sent_ecy, 0)}; hace falta menos de 20) → seguir con los pasos 2 y 3."
+          if sent_ecy is not None else "sin dato → seguir con los pasos 2 y 3.")),
+        ("2 · Cuánto: puerta", "puntos", bool(tramos),
+         ("tramos abiertos: " + ", ".join(f"{n} ({t} de 3)" for n, t in tramos) + ".") if tramos
+         else "ningún índice abre tramo → no ampliar la posición."),
+        ("3 · A qué ritmo: convicción", "conviccion", conv_n >= 2,
+         f"{conv} ({conv_n} de 4 bloques) → {ritmo[0].lower() + ritmo[1:]}."),
+        ("Apoyo · miedo", "sentimiento", miedo,
+         f"SÍ (sentimiento sin CAPE {fmt(sent, 0)}) → refuerza la puerta: construir poco a poco, nunca de golpe." if miedo
+         else f"no (sentimiento sin CAPE {fmt(sent, 0)}; miedo por debajo de 20)."),
+        ("Freno · veto por crédito", "veto", comun["veto"],
+         "ACTIVO → tramo máximo 1 y los índices bajistas pasan a muy malas." if comun["veto"] else "no activo."),
+    ]
+    H.append(f'<div class="plan"><div class="t">Plan de entrada{i("plan")}</div><table>')
+    for nombre, clave, activo, txt in pasos:
+        H.append(f'<tr class="{"activo" if activo else ""}"><td><b>{nombre}</b>{i(clave)}</td><td>{e(txt)}</td></tr>')
+    H.append('</table></div>')
 
-    # Tarjetas de contexto
+    # Contexto
     H.append('<div class="tarjetas" style="margin-top:10px">')
     H.append(f'<div class="tarjeta"><div class="t">Valoración EE. UU. (ECY){i("valoracion")}</div><div class="v">{val_txt}</div>'
              f'<div class="s">ECY {fmt(ecy, 2, " %")} · CAPE {fmt(cape, 1)}'
              f'{" · " + fd(format(fecha_ecy, "%m-%Y")) if fecha_ecy is not None else ""}</div></div>')
+    H.append(f'<div class="tarjeta"><div class="t">Convicción{i("conviccion")}</div><div class="v">{conv}</div>'
+             f'<div class="s">{conv_n} de 4 bloques coinciden · {e(ritmo)}</div></div>')
+    H.append(f'<div class="tarjeta {"alerta" if miedo else ""}"><div class="t">Sentimiento sin CAPE (0–100){i("sentimiento")}</div>'
+             f'<div class="v">{fmt(sent, 0)}</div><div class="s">'
+             f'{"MIEDO (por debajo de 20): construir poco a poco" if miedo else "0 = miedo · 100 = euforia · miedo por debajo de 20"}</div></div>')
+    H.append(f'<div class="tarjeta {"alerta" if cap_l else ""}"><div class="t">Capitulación a largo (indexación){i("cap_largo")}</div>'
+             f'<div class="v">{"SÍ" if cap_l else ("sin dato" if sent_ecy is None else "no")}</div>'
+             f'<div class="s">Sentimiento con ECY: {fmt(sent_ecy, 0)} (hace falta menos de 20)'
+             f'{" · todo a la indexación; aún podría caer un 30–40 % más, como en 2008" if cap_l else ""}</div></div>')
+    H.append('</div>')
+
+    # Crédito: veto y evolución juntos
     vt = "ACTIVO" if comun["veto"] else "no"
-    H.append(f'<div class="tarjeta {"alerta" if comun["veto"] else ""}"><div class="t">Veto por crédito{i("veto")}</div><div class="v">{vt}</div>'
+    H.append(f'<div class="tarjeta ancha {"alerta" if comun["veto"] else ""}"><div class="t">Crédito · veto{i("veto")}</div>'
+             f'<div class="v">{vt}</div>'
              f'<div class="s">Diferencial Baa − Tesoro 10 años: {fmt(baa_w.iloc[-1] if baa_w is not None else None, 2)} puntos · '
              f'{_con_signo(comun.get("baa_13s"))} en 13 semanas'
              f'{"" if comun.get("baa_13s") is None else (" (se estrecha: menos miedo)" if comun["baa_13s"] < 0 else " (se ensancha: más miedo)")}'
-             f'</div></div>')
-    H.append(f'<div class="tarjeta"><div class="t">Convicción{i("conviccion")}</div><div class="v">{conv}</div>'
-             f'<div class="s">{conv_n} de 4 bloques coinciden · {e(ritmo)}</div></div>')
-    H.append(f'<div class="tarjeta"><div class="t">Sentimiento (0–100){i("sentimiento")}</div><div class="v">{fmt(sent, 0)}</div>'
-             f'<div class="s">0 = miedo · 100 = euforia</div></div>')
+             f'</div>')
+    if baa_w is not None and len(baa_w.loc["2008":]) > 20:
+        b08 = baa_w.loc["2008":]
+        media08 = float(b08.mean())
+        H.append(f'<p class="nota">Evolución desde 2008{i("Estrés de crédito: diferencial Baa − Tesoro 10 años (puntos)")}: '
+                 f'ahora {fmt(baa_w.iloc[-1], 2)} ({fd(format(baa_w.index[-1], "%d-%m-%Y"))}); media desde 2008: {fmt(media08, 2)}; '
+                 f'percentil {fmt(pct(b08), 0)} desde 2008. Línea discontinua: media. '
+                 'Por encima de la media = más miedo al crédito de lo habitual; por debajo = menos.</p>')
+        H.append(svg_historico(b08, media08, f"media {fmt(media08, 2)}"))
     H.append('</div>')
 
-    # Puerta por índice
+    # Detalle desplegable: puerta y convicción
     def si_no(v, dato=""):
         if v is None:
             return "<td>sin dato</td>"
         return f'<td class="{"si" if v else ""}">{"SÍ" if v else "no"}{(" · " + dato) if dato else ""}</td>'
     rv = comun.get("ratio_vix")
     rv_txt = "" if rv is None else f'VIX/VIX3M {fmt(rv, 2)}: {"contango, lo normal" if rv < 1 else "invertida, miedo agudo"}'
-    if baa_w is not None and len(baa_w.loc["2008":]) > 20:
-        b08 = baa_w.loc["2008":]
-        media08 = float(b08.mean())
-        H.append(f'<h2>Diferencial de crédito Baa − Tesoro 10 años desde 2008{i("Estrés de crédito: diferencial Baa − Tesoro 10 años (puntos)")}</h2>')
-        H.append(f'<p class="nota">Puntos porcentuales, cierres semanales. Ahora {fmt(baa_w.iloc[-1], 2)} '
-                 f'({fd(format(baa_w.index[-1], "%d-%m-%Y"))}); media desde 2008: {fmt(media08, 2)}; '
-                 f'percentil {fmt(pct(b08), 0)} desde 2008. Línea discontinua: media desde 2008. '
-                 'Por encima de la media = más miedo al crédito de lo habitual; por debajo = menos.</p>')
-        H.append(svg_historico(b08, media08, f"media {fmt(media08, 2)}"))
-    H.append(f'<h2>Puerta de indexación{i("puntos")}</h2>')
-    H.append(f'<table><tr><th>Índice</th><th>Cerca de la media de 200 sem. (2){i("c_ma200")}</th>'
+    H.append(f'<details class="detalle"><summary>Detalle de la puerta por índice</summary>'
+             f'<table><tr><th>Índice</th><th>Cerca de la media de 200 sem. (2){i("c_ma200")}</th>'
              f'<th>Crédito girando (2){i("c_credito")}</th><th>VIX vuelve a contango (1){i("c_vix")}</th>'
              f'<th>RSI semanal en sobreventa (1){i("c_rsi")}</th><th>Puntos</th><th>Tramo</th></tr>')
     for c in conds:
@@ -2336,15 +2424,41 @@ def main():
                  f'{si_no(comun["credito"])}{si_no(comun["vix"])}{si_no(pu["rsi"], "RSI " + fmt(pu["rsi_v"], 0))}'
                  f'<td><b>{c["puntos"]}/6</b></td><td>{c["tramo"]} de 3</td></tr>')
     H.append(f'</table><p class="nota">Crédito y VIX son comunes a todos los índices. {e(rv_txt)}. '
-             'Cada condición cuenta si se cumplió en las últimas 13 semanas. 2, 4 y 6 puntos abren los tramos 1, 2 y 3.</p>')
-
-    H.append(f'<h2>Grado de convicción{i("conviccion")}</h2><table><tr><th>Bloque</th><th>Voto</th></tr>')
+             'Cada condición cuenta si se cumplió en las últimas 13 semanas. 2, 4 y 6 puntos abren los tramos 1, 2 y 3.</p></details>')
+    H.append('<details class="detalle"><summary>Detalle de la convicción por bloques</summary><table><tr><th>Bloque</th><th>Voto</th></tr>')
     for k, v in votos.items():
         H.append(f'<tr><td>{e(k)}{i(CLAVE_BLOQUE.get(k, ""))}</td><td>{"a favor del riesgo" if v > 0 else "en contra del riesgo" if v < 0 else "neutral"}</td></tr>')
-    H.append(f'<tr><td>Dirección del mapa (RV global){i("direccion")}</td><td>{e(fase_acwi or "sin dato")}</td></tr>')
-    H.append(f'<tr><td>D · Beta o alfa{i("b_D")}</td><td>{d_txt_html if d_txt else "sin dato"}</td></tr>')
-    H.append(f'<tr><td>Sentimiento (réplica Euphoriameter, 0–100){i("sentimiento")}</td><td>{fmt(sent, 0)}</td></tr>')
-    H.append('</table>')
+    H.append(f'<tr><td>Dirección del mapa (RV global){i("direccion")}</td><td>{e(nombre_fase(fase_acwi) if fase_acwi else "sin dato")}</td></tr>')
+    H.append(f'<tr><td>D · Beta o alfa (no vota){i("b_D")}</td><td>{d_txt_html if d_txt else "sin dato"}</td></tr>')
+    H.append('</table></details>')
+
+    # ===== TÁCTICO: parte especulativa
+    H.append(f'<h2>Táctico · parte especulativa{i("cap_corto")}</h2>')
+    if cap_c:
+        sc = cap_c["n"] >= 6
+        H.append(f'<div class="tarjetas"><div class="tarjeta {"alerta" if sc else ""}"><div class="t">Capitulación a corto (rebote){i("cap_corto")}</div>'
+                 f'<div class="v">{"SÍ" if sc else "no"}</div><div class="s">{cap_c["n"]} de 8 indicios (hacen falta 6) · '
+                 f'cierre del {fd(format(cap_c["fecha"], "%d-%m-%Y"))}'
+                 f'{" · posible rebote de 1–3 meses: solo parte especulativa" if sc else ""}</div></div></div>')
+        H.append('<table class="indicios"><tr><th></th><th>Indicio</th><th>Ahora</th></tr>')
+        for nombre, valor, ok in cap_c["crit"]:
+            H.append(f'<tr><td class="{"si" if ok else ""}">{"✔" if ok else "—"}</td><td>{e(nombre)}</td><td>{valor}</td></tr>')
+        H.append(f'</table><p class="nota">S&amp;P 500 y VIX, cierre del {fd(format(cap_c["fecha"], "%d-%m-%Y"))}. '
+                 f'Se activa con 6 o más. Horizonte de 1 a 3 meses; peligroso a un año en mercados bajistas largos.</p>')
+    else:
+        H.append('<p class="nota">Capitulación a corto: sin dato (faltan los precios diarios del S&amp;P 500 o del VIX).</p>')
+
+    # ===== ROTACIÓN DE MOTORES: TOP 3
+    def lista_top(ms):
+        if not ms:
+            return '<p class="nota">Ningún motor cumple ahora el criterio.</p>'
+        return "<ol>" + "".join(f'<li>{tk(m["t"])} <span class="nota">{e(m["nombre"])}</span></li>' for m in ms) + "</ol>"
+    H.append('<h2>Rotación de motores · TOP 3</h2>')
+    H.append('<div class="tarjetas tops">')
+    H.append(f'<div class="tarjeta top salir"><div class="t">Cerca de fin de ciclo · ir saliendo{i("top_salir")}</div>{lista_top(top_salir)}</div>')
+    H.append(f'<div class="tarjeta top ampliar"><div class="t">Tendencia alcista con recorrido · ampliar{i("top_ampliar")}</div>{lista_top(top_ampliar)}</div>')
+    H.append(f'<div class="tarjeta top construir"><div class="t">Podrían iniciar tendencia alcista · empezar a construir{i("top_construir")}</div>{lista_top(top_construir)}</div>')
+    H.append('</div>')
 
     # Mapa motores
     H.append(f'<h2>Mapa de rotación de motores{i("mapa")}</h2>')
@@ -2655,6 +2769,11 @@ nav button.activa{color:var(--f);border-bottom-color:var(--acento);font-weight:6
 h2{font-size:1.05em;margin:22px 0 8px}
 .tarjetas{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 .tarjeta{background:var(--panel);border:1px solid var(--b);border-radius:10px;padding:10px 12px}
+.tarjeta.ancha{margin-top:10px}
+.plan{background:var(--panel);border:1px solid var(--b);border-radius:10px;padding:10px 12px;margin-top:10px}
+.plan table{margin:6px 0 0;width:100%}.plan td{vertical-align:top;white-space:normal}.plan td:first-child{width:34%;min-width:120px}
+.plan tr.activo td{background:#fff1ec}
+details.detalle{margin:10px 0}details.detalle>summary{cursor:pointer;font-weight:600;padding:6px 0}
 .tarjeta.alerta{background:#fff1ec;border-color:#f3b49b}
 .tarjeta .t{font-size:.8em;color:var(--s)}.tarjeta .v{font-size:1.5em;font-weight:700;margin:2px 0}.tarjeta .s{font-size:.8em;color:var(--s)}
 table{border-collapse:collapse;width:fit-content;max-width:100%;font-size:.88em;display:block;overflow-x:auto;background:var(--panel);border-radius:8px}
@@ -2678,6 +2797,7 @@ th{white-space:normal;vertical-align:bottom;min-width:60px}
 .sin-rastro .r{display:none}
 .nivel{color:#fff;border-radius:6px;padding:3px 8px;font-size:.8em;font-weight:700;white-space:nowrap}
 td.motivo{white-space:normal;min-width:220px;max-width:340px}
+td.fase{white-space:normal;min-width:90px;max-width:140px}
 h2.primero{margin-top:6px}
 .tops{margin-top:12px}.tops .tarjeta ol{margin:6px 0 0;padding-left:20px}.tops .tarjeta li{margin:2px 0}
 .top.salir{border-left:4px solid #d9534f}.top.ampliar{border-left:4px solid #2e9d55}.top.construir{border-left:4px solid #2f6fdb}
