@@ -118,6 +118,14 @@ INFO = {
 <p><b>Por qué sin CAPE.</b> Desde 2016 la bolsa de EE. UU. está siempre entre el 10&nbsp;% más cara de su historia: con el CAPE dentro, el indicador no bajaba de 29–42 ni en los suelos de 2018, 2020, 2022 o 2025. La valoración ya tiene su propio bloque.</p>
 <p><b>Miedo (por debajo de 20) → construir poco a poco.</b> Desde 1997, 17 avisos: rentabilidad mediana del S&amp;P 500 a 12 meses del +20,9&nbsp;% (una semana cualquiera: +13,7&nbsp;%).</p>
 <p><b>Cuidado.</b> 6 de esos 17 avisos llegaron dentro de los mercados bajistas de 2000–2002 y 2008: la bolsa siguió cayendo hasta un 45&nbsp;% más y tardó hasta 3 años en recuperar. A 5 años, la mediana fue peor que la de una semana cualquiera (+48,9&nbsp;% frente a +65,3&nbsp;%). Por eso no sirve para entrar de golpe.</p>""", []),
+    "agujas": ("Resumen en agujas", """
+<p>Cada aguja resume, de rojo (desfavorable) a verde (favorable), lo que ya dicen las reglas de la web. En las de dos opciones (renta fija o variable, indexación o stock picking) los colores son neutros: ningún extremo es malo.</p>
+<ul><li><b>Liquidez ↔ invertir:</b> suma de los 4 votos de la convicción (a favor +1, neutral 0, en contra −1) más la dirección del mapa de la bolsa mundial (ACWI). Con capitulación a largo, verde total; con el veto por crédito activo, no pasa de la zona roja. Es la única regla nueva.</li>
+<li><b>Renta fija ↔ renta variable:</b> fase en el mapa de rotación de la bolsa mundial (ACWI) frente a los bonos del Tesoro a 7–10 años (IEF), con el mismo cálculo que los motores.</li>
+<li><b>RV EE. UU., Europa y emergentes:</b> el veredicto de "Condiciones de indexación" del S&amp;P 500, de Europa (VGK) y de emergentes (IEMG), de muy malas a muy buenas. En EE. UU., la capitulación a largo lleva la aguja al verde total.</li>
+<li><b>Bonos largos y cortos:</b> fase frente a la liquidez de TLT (20 años o más) y SHY (1–3 años): aceleración (verde) → arranque → madurez → suelo → giro → bajista frente a la liquidez (rojo).</li>
+<li><b>Indexación ↔ stock picking:</b> media de la dispersión entre acciones del S&amp;P 500 (DSPX) y de la correlación implícita invertida (COR3M), en percentiles. Dispersión alta y correlación baja favorecen elegir valores; lo contrario, el índice.</li></ul>
+<p><b>Cuidado.</b> Son resúmenes de reglas de criterio propio, no predicciones. El detalle de cada una está en su apartado.</p>""", []),
     "plan": ("Plan de entrada", """
 <p>Resume, en un orden fijo, qué hacer con la indexación:</p>
 <ul><li><b>1. Capitulación a largo.</b> Si está activa, manda sobre todo lo demás: todo a la indexación (aceptando que aún podría caer un 30–40&nbsp;% más, como en 2008).</li>
@@ -303,6 +311,22 @@ INFO = {
 <p>Precio del cobre (metal industrial, sensible al crecimiento) frente al oro (refugio).</p>
 <p><b>Lectura.</b> Subiendo suele acompañar expectativas de más crecimiento y tipos más altos; bajando, de menos crecimiento o miedo.</p>
 <p><b>Cuidado.</b> Es una heurística de mercado sin respaldo académico sólido. Aquí se mide con dos fondos cotizados (CPER y GLD), con historia desde 2011.</p>""", []),
+    "Volatilidad de los bonos largos (Cboe VXTLT)": ("Volatilidad de los bonos largos (Cboe VXTLT)", """
+<p><b>Qué es.</b> Volatilidad implícita a 30 días en las opciones del fondo de bonos del Tesoro a más de 20 años (TLT), calculada por Cboe con el mismo método que el VIX. Desde 2004. Cuanto más alta, más miedo a movimientos bruscos de los tipos de interés.</p>
+<p><b>Por qué no el MOVE.</b> El MOVE (ICE BofA) es el índice de referencia de la volatilidad de los bonos, pero es de pago y no está en Tiingo ni en la Reserva Federal; Yahoo Finance falla. El VXTLT es lo más parecido gratuito y fiable, pero mide otra cosa (volatilidad del precio del bono largo, en %, no de los tipos en puntos básicos) y tiene otra escala: el umbral de 98 del MOVE no se aplica aquí.</p>
+<p><b>Sobre el MOVE por encima de 98.</b> Coincidió con las caídas de 2008, 2011, 2020, 2022 y abril de 2025, pero no con agosto de 2015, febrero de 2016 ni 2018 (máximo de 2018: 69,9). No es condición necesaria para una crisis bursátil.</p>
+<p><b>Tramos.</b> Se fijan con su propia historia (percentiles desde 2004), porque no hay umbrales oficiales:</p>
+<ul><li><b>Tranquilidad:</b> por debajo de su percentil 25.</li>
+<li><b>Normal:</b> entre los percentiles 25 y 75.</li>
+<li><b>Tensión:</b> por encima del percentil 75.</li>
+<li><b>Tensión alta:</b> por encima del percentil 90.</li></ul>
+<!--TRAMOS_VXTLT-->
+<p>Solo información: no cambia ninguna regla.</p>""", [("Cboe: VXTLT", "https://www.cboe.com/us/indices/dashboard/vxtlt/")]),
+    "Masa monetaria M2 (crecimiento interanual, %)": ("Masa monetaria M2", """
+<p><b>Qué es.</b> Dinero en manos del público en EE. UU.: efectivo, depósitos a la vista y de ahorro, depósitos a plazo pequeños y fondos monetarios minoristas. Se muestra su crecimiento frente al mismo mes del año anterior. Serie mensual de la Reserva Federal (M2SL, desestacionalizada), desde 1960.</p>
+<p><b>Media desde 2008.</b> La gráfica empieza en 2008, con el inicio de las compras de bonos de la Fed (QE): desde entonces el crecimiento de M2 responde a otro régimen monetario, y la media de toda la historia (que incluye la etapa anterior a 1971, con el dólar ligado al oro) no sirve como referencia. Debajo de la gráfica se dan también, como contexto, las medias desde 1971 y desde 1960.</p>
+<p><b>Lectura.</b> Un crecimiento fuerte suele acompañar a políticas expansivas (2020–2021: más del 25&nbsp;%); un crecimiento negativo es muy raro (2023, por primera vez desde los años treinta, tras las subidas de tipos). Su relación con la bolsa y la inflación a corto plazo es débil e inestable.</p>
+<p>Solo información: no cambia ninguna regla.</p>""", [("Serie M2SL (FRED)", FRED + "M2SL")]),
     "Estructura del VIX (VIX/VIX3M)": ("Estructura del VIX (VIX/VIX3M)", """
 <p>Volatilidad esperada a 1 mes frente a la de 3 meses.</p>
 <p><b>Lectura.</b> Por debajo de 1 (contango) es lo normal. Por encima de 1 (inversión) indica miedo agudo a corto plazo. La vuelta por debajo de 0,95 tras una inversión cuenta como punto en la puerta.</p>""",
@@ -437,7 +461,7 @@ MOTORES = [
     ("DBMF", "Managed futures"), ("VIXY", "Volatilidad"),
 ]
 REFERENCIA = "BIL"
-OTROS_TIINGO = ["CPER", "URTH", "IEMG"]
+OTROS_TIINGO = ["CPER", "URTH", "IEMG", "SHY"]
 
 # Índices para las condiciones de indexación: (ticker, nombre, ¿EE. UU.?)
 INDICES_COND = [("URTH", "MSCI World", False), ("SPY", "S&P 500", True),
@@ -466,7 +490,7 @@ SENALES_VALIDAS = {
     "alc": {"TLT": {"rsi"}, "Renta variable": {"div"}, "Factores": {"div"}},
     "baj": {"Renta variable": {"rsi", "div"}, "Factores": {"rsi", "div"}, "Renta fija": {"rsi"}, "Crédito": {"rsi"}},
 }
-FAMILIA_EXTRA = {"URTH": "Renta variable", "IEMG": "Renta variable"}   # índices de las condiciones que no son motores
+FAMILIA_EXTRA = {"URTH": "Renta variable", "IEMG": "Renta variable", "SHY": "Renta fija"}   # índices de las condiciones que no son motores
 NOMBRE_SENAL = {"rsi": "RSI", "dist": "distancia a la media", "rs": "fuerza extrema", "div": "divergencia"}
 
 
@@ -502,6 +526,7 @@ DESC = {
     "DBMF": "iMGP DBi Managed Futures: réplica de los fondos de gestión tendencial.",
     "VIXY": "ProShares VIX Short-Term Futures: futuros del VIX a corto plazo. Sube en los picos de miedo y pierde valor con el tiempo en mercados tranquilos.",
     "BIL": "SPDR 1-3 Month T-Bill: letras del Tesoro de EE. UU., la referencia de liquidez.",
+    "SHY": "iShares 1-3 Year Treasury Bond: bonos del Tesoro de EE. UU. a 1–3 años (bonos cortos).",
     "URTH": "iShares MSCI World: bolsa de países desarrollados.",
     "IEMG": "iShares Core MSCI Emerging Markets: emergentes de empresas grandes, medianas y pequeñas (índice IMI).",
     "CPER": "United States Copper Index Fund: futuros de cobre.",
@@ -529,9 +554,10 @@ FRED_SERIES = {
     "WTREGEN": "Cuenta del Tesoro",
     "RRPONTSYD": "Repo inverso",
     "DTWEXBGS": "Dólar (índice amplio)",
+    "M2SL": "Masa monetaria M2",
 }
 
-CBOE_INDICES = ["VIX", "VIX3M", "COR3M", "DSPX", "SKEW"]
+CBOE_INDICES = ["VIX", "VIX3M", "COR3M", "DSPX", "SKEW", "VXTLT"]
 
 # Calendarios oficiales (revisar cada año)
 FOMC = [
@@ -1198,6 +1224,11 @@ def nombre_fase(f):
     return NOMBRE_FASE.get(f, f)
 
 
+def nombre_fase_macro(f):
+    """En las variables macro no hay liquidez de referencia: nivel e impulso bajos = tendencia bajista."""
+    return "TENDENCIA BAJISTA" if f == "REZAGADO" else nombre_fase(f)
+
+
 COLOR_FASE = {
     "SUELO": "#6b7a90", "ARRANQUE": "#2f6fdb", "ACELERACIÓN": "#1f9d55",
     "MADUREZ": "#d9a400", "GIRO": "#e0661b", "REZAGADO": "#c0392b",
@@ -1489,6 +1520,39 @@ def svg_linea(serie, alto=120, ancho=680, color="#2f6fdb", ref=None):
         out.append(f'<line x1="0" x2="{ancho}" y1="{yr:.1f}" y2="{yr:.1f}" stroke="#bbb" stroke-dasharray="4 4"/>')
     out.append(f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="1.8"/></svg>')
     return "".join(out)
+
+
+PUNTOS_NIVEL = {"MUY MALAS": 8, "MALAS": 25, "REGULAR-PESIMISTA": 42, "REGULAR-OPTIMISTA": 58, "BUENAS": 75, "MUY BUENAS": 92}
+PUNTOS_FASE = {"REZAGADO": 10, "GIRO": 25, "SUELO": 45, "MADUREZ": 55, "ARRANQUE": 70, "ACELERACIÓN": 88}
+COLORES_AGUJA = {"rv": ["#c0392b", "#e67e22", "#f1c40f", "#8bc34a", "#2e7d32"],
+                 "neutro": ["#2f6db5", "#7f9fcc", "#b9bec6", "#ab8fcb", "#7d4fb0"]}
+
+
+def svg_aguja(valor, paleta="rv", izq="", der=""):
+    """Semicírculo de 5 tramos y aguja; valor de 0 (izquierda) a 100 (derecha)."""
+    import math
+    cx, cy, r, g = 80, 78, 62, 13
+
+    def punto(ang, rad):
+        a = math.radians(ang)
+        return cx + rad * math.cos(a), cy - rad * math.sin(a)
+    partes = [f'<svg class="aguja-svg" viewBox="0 0 160 100" role="img">']
+    for k, col in enumerate(COLORES_AGUJA[paleta]):
+        a1, a2 = 180 - 36 * k, 180 - 36 * (k + 1)
+        x1, y1 = punto(a1 - (0 if k == 0 else 0.6), r)
+        x2, y2 = punto(a2 + (0 if k == 4 else 0.6), r)
+        partes.append(f'<path d="M{x1:.1f},{y1:.1f} A{r},{r} 0 0 1 {x2:.1f},{y2:.1f}" stroke="{col}" stroke-width="{g}" fill="none"/>')
+    if valor is not None:
+        v = max(0.0, min(100.0, float(valor)))
+        xt, yt = punto(180 - 1.8 * v, r - 6)
+        partes.append(f'<line x1="{cx}" y1="{cy}" x2="{xt:.1f}" y2="{yt:.1f}" stroke="#1d2733" stroke-width="3" stroke-linecap="round"/>')
+        partes.append(f'<circle cx="{cx}" cy="{cy}" r="5" fill="#1d2733"/>')
+    if izq:
+        partes.append(f'<text x="12" y="96" font-size="9" fill="#5b6776">{e(izq)}</text>')
+    if der:
+        partes.append(f'<text x="148" y="96" font-size="9" fill="#5b6776" text-anchor="end">{e(der)}</text>')
+    partes.append('</svg>')
+    return "".join(partes)
 
 
 def svg_historico(serie, media, txt_media, unidad="", ancho=720, alto=260, color="#8a4b2d"):
@@ -1965,7 +2029,7 @@ def narrativa_macro(corto, v, color, reg):
          f'(percentil {fmt(v["rx"][0], 0)}).</p>',
          f'<p><span class="et">Cómo ha llegado hasta aquí (últimas 24 semanas)</span></p>'
          + _recorrido(runs, fechas, f_, sg, pl, CUAD_MACRO, TRAMO_MACRO, mensual),
-         f'<p class="nota">Fase según las reglas: {nombre_fase(v["fase"]).lower()}. "Nivel típico" = su mediana histórica (percentil 50). '
+         f'<p class="nota">Fase según las reglas: {nombre_fase_macro(v["fase"]).lower()}. "Nivel típico" = su mediana histórica (percentil 50). '
          f'{"Dato mensual: un punto por mes." if mensual else "Cierres semanales."}</p>']
     return "".join(P)
 
@@ -2258,6 +2322,14 @@ def main():
         add(variable_macro("Diferencial high yield (solo 3 años)", semanal(fr["BAMLH0A0HYM2"]), "s", 13))
     if "RSP" in W and "SPY" in W and W["RSP"] is not None and W["SPY"] is not None:
         add(variable_macro("Equiponderado / capitalización (RSP/SPY)", (W["RSP"] / W["SPY"]).dropna(), "s", 13, "pct"))
+    vxtlt_w = semanal(cb["VXTLT"]) if "VXTLT" in cb else None
+    if vxtlt_w is not None:
+        add(variable_macro("Volatilidad de los bonos largos (Cboe VXTLT)", vxtlt_w, "s", 13))
+    m2_yoy = None
+    if "M2SL" in fr:
+        m2_m = mensual(fr["M2SL"])
+        m2_yoy = ((m2_m / m2_m.shift(12) - 1) * 100).dropna()
+        add(variable_macro("Masa monetaria M2 (crecimiento interanual, %)", m2_yoy, "m", 6))
     mac = {v["nombre"]: v for v in macro}
 
     # --- Sentimiento sin CAPE, sentimiento con ECY y capitulación (decisión 22-11-2026)
@@ -2333,15 +2405,84 @@ def main():
     # ===== PESTAÑA 1: DIAGNOSTICADOR
     H.append('<section id="t1" class="pest activa">')
 
+    # ===== RESUMEN EN AGUJAS
+    cap_l = sent_ecy is not None and sent_ecy < 20
+    cond_t = {c["t"]: c for c in conds}
+    motor_t = {m["t"]: m for m in motores}
+
+    def fase_simple(precio_w, rs_ref):
+        rs_, X_, Y_ = rrg(precio_w, rs_ref)
+        XY_ = pd.concat([X_, Y_], axis=1).dropna()
+        if len(XY_) < 12:
+            return None
+        return fase_motor(rs_.loc[:XY_.index[-1]], rs_, XY_.iloc[:, 0], XY_.iloc[:, 1], None)[0]
+
+    agujas = []
+    # 1. Liquidez ↔ invertir
+    items = list(votos.values()) + ([direccion] if direccion is not None else [])
+    v_liq = 50 + 50 * sum(items) / len(items) if items else None
+    nota_liq = (f'{sum(1 for x in items if x > 0)} a favor, {sum(1 for x in items if x < 0)} en contra y '
+                f'{sum(1 for x in items if x == 0)} neutrales, de {len(items)} señales (bloques de la convicción y mapa global)') if items else ""
+    if cap_l:
+        v_liq, nota_liq = 100, "capitulación a largo activa"
+    elif comun["veto"] and v_liq is not None:
+        v_liq, nota_liq = min(v_liq, 20), nota_liq + " · veto por crédito activo"
+    agujas.append(("Liquidez ↔ invertir", v_liq, "rv", "Liquidez", "Invertir",
+                   "INVERTIR" if v_liq is not None and v_liq >= 60 else "LIQUIDEZ" if v_liq is not None and v_liq <= 40 else
+                   ("NEUTRAL" if v_liq is not None else "sin dato"), nota_liq))
+    # 2. Renta fija ↔ renta variable
+    f_rvrf = None
+    if W.get("ACWI") is not None and W.get("IEF") is not None:
+        f_rvrf = fase_simple(W["ACWI"], W["IEF"])
+    v_rvrf = PUNTOS_FASE.get(f_rvrf) if f_rvrf else None
+    agujas.append(("Renta fija ↔ renta variable", v_rvrf, "neutro", "R. fija", "R. variable",
+                   "A FAVOR DE LA RV" if v_rvrf is not None and v_rvrf >= 60 else
+                   "A FAVOR DE LA RENTA FIJA" if v_rvrf is not None and v_rvrf <= 40 else
+                   ("EQUILIBRIO" if v_rvrf is not None else "sin dato"),
+                   f'bolsa mundial (ACWI) frente a bonos a 7–10 años (IEF): {nombre_fase(f_rvrf).lower()}' if f_rvrf else ""))
+    # 3-5. Bolsa por zonas
+    for t, nom in (("SPY", "RV EE. UU."), ("VGK", "RV Europa"), ("IEMG", "RV emergentes")):
+        c = cond_t.get(t)
+        if t == "SPY" and cap_l:
+            agujas.append((nom, 100, "rv", "", "", "CAPITULACIÓN A LARGO", "todo a la indexación"))
+        elif c:
+            agujas.append((nom, PUNTOS_NIVEL.get(c["nivel"]), "rv", "", "", c["nivel"], f'condiciones de indexación de {c["nombre"]}'))
+        else:
+            agujas.append((nom, None, "rv", "", "", "sin dato", ""))
+    # 6-7. Bonos largos y cortos
+    f_tlt = motor_t["TLT"]["fase"] if "TLT" in motor_t else None
+    f_shy = None
+    if W.get("SHY") is not None and ref_w is not None:
+        rs_s, X_s, Y_s = rrg(W["SHY"], ref_w)
+        XY_s = pd.concat([X_s, Y_s], axis=1).dropna()
+        if len(XY_s) >= 12:
+            f_shy = fase_motor(precio("SHY").loc[:rs_s.index[-1]], rs_s, XY_s.iloc[:, 0], XY_s.iloc[:, 1], "SHY")[0]
+    for nom, f_, desc in (("Bonos largos", f_tlt, "TLT (20 años o más)"), ("Bonos cortos", f_shy, "SHY (1–3 años)")):
+        agujas.append((nom, PUNTOS_FASE.get(f_) if f_ else None, "rv", "", "",
+                       nombre_fase(f_) if f_ else "sin dato", f"{desc} frente a la liquidez" if f_ else ""))
+    # 8. Indexación ↔ stock picking
+    v_sp = None
+    if "DSPX" in cb and "COR3M" in cb:
+        v_sp = (pct(cb["DSPX"]) + (100 - pct(cb["COR3M"]))) / 2
+    agujas.append(("Indexación ↔ stock picking", v_sp, "neutro", "Indexación", "Stock picking",
+                   "STOCK PICKING" if v_sp is not None and v_sp >= 60 else "INDEXACIÓN" if v_sp is not None and v_sp <= 40 else
+                   ("EQUILIBRIO" if v_sp is not None else "sin dato"),
+                   f"dispersión y correlación entre acciones del S&P 500: {fmt(v_sp, 0)} de 100" if v_sp is not None else ""))
+    H.append(f'<h2 class="primero">Resumen{i("agujas")}</h2><div class="agujas">')
+    for nom, v, pal, iz, de, txt, det in agujas:
+        H.append(f'<div class="aguja"><div class="t">{e(nom)}</div>{svg_aguja(v, pal, iz, de)}'
+                 f'<div class="v">{e(txt)}</div><div class="s">{e(det)}</div></div>')
+    H.append('</div>')
+
     # ===== INDEXACIÓN: condiciones, plan de entrada, contexto y detalle
-    H.append(f'<h2 class="primero">Indexación · condiciones por índice (plazo de 6 a 12 meses){i("condiciones")}</h2>')
+    H.append(f'<h2>Indexación · condiciones por índice (plazo de 6 a 12 meses){i("condiciones")}</h2>')
     H.append('<table><tr><th>Índice</th><th>Condiciones</th><th>Por qué</th><th>Tendencia</th><th>Fase</th>'
              f'<th>Sobre la media de 200 sem.{i("dist200")}</th><th>Caída hasta ella{i("dist200")}</th><th>Puerta{i("puntos")}</th></tr>')
     for c in conds:
         H.append(f'<tr><td><b>{e(c["nombre"])}</b> ({tk(c["t"])})</td>'
                  f'<td><span class="nivel" style="background:{COLOR_NIVEL[c["nivel"]]}">{c["nivel"]}</span></td>'
                  f'<td class="motivo">{e(c["motivo"])}</td><td>{c["tend"]}</td>'
-                 f'<td class="fase">{e(nombre_fase(c["fase"]).capitalize() if c["fase"] else "—")}</td><td>{_con_signo(c["dist"])}</td>'
+                 f'<td class="col-fase">{e(nombre_fase(c["fase"]).capitalize() if c["fase"] else "—")}</td><td>{_con_signo(c["dist"])}</td>'
                  f'<td>{"ya por debajo" if c["pu"].get("caida") is not None and c["pu"]["caida"] < 0 else fmt(c["pu"].get("caida"), 1, " %")}</td>'
                  f'<td>{c["puntos"]}/6 · tramo {c["tramo"]}</td></tr>')
     H.append('</table><p class="nota">Tendencia: precio frente a su media de 40 semanas (unos 9 meses). Fase: fuerza frente a la liquidez '
@@ -2349,7 +2490,6 @@ def main():
              'Cierres semanales; no sirven para decidir a días o semanas.</p>')
 
     # Plan de entrada (orden fijo)
-    cap_l = sent_ecy is not None and sent_ecy < 20
     miedo = sent is not None and sent < 20
     tramos = [(c["nombre"], c["tramo"]) for c in conds if c["tramo"]]
     pasos = [
@@ -2593,8 +2733,35 @@ def main():
         H.append(f'<tr><td>{e(v["nombre"])}{i(v["nombre"])}</td><td>{fmt(v["valor"], 0 if abs(v["valor"]) >= 1000 else 2)}</td>'
                  f'<td class="{"viejo" if viejo else ""}">{fd(format(v["fecha"], "%d-%m-%Y"))}{" ⚠" if viejo else ""}</td>'
                  f'<td>{fmt(v["nivel"], 0)} <span class="nota">desde {fd(v["desde"])}</span></td><td>{fmt(v["impulso"], 2, unidad)} ({per})</td>'
-                 f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{nombre_fase(v["fase"])}</span></td></tr>')
+                 f'<td><span class="fase" style="background:{COLOR_FASE[v["fase"]]}">{nombre_fase_macro(v["fase"])}</span></td></tr>')
     H.append('</table><p class="nota">⚠ = dato desfasado.</p>')
+    if vxtlt_w is not None and len(vxtlt_w) > 50:
+        mv = float(vxtlt_w.mean())
+        q25, q75, q90 = (float(vxtlt_w.quantile(q)) for q in (0.25, 0.75, 0.90))
+        ahora = float(vxtlt_w.iloc[-1])
+        tramo = ("TENSIÓN ALTA" if ahora > q90 else "TENSIÓN" if ahora > q75 else "TRANQUILIDAD" if ahora < q25 else "NORMAL")
+        clave_v = "Volatilidad de los bonos largos (Cboe VXTLT)"
+        tit_v, cuerpo_v, fu_v = INFO[clave_v]
+        INFO[clave_v] = (tit_v, cuerpo_v.replace("<!--TRAMOS_VXTLT-->",
+            f'<p>Con los datos desde {vxtlt_w.index[0].year}: tranquilidad por debajo de {fmt(q25, 1)}; normal entre {fmt(q25, 1)} y {fmt(q75, 1)}; '
+            f'tensión por encima de {fmt(q75, 1)}; tensión alta por encima de {fmt(q90, 1)}. Ahora: {fmt(ahora, 1)} ({tramo.lower()}).</p>'), fu_v)
+        H.append(f'<h2>Volatilidad de los bonos largos (Cboe VXTLT){i(clave_v)}</h2>'
+                 f'<p class="nota">Cierres semanales desde {fd(vxtlt_w.index[0].year)}. Ahora {fmt(ahora, 1)} '
+                 f'({fd(format(vxtlt_w.index[-1], "%d-%m-%Y"))}): <b>{tramo}</b>. Tranquilidad por debajo de {fmt(q25, 1)} · '
+                 f'normal hasta {fmt(q75, 1)} · tensión por encima de {fmt(q75, 1)} · tensión alta por encima de {fmt(q90, 1)} '
+                 f'(percentiles 25, 75 y 90 desde {fd(vxtlt_w.index[0].year)}); media {fmt(mv, 1)}. '
+                 'No es el MOVE: otra escala (su umbral de 98 no se aplica).</p>')
+        H.append(svg_historico(vxtlt_w, mv, f"media {fmt(mv, 1)}"))
+    if m2_yoy is not None and len(m2_yoy.loc["2008":]) > 24:
+        m08 = m2_yoy.loc["2008":]
+        mm = float(m08.mean())
+        m71 = float(m2_yoy.loc["1971":].mean())
+        mtot = float(m2_yoy.mean())
+        H.append(f'<h2>Masa monetaria M2 · crecimiento interanual desde 2008{i("Masa monetaria M2 (crecimiento interanual, %)")}</h2>'
+                 f'<p class="nota">Mensual. Ahora {_con_signo(m2_yoy.iloc[-1])} ({fd(format(m2_yoy.index[-1], "%m-%Y"))}); '
+                 f'<b>media desde 2008: {fmt(mm, 1, " %")}</b> (línea discontinua); percentil {fmt(pct(m08), 0)} desde 2008. '
+                 f'Como contexto: media desde 1971 {fmt(m71, 1, " %")}; desde {fd(m2_yoy.index[0].year)} {fmt(mtot, 1, " %")}.</p>')
+        H.append(svg_historico(m08, mm, f"media {fmt(mm, 1)} %"))
     H.append('</section>')
 
     # ===== PESTAÑA 2: OPCIONES
@@ -2716,7 +2883,7 @@ def main():
          + " · construir: " + ", ".join(m["t"] for m in top_construir),
          f"Convicción={conv}; votos=" + ", ".join(f"{k}:{v:+d}" for k, v in votos.items()) + f"; dirección RV global={nombre_fase(fase_acwi) if fase_acwi else None}; beta/alfa={d_txt}; sentimiento={fmt(sent, 0)}",
          "Motores: " + "; ".join(f"{m['t']}={nombre_fase(m['fase'])}" for m in motores),
-         "Macro: " + "; ".join(f"{v['nombre']}={nombre_fase(v['fase'])} (p{fmt(v['nivel'], 0)})" for v in macro)]
+         "Macro: " + "; ".join(f"{v['nombre']}={nombre_fase_macro(v['fase'])} (p{fmt(v['nivel'], 0)})" for v in macro)]
     if gm:
         R.append(f"Gamma={'positiva' if gm['gex_mm'] > 0 else 'negativa'}, giro={fmt(gm['giro'], 0)}, S&P={fmt(gm['spot'], 0)}")
     R.append(f"Blackout estimado={'sí' if en_blackout else 'no'}")
@@ -2770,6 +2937,11 @@ h2{font-size:1.05em;margin:22px 0 8px}
 .tarjetas{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 .tarjeta{background:var(--panel);border:1px solid var(--b);border-radius:10px;padding:10px 12px}
 .tarjeta.ancha{margin-top:10px}
+.agujas{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:700px){.agujas{grid-template-columns:repeat(4,1fr)}}
+.aguja{background:var(--panel);border:1px solid var(--b);border-radius:10px;padding:8px 10px 10px;text-align:center}
+.aguja .t{font-size:.85em;font-weight:600}.aguja .v{font-weight:700;font-size:.95em;margin-top:2px}.aguja .s{font-size:.75em;color:var(--s)}
+.aguja-svg{width:100%;max-width:190px;display:block;margin:2px auto 0}
 .plan{background:var(--panel);border:1px solid var(--b);border-radius:10px;padding:10px 12px;margin-top:10px}
 .plan table{margin:6px 0 0;width:100%}.plan td{vertical-align:top;white-space:normal}.plan td:first-child{width:34%;min-width:120px}
 .plan tr.activo td{background:#fff1ec}
@@ -2797,7 +2969,7 @@ th{white-space:normal;vertical-align:bottom;min-width:60px}
 .sin-rastro .r{display:none}
 .nivel{color:#fff;border-radius:6px;padding:3px 8px;font-size:.8em;font-weight:700;white-space:nowrap}
 td.motivo{white-space:normal;min-width:220px;max-width:340px}
-td.fase{white-space:normal;min-width:90px;max-width:140px}
+td.col-fase{white-space:normal;min-width:90px;max-width:140px}
 h2.primero{margin-top:6px}
 .tops{margin-top:12px}.tops .tarjeta ol{margin:6px 0 0;padding-left:20px}.tops .tarjeta li{margin:2px 0}
 .top.salir{border-left:4px solid #d9534f}.top.ampliar{border-left:4px solid #2e9d55}.top.construir{border-left:4px solid #2f6fdb}
