@@ -449,6 +449,10 @@ HOY = AHORA.normalize()
 # Datos completos hasta ayer; última semana cerrada = último viernes <= ayer
 _REF = HOY - pd.Timedelta(days=1)
 ULTIMO_VIERNES = _REF - pd.Timedelta(days=(_REF.weekday() - 4) % 7)
+_NY = pd.Timestamp.now(tz="America/New_York")
+HOY_NY = _NY.tz_localize(None).normalize()
+# Sesión de hoy en EE. UU. ya cerrada (la web se actualiza a las 22:30 de España, después del cierre)
+SESION_CERRADA = _NY.weekday() < 5 and (_NY.hour, _NY.minute) >= (16, 20)
 
 MOTORES = [
     ("ACWI", "RV global"), ("SPY", "RV EE. UU."), ("RSP", "RV EE. UU. equiponderada"),
@@ -694,7 +698,7 @@ def capitulacion_corto(spy_d, vix_d):
             ("Caída del 10 % o más en 20 sesiones", _con_signo(r20), r20 <= -10),
             ("Precio un 8 % o más por debajo de su media de 50 sesiones", _con_signo(d50), d50 <= -8),
             ("Sentimiento sin CAPE (cierres diarios) por debajo de 20", fmt(st, 0), st < 20),
-            ("Ese sentimiento cae 1,5 desviaciones típicas o más en 20 sesiones", _con_signo(zz, 1, " desv. típicas"), zz <= -1.5)]
+            ("Ese sentimiento cae 1,5 desviaciones típicas o más en 20 sesiones", _con_signo(zz, 1, " desviaciones típicas"), zz <= -1.5)]
     return {"fecha": c.index[-1], "n": sum(1 for _, _, x in crit if x), "crit": crit}
 
 
@@ -1067,6 +1071,29 @@ def _gamma_bs(S, K, T, iv):
     sq = np.sqrt(T)
     d1 = (np.log(S / K) + 0.5 * iv ** 2 * T) / (iv * sq)
     return np.exp(-0.5 * d1 ** 2) / np.sqrt(2 * np.pi) / (S * iv * sq)
+
+
+def cboe_cotizacion(nombre):
+    """Cotización retrasada (15 min) de un índice de Cboe: (fecha en Nueva York, valor). Para el cierre del día
+    cuando el histórico de Cboe aún no lo ha publicado."""
+    d = get(f"https://cdn-api.cboe.com/api/global/delayed_quotes/quotes/_{nombre}.json", intentos=1, timeout=(10, 30),
+            cabeceras={"Referer": f"https://www.cboe.com/delayed_quotes/{nombre.lower()}", "Origin": "https://www.cboe.com",
+                       "Accept": "application/json, text/plain, */*", "Accept-Language": "en-US,en;q=0.9"}).json()
+    x = d["data"]
+    v = None
+    for clave in ("current_price", "close", "last_trade_price"):
+        try:
+            if x.get(clave) and float(x[clave]) > 0:
+                v = float(x[clave])
+                break
+        except Exception:  # noqa
+            pass
+    hora = x.get("last_trade_time") or d.get("timestamp")
+    if v is None or not hora:
+        raise RuntimeError("cotización sin precio o sin hora")
+    f = pd.Timestamp(hora)
+    f = (f.tz_convert("America/New_York").tz_localize(None) if f.tzinfo else f).normalize()
+    return f, v
 
 
 def gamma_spx(spy_ultimo=None):
@@ -2076,6 +2103,13 @@ def main():
     for n in CBOE_INDICES:
         s = seguro(f"Cboe {n}", cboe_indice, n)
         if s is not None:
+            if SESION_CERRADA and s.index[-1] < HOY_NY:
+                try:
+                    f_c, v_c = cboe_cotizacion(n)
+                    if f_c == HOY_NY:
+                        s = pd.concat([s, pd.Series([v_c], index=[f_c])])
+                except Exception as ex:  # noqa
+                    AVISOS.append((f"Cboe {n} de hoy", f"cotización del cierre no disponible ({str(ex)[:60]}); se usa el último cierre publicado"))
             cb[n] = s
             registrar(f"Cboe {n}", s)
     sh = seguro("CAPE / ECY (Shiller)", shiller)
@@ -2086,8 +2120,6 @@ def main():
     pc = seguro("Ratio put/call (Cboe)", actualizar_putcall)
     if pc is not None:
         registrar("Ratio put/call (Cboe)", pc)
-    spy_ult = float(precios["SPY"].iloc[-1]) if "SPY" in precios else None
-    gm = seguro("Gamma SPX (Cboe)", gamma_spx, spy_ult)
     cot_series = {}
     for etq, ds, cod, l, c in [
         ("S&P 500 · gestoras", "gpe5-46if", "13874A", "asset_mgr_positions_long", "asset_mgr_positions_short"),
@@ -2120,6 +2152,16 @@ def main():
     elif ref_w is not None:
         AVISOS.append(("Precios de la semana en curso", "límite horario de Tiingo: hoy solo semanas cerradas"))
     tiingo_guardar_uso()
+    # Cierre de hoy del S&P 500 (SPY) si Tiingo aún no ha publicado el dato diario oficial
+    if SESION_CERRADA and ult and "SPY" in ult and "SPY" in BRUTO and "SPY" in precios and len(BRUTO["SPY"]):
+        f_s, v_s = ult["SPY"]
+        if f_s == HOY_NY and f_s > BRUTO["SPY"].index[-1]:
+            r_aj = float(precios["SPY"].iloc[-1] / BRUTO["SPY"].iloc[-1])
+            BRUTO["SPY"] = pd.concat([BRUTO["SPY"], pd.Series([v_s], index=[f_s])])
+            precios["SPY"] = pd.concat([precios["SPY"], pd.Series([v_s * r_aj], index=[f_s])])
+            registrar("Precio SPY", precios["SPY"])
+    spy_ult = float(BRUTO["SPY"].iloc[-1]) if "SPY" in BRUTO and len(BRUTO["SPY"]) else None
+    gm = seguro("Gamma SPX (Cboe)", gamma_spx, spy_ult)
     for t in [m for m, _ in MOTORES] + [REFERENCIA]:
         if W.get(t) is None:
             continue
