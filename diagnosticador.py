@@ -439,6 +439,48 @@ INFO = {
 # CONFIGURACIÓN
 # ----------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------
+# CURVAS DE FUTUROS (contango / backwardation)
+# ----------------------------------------------------------------------------
+CME_LIQ = "https://www.cmegroup.com/markets/"
+INFO["vx_curva"] = ("Curva de futuros del VIX", """
+<p><b>Qué es.</b> El precio de liquidación diario de cada vencimiento mensual de los futuros del VIX (Cboe, mercado CFE), de más cercano a más lejano. Es la curva oficial, gratuita, que publica el propio mercado cada tarde.</p>
+<ul><li><b>Contango</b> (lo normal en calma): cada vencimiento vale más que el anterior. El mercado espera que la volatilidad de ahora suba con el tiempo hacia su media.</li>
+<li><b>Backwardation</b> (inversión): el primer vencimiento vale más que el segundo. Aparece en pánicos: se paga más por protegerse ya que dentro de meses.</li></ul>
+<p><b>En esta web.</b> Primer vencimiento ÷ segundo: por encima de 1, backwardation (miedo agudo); entre 0,98 y 1, plana (a menos de un 2 % de invertirse); por debajo de 0,98, contango. Al lado, el percentil de esa ratio en el último año (histórico propio, desde que la web guarda la curva): percentil alto = contango más débil de lo habitual, más tensión. También se muestra la pendiente del 4.º al 7.º vencimiento, menos ruidosa.</p>
+<p><b>Diferencia con VIX/VIX3M.</b> VIX y VIX3M son índices calculados con opciones del S&amp;P 500 (volatilidad esperada a 1 y 3 meses); los futuros son contratos que cotizan y además reflejan la prima que cobra el mercado por asegurar. Suelen decir lo mismo; cuando discrepan, los futuros muestran dónde se cubre de verdad el dinero.</p>
+<p><b>Cuidado.</b> En los días previos al vencimiento (miércoles a mitad de mes) el primer contrato converge al VIX de contado y la ratio da saltos. Por eso conviene mirar también el 4→7. Solo información: no cambia ninguna regla.</p>""",
+    [("Cboe: liquidaciones diarias (CSV por fecha)", "https://www.cboe.com/us/futures/market_statistics/settlement/"),
+     ("VIX Central: curva e histórico (gratis)", "http://vixcentral.com/"),
+     ("Cboe: especificaciones de los futuros VX", "https://www.cboe.com/tradable_products/vix/vix_futures/")])
+
+INFO["curvas_mp"] = ("Curvas de futuros de materias primas", """
+<p><b>Qué es.</b> El precio de cada vencimiento de los futuros, ordenado en el tiempo. Compara el primer vencimiento con el que vence 12 meses después (mismo mes del año siguiente: así se elimina la estacionalidad del gas natural).</p>
+<ul><li><b>Backwardation</b> (el futuro lejano más barato): el mercado paga más por tener la materia ya. Suele indicar escasez y existencias bajas.</li>
+<li><b>Contango</b> (el futuro lejano más caro): hay oferta de sobra y cuesta almacenarla y financiarla.</li></ul>
+<p><b>Por qué importa para la cartera.</b> Un fondo de materias primas (DBC, CPER, USO...) no tiene la materia: tiene futuros y los renueva cada mes. Con backwardation, cada renovación compra más barato y suma rentabilidad; con contango, la resta. La columna «Renovación a 12 meses» es esa ganancia o pérdida aproximada en un año <b>si el precio de contado no cambia</b>: precio del 1.<sup>er</sup> vencimiento ÷ precio a 12 meses − 1.</p>
+<p><b>En esta web.</b> Diferencia 1→12 por debajo de −2 %: backwardation; por encima de +2 %: contango; entre medias: plana. Umbral de criterio propio, solo descriptivo. Solo información: no cambia ninguna regla.</p>
+<p><b>Por qué no el oro.</b> El oro está casi siempre en contango por el coste de financiarlo (aprox. el tipo de interés): su curva dice poco del mercado.</p>
+<p><b>Cuidado.</b> Los precios son cierres diarios de cada contrato (Yahoo Finance, gratuito pero no oficial; si falla, las liquidaciones de la web de CME). La fuente oficial para consultarlo a mano es la pestaña «Settlements» de cada producto en CME. DBC no usa siempre el primer vencimiento (elige el contrato con mejor renovación), así que su coste real puede ser menor que el que sugiere la curva.</p>""",
+    [("CME: petróleo WTI, liquidaciones", CME_LIQ + "energy/crude-oil/light-sweet-crude.settlements.html"),
+     ("CME: Brent, liquidaciones", CME_LIQ + "energy/crude-oil/brent-crude-oil.settlements.html"),
+     ("CME: gas natural, liquidaciones", CME_LIQ + "energy/natural-gas/natural-gas.settlements.html"),
+     ("CME: cobre, liquidaciones", CME_LIQ + "metals/base/copper.settlements.html"),
+     ("Erb y Harvey (2006), The Strategic and Tactical Value of Commodity Futures", "https://doi.org/10.2469/faj.v62.n2.4083"),
+     ("Gorton, Hayashi y Rouwenhorst (2013), The Fundamentals of Commodity Futures Returns", "https://doi.org/10.1093/rof/rfs019")])
+
+MESES_COD = "FGHJKMNQUVXZ"
+MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+# (clave, nombre, raíz, bolsa en Yahoo, meses que cotizan, id de producto en CME)
+MATERIAS_CURVA = [
+    ("CL", "Petróleo WTI", "CL", "NYM", MESES_COD, 425),
+    ("BZ", "Petróleo Brent", "BZ", "NYM", MESES_COD, 424),
+    ("NG", "Gas natural (Henry Hub)", "NG", "NYM", MESES_COD, 444),
+    ("HG", "Cobre", "HG", "CMX", "HKNUZ", 438),
+]
+COLOR_MATERIA = {"CL": "#1d2733", "BZ": "#8a4b2d", "NG": "#2f6fdb", "HG": "#e67e22"}
+
+
 CARPETA_WEB = "docs"
 CARPETA_DATOS = "datos"
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -1065,6 +1107,232 @@ def actualizar_putcall():
     if hist.empty:
         raise RuntimeError("sin datos")
     return hist.sort_index()
+
+
+# ---------------- Curvas de futuros ----------------
+
+def etq_mes(d):
+    return f"{MESES_CORTOS[d.month - 1]}-{d:%y}"
+
+
+def vx_dia(fecha):
+    """Liquidaciones de los futuros mensuales del VIX en una fecha: [(vencimiento, precio)] o None si no hay datos."""
+    r = get("https://www.cboe.com/us/futures/market_statistics/settlement/csv/",
+            params={"dt": f"{fecha:%Y-%m-%d}"}, intentos=1, timeout=(10, 20))
+    texto = r.text.strip()
+    if len(texto) < 30:
+        return None
+    df = pd.read_csv(io.StringIO(texto))
+    cols = {str(c).strip().lower(): c for c in df.columns}
+    faltan = [k for k in ("product", "symbol", "expiration date", "price") if k not in cols]
+    if faltan:
+        raise RuntimeError("formato inesperado: " + ",".join(map(str, df.columns))[:80])
+    prod = df[cols["product"]].astype(str).str.strip()
+    simb = df[cols["symbol"]].astype(str).str.strip()
+    df = df[(prod == "VX") & simb.str.match(r"^VX/[FGHJKMNQUVXZ]\d+$")]     # solo mensuales (no semanales)
+    out = []
+    for v, p in zip(pd.to_datetime(df[cols["expiration date"]], errors="coerce"),
+                    pd.to_numeric(df[cols["price"]], errors="coerce")):
+        if pd.notna(v) and pd.notna(p) and p > 0 and v.normalize() > fecha:
+            out.append((v.normalize(), float(p)))
+    return sorted(out) or None
+
+
+def actualizar_vx():
+    """Histórico propio de la curva del VIX (datos/vx.csv): una fila por fecha y vencimiento."""
+    ruta = os.path.join(CARPETA_DATOS, "vx.csv")
+    if os.path.exists(ruta):
+        hist = pd.read_csv(ruta, parse_dates=["fecha", "vencimiento"])
+    else:
+        hist = pd.DataFrame(columns=["fecha", "vencimiento", "precio"])
+    hechos = set(pd.to_datetime(hist["fecha"]).dt.normalize()) if len(hist) else set()
+    ultimo = HOY_NY if SESION_CERRADA else HOY_NY - pd.Timedelta(days=1)
+    dias = pd.bdate_range(ultimo - pd.Timedelta(days=380), ultimo)
+    pendientes = [d for d in dias if d not in hechos][-260:]
+    filas, fallos = [], 0
+    limite = min(time.time() + 150, LIMITE_DESCARGAS)
+    for d in reversed(pendientes):
+        if time.time() > limite:
+            break
+        try:
+            curva = vx_dia(d)
+        except NoEncontrado:
+            curva = None
+        except Exception:  # noqa  servidor caído o formato nuevo: dejarlo para mañana
+            if not filas and not len(hist):
+                raise
+            break
+        if curva:
+            filas += [(d, v, p) for v, p in curva]
+            fallos = 0
+        else:
+            fallos += 1
+        if fallos >= 15:
+            break
+        time.sleep(0.3)
+    if filas:
+        hist = pd.concat([hist, pd.DataFrame(filas, columns=["fecha", "vencimiento", "precio"])], ignore_index=True)
+        hist["fecha"] = pd.to_datetime(hist["fecha"])
+        hist["vencimiento"] = pd.to_datetime(hist["vencimiento"])
+        hist = hist.drop_duplicates(["fecha", "vencimiento"], keep="last").sort_values(["fecha", "vencimiento"])
+        os.makedirs(CARPETA_DATOS, exist_ok=True)
+        hist.to_csv(ruta, index=False, date_format="%Y-%m-%d")
+    if not len(hist):
+        raise RuntimeError("sin datos")
+    curvas, previa = {}, None
+    for f, g in hist.groupby("fecha"):
+        f = pd.Timestamp(f)
+        g = g[g["vencimiento"] > f].sort_values("vencimiento")
+        c = list(zip(g["vencimiento"], g["precio"].astype(float)))
+        if len(c) < 2 or c == previa:        # festivo que repite la curva del día anterior
+            continue
+        curvas[f] = c
+        previa = c
+    if not curvas:
+        raise RuntimeError("sin curvas válidas")
+    return dict(sorted(curvas.items()))
+
+
+def estado_vx(r12):
+    if r12 is None or (isinstance(r12, float) and math.isnan(r12)):
+        return "SIN DATO"
+    return "BACKWARDATION (miedo agudo)" if r12 > 1 else "PLANA (a punto de invertirse)" if r12 >= 0.98 else "CONTANGO"
+
+
+def yahoo_contrato(simbolo):
+    """Cierres diarios del último mes de un contrato de futuros en Yahoo Finance."""
+    r = get(f"https://query1.finance.yahoo.com/v8/finance/chart/{simbolo}",
+            params={"range": "1mo", "interval": "1d"}, intentos=1, timeout=(10, 20))
+    res = (r.json().get("chart") or {}).get("result") or []
+    if not res or not res[0].get("timestamp"):
+        return None
+    cierre = ((res[0].get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
+    idx = pd.to_datetime(res[0]["timestamp"], unit="s", utc=True).tz_convert("America/New_York").tz_localize(None).normalize()
+    s = pd.Series(pd.to_numeric(pd.Series(cierre), errors="coerce").values[:len(idx)], index=idx[:len(cierre)]).dropna()
+    s = s[s > 0]
+    return s[~s.index.duplicated(keep="last")] if len(s) else None
+
+
+def cme_curva(pid):
+    """Liquidaciones de la web de CME (plan B): (fecha, [(mes, precio)])."""
+    for k in range(0, 6):
+        d = (HOY_NY - pd.offsets.BDay(k)).normalize()
+        r = get(f"https://www.cmegroup.com/CmeWS/mvc/Settlements/Futures/Settlements/{pid}/FUT",
+                params={"strategy": "DEFAULT", "tradeDate": f"{d:%m/%d/%Y}", "pageSize": "500"},
+                intentos=1, timeout=(10, 20), cabeceras={"Referer": "https://www.cmegroup.com/", "Accept": "application/json"})
+        pts = []
+        for x in (r.json() or {}).get("settlements", []) or []:
+            m = pd.to_datetime(str(x.get("month", "")).strip().title(), format="%b %y", errors="coerce")
+            p = pd.to_numeric(re.sub(r"[^0-9.]", "", str(x.get("settle", ""))) or "x", errors="coerce")
+            if pd.notna(m) and pd.notna(p) and p > 0:
+                pts.append((m, float(p)))
+        if len(pts) >= 3:
+            return d, sorted(pts)
+    raise RuntimeError("sin liquidaciones en los últimos días")
+
+
+def curva_materia(clave, nombre, raiz, bolsa, meses, pid):
+    """Curva actual de una materia prima: {"fecha", "fuente", "pts": [(mes del contrato, precio)]}."""
+    base = pd.Timestamp(HOY_NY.year, HOY_NY.month, 1)
+    candidatos = []
+    for k in range(0, 15):
+        m = base + pd.DateOffset(months=k)
+        if MESES_COD[m.month - 1] in meses:
+            candidatos.append(m)
+    yahoo_ok = "query1.finance.yahoo.com" not in SERVIDOR_CAIDO
+    datos = {}
+    if yahoo_ok:
+        for m in candidatos:
+            sim = f"{raiz}{MESES_COD[m.month - 1]}{m:%y}.{bolsa}"
+            try:
+                s = yahoo_contrato(sim)
+            except NoEncontrado:
+                s = None
+            except Exception:  # noqa  límite de peticiones u otro fallo: plan B
+                datos = {}
+                break
+            if s is not None and len(s):
+                datos[m] = s
+            time.sleep(0.3)
+    if len(datos) >= 3:
+        f_max = max(s.index[-1] for s in datos.values())
+        vivos = {m: s for m, s in datos.items() if s.index[-1] == f_max}       # descarta contratos ya vencidos
+        if len(vivos) >= 3:
+            return {"fecha": f_max, "fuente": "Yahoo Finance",
+                    "pts": sorted((m, float(s.iloc[-1])) for m, s in vivos.items())}
+    d, pts = cme_curva(pid)
+    pts = [(m, p) for m, p in pts if m >= base]
+    if len(pts) < 3:
+        raise RuntimeError("curva incompleta")
+    return {"fecha": d, "fuente": "CME (web)", "pts": pts}
+
+
+def resumen_curva(pts):
+    """Primer vencimiento, el de 12 meses después y la diferencia entre ambos (%)."""
+    m1, p1 = pts[0]
+    objetivo = m1 + pd.DateOffset(months=12)
+    cand = [(abs((m - objetivo).days), m, p) for m, p in pts[1:]]
+    if not cand:
+        return None
+    dist, m12, p12 = min(cand)
+    if dist > 45:            # no hay contrato a unos 12 meses: el más lejano disponible
+        m12, p12 = pts[-1]
+    meses = (m12.year - m1.year) * 12 + m12.month - m1.month
+    dif = (p12 / p1 - 1) * 100
+    est = "BACKWARDATION" if dif < -2 else "CONTANGO" if dif > 2 else "PLANA"
+    return {"m1": m1, "p1": p1, "m12": m12, "p12": p12, "meses": meses, "dif": dif,
+            "renov": (p1 / p12 - 1) * 100 * (12 / meses if meses else np.nan), "estado": est}
+
+
+def svg_curvas(series, xs_etq, unidad="", ref=None, ancho=720, alto=250):
+    """Varias curvas de futuros en un mismo gráfico. series: [(nombre, color, [(x, y)], discontinua)];
+    xs_etq: [(x, etiqueta)] para el eje horizontal."""
+    todas = [p for _, _, pts, _ in series for p in pts]
+    if len(todas) < 2:
+        return ""
+    ml, mr, mt, mb = 46, 16, 26, 30
+    xs = [x for x, _ in todas] + [x for x, _ in xs_etq]
+    ys = [y for _, y in todas] + ([ref] if ref is not None else [])
+    x0, x1 = min(xs), max(xs)
+    lo, hi = min(ys), max(ys)
+    pad = (hi - lo) * 0.08 or max(abs(hi) * 0.02, 0.1)
+    lo, hi = lo - pad, hi + pad
+    x1 = x1 if x1 > x0 else x0 + 1
+
+    def X(x):
+        return ml + (x - x0) / (x1 - x0) * (ancho - ml - mr)
+
+    def Y(v):
+        return mt + (hi - v) / (hi - lo) * (alto - mt - mb)
+    o = [f'<svg viewBox="0 0 {ancho} {alto}" class="grafico historico" role="img">']
+    rango = hi - lo
+    paso = next(p for p in (0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000) if rango / p <= 6)
+    v = math.ceil(lo / paso) * paso
+    while v <= hi:
+        o.append(f'<line x1="{ml}" x2="{ancho - mr}" y1="{Y(v):.1f}" y2="{Y(v):.1f}" stroke="#d5dde7"/>'
+                 f'<text x="{ml - 6}" y="{Y(v) + 3.5:.1f}" text-anchor="end" class="ytk">{fmt(v, 2 if paso < 1 else 0)}{e(unidad)}</text>')
+        v += paso
+    if ref is not None:
+        o.append(f'<line x1="{ml}" x2="{ancho - mr}" y1="{Y(ref):.1f}" y2="{Y(ref):.1f}" stroke="#1b2a3a" stroke-dasharray="6 4" stroke-width="1.2"/>')
+    salto = max(1, math.ceil(len(xs_etq) / 12))
+    for k, (x, t) in enumerate(xs_etq):
+        if k % salto:
+            continue
+        o.append(f'<line x1="{X(x):.1f}" x2="{X(x):.1f}" y1="{alto - mb}" y2="{alto - mb + 4}" stroke="#7d8a9c"/>'
+                 f'<text x="{X(x):.1f}" y="{alto - mb + 16}" text-anchor="middle" class="fdt">{e(t)}</text>')
+    xl = ml + 4
+    for nombre, color, pts, disc in series:
+        if len(pts) < 2:
+            continue
+        pp = " ".join(f"{X(x):.1f},{Y(y):.1f}" for x, y in pts)
+        raya = ' stroke-dasharray="5 4"' if disc else ""
+        o.append(f'<polyline points="{pp}" fill="none" stroke="{color}" stroke-width="{1.4 if disc else 2}"{raya}/>')
+        o.extend(f'<circle cx="{X(x):.1f}" cy="{Y(y):.1f}" r="{2.2 if disc else 3}" fill="{color}"/>' for x, y in pts)
+        o.append(f'<line x1="{xl}" x2="{xl + 18}" y1="12" y2="12" stroke="{color}" stroke-width="2"{raya}/>'
+                 f'<text x="{xl + 22}" y="15.5" class="etq2" fill="{color}">{e(nombre)}</text>')
+        xl += 30 + 6.2 * len(nombre)
+    o.append('</svg>')
+    return "".join(o)
 
 
 def _gamma_bs(S, K, T, iv):
@@ -2139,6 +2407,25 @@ def main():
             cot_series[etq] = s
     if cot_series:
         registrar("Posicionamiento (CFTC)", max(cot_series.values(), key=lambda x: x.index[-1]))
+    vx = seguro("Futuros del VIX (Cboe)", actualizar_vx)
+    if vx:
+        registrar("Futuros del VIX (Cboe)", pd.Series([1.0], index=[max(vx)]))
+    curvas_mp = {}
+    for cl, nom, raiz, bolsa, meses_c, pid in MATERIAS_CURVA:
+        c = seguro(f"Futuros {nom}", curva_materia, cl, nom, raiz, bolsa, meses_c, pid)
+        if c:
+            c["res"] = resumen_curva(c["pts"])
+            if c["res"]:
+                curvas_mp[cl] = c
+                registrar(f"Futuros {nom} ({c['fuente']})", pd.Series([1.0], index=[c["fecha"]]))
+    if curvas_mp:
+        try:
+            h_mp = leer_hist("curvas_mp.csv")
+            for cl, c in curvas_mp.items():
+                h_mp.loc[pd.Timestamp(c["fecha"]), cl] = round(c["res"]["dif"], 3)
+            guardar_hist("curvas_mp.csv", h_mp)
+        except Exception as ex:  # noqa
+            AVISOS.append(("Curvas de materias primas", f"no se pudo guardar el histórico ({str(ex)[:60]})"))
 
     # --- Series semanales (solo semanas cerradas: las reglas usan siempre estas)
     W = {t: semanal(s) for t, s in precios.items()}
@@ -2804,6 +3091,28 @@ def main():
                  f'<b>media desde 2008: {fmt(mm, 1, " %")}</b> (línea discontinua); percentil {fmt(pct(m08), 0)} desde 2008. '
                  f'Como contexto: media desde 1971 {fmt(m71, 1, " %")}; desde {fd(m2_yoy.index[0].year)} {fmt(mtot, 1, " %")}.</p>')
         H.append(svg_historico(m08, mm, f"media {fmt(mm, 1)} %"))
+    if curvas_mp:
+        H.append(f'<h2>Curvas de futuros de materias primas{i("curvas_mp")}</h2>'
+                 '<table><tr><th>Materia</th><th>1.<sup>er</sup> vencimiento</th><th>A unos 12 meses</th><th>Diferencia</th>'
+                 '<th>Estructura</th><th>Renovación a 12 meses (si el contado no cambia)</th><th>Fuente · fecha</th></tr>')
+        series_mp, max_m = [], 0
+        for cl, nom, *_ in MATERIAS_CURVA:
+            if cl not in curvas_mp:
+                continue
+            c, rs = curvas_mp[cl], curvas_mp[cl]["res"]
+            H.append(f'<tr><td>{e(nom)}</td><td>{etq_mes(rs["m1"])}: {fmt(rs["p1"], 2)}</td><td>{etq_mes(rs["m12"])}: {fmt(rs["p12"], 2)}</td>'
+                     f'<td>{_con_signo(rs["dif"])}</td><td><b>{rs["estado"]}</b></td><td>{_con_signo(rs["renov"])}</td>'
+                     f'<td>{e(c["fuente"])} · {fd(format(pd.Timestamp(c["fecha"]), "%d-%m-%Y"))}</td></tr>')
+            pts_n = [((m.year - rs["m1"].year) * 12 + m.month - rs["m1"].month, (p / rs["p1"] - 1) * 100) for m, p in c["pts"]]
+            pts_n = [(x, y) for x, y in pts_n if x <= 14]
+            max_m = max(max_m, max(x for x, _ in pts_n))
+            series_mp.append((nom, COLOR_MATERIA.get(cl, "#555"), pts_n, False))
+        H.append('</table>')
+        H.append(svg_curvas(series_mp, [(k, "1.º" if k == 0 else f"+{k} m") for k in range(0, max_m + 1)], unidad=" %", ref=0))
+        H.append('<p class="nota">Cada línea: precio de cada vencimiento frente al primero, en %. Por encima de la línea discontinua, '
+                 'contango (resta a los fondos que renuevan futuros); por debajo, backwardation (suma). Solo información: no cambia ninguna regla. '
+                 'Para consultarlas a mano: pestaña «Settlements» de cada producto en CME (enlaces en ⓘ) o, en TradingView, el diferencial '
+                 '<code>NYMEX:CL1!-NYMEX:CL2!</code> (positivo = backwardation).</p>')
     H.append('</section>')
 
     # ===== PESTAÑA 2: OPCIONES
@@ -2832,7 +3141,51 @@ def main():
         H.append(f'<div class="tarjeta"><div class="t">SKEW{i("skew")}</div><div class="v">{fmt(sk.iloc[-1], 0)}</div>'
                  f'<div class="s">percentil {fmt(pct(sk), 0)} histórico (desde {fd(sk.index[0].year)}) · {fmt(pct(sk1), 0)} último año · '
                  f'{fd(format(sk.index[-1], "%d-%m-%Y"))}</div></div>')
+    vx_txt = None
+    if vx:
+        f_v = max(vx)
+        c_v = vx[f_v]
+        r12 = c_v[0][1] / c_v[1][1]
+        p47 = (c_v[6][1] / c_v[3][1] - 1) * 100 if len(c_v) >= 7 else np.nan
+        est_v = estado_vx(r12)
+        ratio_v = pd.Series({f: c[0][1] / c[1][1] for f, c in vx.items()}).sort_index()
+        ratio_1a = ratio_v[ratio_v.index >= f_v - pd.Timedelta(days=365)]
+        pct_v = pct(ratio_1a) if len(ratio_1a) >= 120 else None
+        txt_pct = f"percentil {fmt(pct_v, 0)} del último año" if pct_v is not None else "historia aún corta para el percentil"
+        vx_txt = f"{est_v} (1.º/2.º {fmt(r12, 2)}; {txt_pct}; 4→7 {fmt(p47, 1)} %)"
+        H.append(f'<div class="tarjeta {"alerta" if r12 > 1 else ""}"><div class="t">Curva de futuros del VIX{i("vx_curva")}</div>'
+                 f'<div class="v" style="font-size:1.1em">{e(est_v.split(" (")[0])}</div>'
+                 f'<div class="s">1.<sup>er</sup> ÷ 2.º vencimiento {fmt(r12, 2)} · {txt_pct} · {fd(format(f_v, "%d-%m-%Y"))}</div></div>')
     H.append('</div>')
+    if vx:
+        fechas_v = list(vx)
+        vix_c = None
+        if "VIX" in cb:
+            sv = cb["VIX"][cb["VIX"].index <= f_v]
+            if len(sv) and sv.index[-1] == f_v:
+                vix_c = float(sv.iloc[-1])
+        H.append(f'<h2>Curva de futuros del VIX (Cboe){i("vx_curva")}</h2>'
+                 f'<p class="nota">Liquidación del {fd(format(f_v, "%d-%m-%Y"))}. '
+                 + (f'VIX de contado {fmt(vix_c, 2)} · ' if vix_c is not None else '')
+                 + f'1.<sup>er</sup> vencimiento ({etq_mes(c_v[0][0])}) {fmt(c_v[0][1], 2)} · 2.º ({etq_mes(c_v[1][0])}) {fmt(c_v[1][1], 2)} · '
+                 f'pendiente 1→2 {_con_signo((c_v[1][1] / c_v[0][1] - 1) * 100)} · 4→7 {_con_signo(p47)}. <b>{e(est_v)}</b>; {txt_pct}.</p>')
+
+        def _pts_vx(f, c, contado=None):
+            pts = [((v - f).days / 30.44, p) for v, p in c]
+            return ([(0.0, contado)] if contado is not None else []) + pts
+        series_v = [("hoy", "#7a3fd1", _pts_vx(f_v, c_v, vix_c), False)]
+        for n_ses, nom_s, col_s in ((5, "hace 1 semana", "#8a96a8"), (21, "hace 1 mes", "#c8a27a")):
+            if len(fechas_v) > n_ses:
+                f_a = fechas_v[-1 - n_ses]
+                series_v.append((f"{nom_s} ({format(f_a, '%d-%m')})", col_s, _pts_vx(f_a, vx[f_a]), True))
+        etq_v = ([(0.0, "contado")] if vix_c is not None else []) + [((v - f_v).days / 30.44, etq_mes(v)) for v, _ in c_v]
+        H.append(svg_curvas(series_v, etq_v))
+        H.append('<p class="nota">Eje horizontal: tiempo hasta cada vencimiento. Cada curva se dibuja con su propia fecha, '
+                 'así se comparan formas a igual plazo.</p>')
+        if len(ratio_v) >= 20:
+            H.append(svg_historico(ratio_v.iloc[-260:], 1.0, "1 = plana", color="#7a3fd1"))
+            H.append(f'<p class="nota">1.<sup>er</sup> ÷ 2.º vencimiento, histórico propio desde {fd(format(ratio_v.index[0], "%d-%m-%Y"))} '
+                     '(línea discontinua = 1: por encima, backwardation).</p>')
 
     if pc is not None and len(pc):
         H.append(f'<h2>Ratio put/call{i("putcall")}</h2><table><tr><th>Tipo</th><th>Último</th><th>Media 10 días</th><th>Percentil (media 10 d.) sobre su histórico propio</th></tr>')
@@ -2926,6 +3279,11 @@ def main():
          f"Convicción={conv}; votos=" + ", ".join(f"{k}:{v:+d}" for k, v in votos.items()) + f"; dirección RV global={nombre_fase(fase_acwi) if fase_acwi else None}; beta/alfa={d_txt}; sentimiento={fmt(sent, 0)}",
          "Motores: " + "; ".join(f"{m['t']}={nombre_fase(m['fase'])}" for m in motores),
          "Macro: " + "; ".join(f"{v['nombre']}={nombre_fase_macro(v['fase'])} (p{fmt(v['nivel'], 0)})" for v in macro)]
+    if vx_txt:
+        R.append(f"Curva VIX={vx_txt}")
+    if curvas_mp:
+        R.append("Curvas materias: " + "; ".join(f"{cl}={c['res']['estado']} ({fmt(c['res']['dif'], 1)} % a {c['res']['meses']} meses)"
+                                                for cl, c in curvas_mp.items()))
     if gm:
         R.append(f"Gamma={'positiva' if gm['gex_mm'] > 0 else 'negativa'}, giro={fmt(gm['giro'], 0)}, S&P={fmt(gm['spot'], 0)}")
     R.append(f"Blackout estimado={'sí' if en_blackout else 'no'}")
