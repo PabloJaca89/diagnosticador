@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png?v=3" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>GovCon Deal Watch</title>
+    <meta name="description" content="Informing GovCon’s most consequential decisions with M&A, private equity, and venture capital intelligence." />
+    <meta name="author" content="GovCon Deal Watch" />
+    <meta name="google-site-verification" content="6iTQVrBhlGaoNRq_NDjpcz5DFC4h4JcvITeJROMF968" />
+    <meta name="google-site-verification" content="iXpkb4XAXJwx5POpCPp-O4-Oo0I3XEDU9ihQnDaK8XI" />
+    <link rel="alternate" type="application/rss+xml" title="GovCon Deal Watch RSS" href="https://aysnwfzqhqgogqccbjiz.supabase.co/functions/v1/rss-feed" />
+
+    <!-- Google Preferred Sources button -->
+    <script async src="https://news.google.com/swg/js/v1/publisher.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet" />
+
+    <meta property="og:title" content="GovCon Deal Watch" />
+    <meta property="og:description" content="Informing GovCon’s most consequential decisions with M&A, private equity, and venture capital intelligence." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://govcondealwatch.com/" />
+    <meta property="og:image" content="https://govcondealwatch.com/og-image.jpg?v=2" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="GovCon Deal Watch" />
+    <meta name="twitter:description" content="Informing GovCon’s most consequential decisions with M&A, private equity, and venture capital intelligence." />
+    <meta name="twitter:image" content="https://govcondealwatch.com/og-image.jpg?v=2" />
+    <script type="module" crossorigin src="/assets/index-BU86E4KM.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BJChcZL1.css">
+  <script defer src="/__l5e/events.1851fa895e86309c.js" data-artifact-kind="dwl_content_hash" data-artifact-id="3aebfe39d160d50f8140718ba905f1278730f83972cabf4d4a743df2f90dc9fe" data-commit-sha="69ef534e653c39acc4fc41b744cd09e19d12c5ba" data-context-token="v1.eyJwcm9qZWN0X2lkIjoibG92cF8yYTcwY3duank1ODNtczB0NjB4M3J4d2VyNyIsImFydGlmYWN0X2tpbmQiOiJkd2xfY29udGVudF9oYXNoIiwiYXJ0aWZhY3RfaWQiOiIzYWViZmUzOWQxNjBkNTBmODE0MDcxOGJhOTA1ZjEyNzg3MzBmODM5NzJjYWJmNGQ0YTc0M2RmMmY5MGRjOWZlIiwiY29tbWl0X3NoYSI6IjY5ZWY1MzRlNjUzYzM5YWNjNGZjNDFiNzQ0Y2QwOWUxOWQxMmM1YmEiLCJleHAiOjE3OTg0MTA4MjN9.0COpoJtKTrkilUbr3voksOB4kf3QpoT20ik2g7efZHQ" data-autocapture="1" data-consent="1"></script></head>
+
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
