@@ -1,0 +1,28 @@
+name: Prueba completa (temporal)
+on:
+  push:
+    branches: [sonda-fuentes]
+    paths: [diagnosticador.py, .github/workflows/prueba-completa.yml]
+permissions:
+  contents: write
+jobs:
+  prueba:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy requests xlrd
+      - name: Ejecutar diagnosticador
+        env:
+          TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python diagnosticador.py 2>&1 | tee sonda/ejecucion.log
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add docs datos sonda/ejecucion.log
+          git commit -m "Resultado de la prueba completa" || echo "Sin cambios"
+          git push

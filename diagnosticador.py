@@ -313,7 +313,7 @@ INFO = {
 <p><b>Cuidado.</b> Es una heurística de mercado sin respaldo académico sólido. Aquí se mide con dos fondos cotizados (CPER y GLD), con historia desde 2011.</p>""", []),
     "Volatilidad de los bonos largos (Cboe VXTLT)": ("Volatilidad de los bonos largos (Cboe VXTLT)", """
 <p><b>Qué es.</b> Volatilidad implícita a 30 días en las opciones del fondo de bonos del Tesoro a más de 20 años (TLT), calculada por Cboe con el mismo método que el VIX. Desde 2004. Cuanto más alta, más miedo a movimientos bruscos de los tipos de interés.</p>
-<p><b>Por qué no el MOVE.</b> El MOVE (ICE BofA) es el índice de referencia de la volatilidad de los bonos, pero es de pago y no está en Tiingo ni en la Reserva Federal; Yahoo Finance falla. El VXTLT es lo más parecido gratuito y fiable, pero mide otra cosa (volatilidad del precio del bono largo, en %, no de los tipos en puntos básicos) y tiene otra escala: el umbral de 98 del MOVE no se aplica aquí.</p>
+<p><b>Diferencia con el MOVE.</b> El MOVE (ver su gráfica) mide la volatilidad de los tipos de interés del Tesoro en puntos básicos y en varios plazos; el VXTLT, la del precio del bono largo, en %. Suelen moverse juntos, pero tienen otra escala: el umbral de 98 del MOVE no se aplica aquí. El VXTLT tiene historia desde 2004; el MOVE gratuito, solo desde octubre de 2019.</p>
 <p><b>Sobre el MOVE por encima de 98.</b> Coincidió con las caídas de 2008, 2011, 2020, 2022 y abril de 2025, pero no con agosto de 2015, febrero de 2016 ni 2018 (máximo de 2018: 69,9). No es condición necesaria para una crisis bursátil.</p>
 <p><b>Tramos.</b> Se fijan con su propia historia (percentiles desde 2004), porque no hay umbrales oficiales:</p>
 <ul><li><b>Tranquilidad:</b> por debajo de su percentil 25.</li>
@@ -322,6 +322,12 @@ INFO = {
 <li><b>Tensión alta:</b> por encima del percentil 90.</li></ul>
 <!--TRAMOS_VXTLT-->
 <p>Solo información: no cambia ninguna regla.</p>""", [("Cboe: VXTLT", "https://www.cboe.com/us/indices/dashboard/vxtlt/")]),
+    "Volatilidad de los tipos (MOVE)": ("Volatilidad de los tipos del Tesoro (MOVE)", """
+<p><b>Qué es.</b> Índice ICE BofA MOVE: volatilidad implícita a 1 mes en las opciones sobre bonos del Tesoro de EE. UU. a 2, 5, 10 y 30 años, en puntos básicos. Es el «VIX de los bonos».</p>
+<p><b>Sobre el MOVE por encima de 98.</b> Coincidió con las caídas de 2008 (264), 2011 (117,8), 2020 (164), 2022 (≈160) y abril de 2025 (139,9), pero no con agosto de 2015, febrero de 2016 (96,3) ni 2018 (máximo del año 69,9). No es condición necesaria para una crisis bursátil.</p>
+<p><b>Datos.</b> Cierres diarios difundidos por CNBC, gratuitos solo desde octubre de 2019; la web guarda su propio histórico desde el 27-11-2026. Por eso el percentil es «desde 2019» (incluye el pico de 2020 y el de marzo de 2023, 198,7): con tan poca historia, mejor fijarse en el nivel y en el umbral de 98 que en el percentil.</p>
+<p>Solo información: no cambia ninguna regla.</p>""", [("ICE: índice MOVE", "https://www.ice.com/fixed-income-data-services/index-solutions/fixed-income-indices/move-index"),
+                                                       ("CNBC: cotización del MOVE", "https://www.cnbc.com/quotes/.MOVE")]),
     "Masa monetaria M2 (crecimiento interanual, %)": ("Masa monetaria M2", """
 <p><b>Qué es.</b> Dinero en manos del público en EE. UU.: efectivo, depósitos a la vista y de ahorro, depósitos a plazo pequeños y fondos monetarios minoristas. Se muestra su crecimiento frente al mismo mes del año anterior. Serie mensual de la Reserva Federal (M2SL, desestacionalizada), desde 1960.</p>
 <p><b>Media desde 2008.</b> La gráfica empieza en 2008, con el inicio de las compras de bonos de la Fed (QE): desde entonces el crecimiento de M2 responde a otro régimen monetario, y la media de toda la historia (que incluye la etapa anterior a 1971, con el dólar ligado al oro) no sirve como referencia. Debajo de la gráfica se dan también, como contexto, las medias desde 1971 y desde 1960.</p>
@@ -455,17 +461,20 @@ INFO["vx_curva"] = ("Curva de futuros del VIX", """
      ("Cboe: especificaciones de los futuros VX", "https://www.cboe.com/tradable_products/vix/vix_futures/")])
 
 INFO["curvas_mp"] = ("Curvas de futuros de materias primas", """
-<p><b>Qué es.</b> El precio de cada vencimiento de los futuros, ordenado en el tiempo. Conviene comparar el primer vencimiento con el del mismo mes del año siguiente (así se elimina la estacionalidad del gas natural).</p>
+<p><b>Qué es.</b> El precio de cada vencimiento de los futuros, ordenado en el tiempo. Se compara el primer vencimiento con el del mismo mes del año siguiente (así se elimina la estacionalidad del gas, que es más caro en invierno).</p>
 <ul><li><b>Backwardation</b> (el futuro lejano más barato): el mercado paga más por tener la materia ya. Suele indicar escasez y existencias bajas.</li>
 <li><b>Contango</b> (el futuro lejano más caro): hay oferta de sobra y cuesta almacenarla y financiarla.</li></ul>
 <p><b>Por qué importa para la cartera.</b> Un fondo de materias primas (DBC, CPER, USO...) no tiene la materia: tiene futuros y los renueva. Con backwardation, cada renovación compra más barato y suma rentabilidad; con contango, la resta. Aproximación de esa ganancia o pérdida en un año <b>si el contado no cambia</b>: precio del 1.<sup>er</sup> vencimiento ÷ precio a 12 meses − 1. DBC no usa siempre el primer vencimiento (elige el contrato con mejor renovación), así que su coste real puede ser menor.</p>
-<p><b>Por qué no se descarga sola.</b> Consultarlas a mano es gratis (páginas «Settlements» de CME, datos oficiales de cierre). Bajarlas a diario de forma automática, no: la serie gratuita de la EIA (vencimientos 1 a 4 de WTI) se dejó de publicar en abril de 2024; CME y Yahoo Finance rechazan las descargas automáticas (error 403, comprobado el 27-11-2026), y los ficheros de CME pasaron a su servicio de pago DataMine.</p>
+<p><b>En esta web.</b> Diferencia del primer vencimiento al de 12 meses después: por debajo de −2 %, backwardation; por encima de +2 %, contango; entre medias, plana (umbral de criterio, solo descriptivo). La columna «Renovación a 12 meses» es la ganancia o pérdida aproximada de renovar durante un año <b>si el contado no cambia</b>. Al lado, el percentil de esa diferencia en el histórico propio (se guarda cada día desde el 27-11-2026). Solo información: no cambia ninguna regla.</p>
+<p><b>Datos.</b> Brent, WTI, gas de EE. UU. (Henry Hub) y cobre: precio de liquidación oficial de cada vencimiento (publicado por el mercado y difundido por CNBC). Gas europeo (TTF): último precio negociado del día en ICE Endex, con 15 minutos de retraso, gratuito según la política de datos de ICE. Si CNBC falla, el Brent se toma de ICE.</p>
 <p><b>Por qué no el oro.</b> Está casi siempre en contango por el coste de financiarlo (aprox. el tipo de interés): su curva dice poco.</p>""",
-    [("CME: petróleo WTI, liquidaciones", CME_LIQ + "energy/crude-oil/light-sweet-crude.settlements.html"),
+    [("ICE: Brent, precios por vencimiento", "https://www.ice.com/products/219/Brent-Crude-Futures/data"),
+     ("ICE Endex: gas TTF, precios por vencimiento", "https://www.ice.com/products/27996665/Dutch-TTF-Natural-Gas-Futures/data"),
+     ("ICE: política de datos (datos retrasados sin coste)", "https://www.ice.com/publicdocs/futures/ICE_Futures_Europe_Market_Data_Policy.pdf"),
+     ("CME: petróleo WTI, liquidaciones", CME_LIQ + "energy/crude-oil/light-sweet-crude.settlements.html"),
      ("CME: Brent, liquidaciones", CME_LIQ + "energy/crude-oil/brent-crude-oil.settlements.html"),
      ("CME: gas natural, liquidaciones", CME_LIQ + "energy/natural-gas/natural-gas.settlements.html"),
      ("CME: cobre, liquidaciones", CME_LIQ + "metals/base/copper.settlements.html"),
-     ("EIA: futuros NYMEX (sin datos desde el 05-04-2024)", "https://www.eia.gov/dnav/pet/pet_pri_fut_s1_d.htm"),
      ("Erb y Harvey (2006), The Strategic and Tactical Value of Commodity Futures", "https://doi.org/10.2469/faj.v62.n2.4083"),
      ("Gorton, Hayashi y Rouwenhorst (2013), The Fundamentals of Commodity Futures Returns", "https://doi.org/10.1093/rof/rfs019")])
 
@@ -1194,6 +1203,155 @@ def estado_vx(r12):
     if r12 is None or (isinstance(r12, float) and math.isnan(r12)):
         return "SIN DATO"
     return "BACKWARDATION (miedo agudo)" if r12 >= 1.02 else "PLANA" if r12 > 0.98 else "CONTANGO"
+
+
+CNBC_Q = "https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol"
+ICE_CURVA = "https://www.ice.com/marketdata/api/productguide/charting/contract-data"
+MES_EN = {m: k + 1 for k, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"])}
+# (clave, nombre, unidad, raíz en CNBC o None, (producto, hub) en ICE o None)
+MATERIAS_CURVA = [
+    ("BRENT", "Petróleo Brent", "$/barril", "LCO", (254, 403)),
+    ("WTI", "Petróleo WTI", "$/barril", "CL", None),
+    ("TTF", "Gas natural Europa (TTF)", "€/MWh", None, (4331, 7979)),
+    ("NG", "Gas natural EE. UU. (Henry Hub)", "$/MMBtu", "NG", None),
+    ("HG", "Cobre", "$/libra", "HG", None),
+]
+COLOR_MATERIA = {"BRENT": "#8a4b2d", "WTI": "#1d2733", "TTF": "#7b3fa0", "NG": "#2f6fdb", "HG": "#e67e22"}
+
+
+def _num(x):
+    v = pd.to_numeric(re.sub(r"[^0-9.\-]", "", str(x if x is not None else "")) or "x", errors="coerce")
+    return float(v) if pd.notna(v) and v > 0 else None
+
+
+def cnbc_curvas(raices, n=13):
+    """Liquidación oficial del día de los vencimientos 1 a n de cada raíz (CNBC): {raíz: {"fecha", "fuente", "pts"}}."""
+    simb = "|".join(f"@{r}.{k}" for r in raices for k in range(1, n + 1))
+    r = get(CNBC_Q, params={"symbols": simb, "requestMethod": "itv", "noform": "1", "partnerId": "2", "fund": "1",
+                            "exthrs": "1", "output": "json", "events": "1"}, intentos=2, timeout=(10, 30))
+    qs = ((r.json() or {}).get("FormattedQuoteResult") or {}).get("FormattedQuote") or []
+    out = {}
+    for q in qs:
+        m = re.match(r"^@([A-Z]+)\.(\d+)$", str(q.get("symbol", "")))
+        mes = re.search(r"\((\w{3})'(\d{2})\)", str(q.get("name", "")))
+        if not m or not mes or str(q.get("code", "1")) != "0" or mes.group(1).lower() not in MES_EN:
+            continue
+        cm = pd.Timestamp(2000 + int(mes.group(2)), MES_EN[mes.group(1).lower()], 1)
+        dia_liq = pd.to_datetime(q.get("settleDate"), errors="coerce")
+        dia_ult = pd.to_datetime(str(q.get("last_time", ""))[:10], errors="coerce")
+        p_liq, p_ult = _num(q.get("settlePrice")), _num(q.get("last"))
+        if p_liq and pd.notna(dia_liq) and (pd.isna(dia_ult) or dia_liq >= dia_ult):
+            precio, dia, tipo = p_liq, dia_liq, "liquidación"
+        elif p_ult and pd.notna(dia_ult):
+            precio, dia, tipo = p_ult, dia_ult, "último precio"
+        else:
+            continue
+        out.setdefault(m.group(1), []).append((cm, precio, dia.normalize(), tipo))
+    res = {}
+    for raiz, pts in out.items():
+        f_max = max(d for _, _, d, _ in pts)
+        vivos = sorted({cm: p for cm, p, d, _ in pts if d == f_max}.items())
+        tipos = {t for _, _, d, t in pts if d == f_max}
+        if len(vivos) >= 3:
+            res[raiz] = {"fecha": f_max, "pts": vivos,
+                         "fuente": "CNBC · " + ("liquidación oficial" if tipos == {"liquidación"} else "último precio")}
+    return res
+
+
+def ice_curva(producto, hub):
+    """Precios por vencimiento mensual en ICE (retrasados 15 min): {"fecha", "fuente", "pts"}."""
+    r = get(ICE_CURVA, params={"productId": producto, "hubId": hub}, intentos=2, timeout=(10, 30))
+    pts = []
+    for x in r.json() or []:
+        m = re.match(r"^([A-Za-z]{3})(\d{2})$", str(x.get("marketStrip", "")).strip())
+        p = _num(x.get("lastPrice"))
+        d = pd.to_datetime(str(x.get("lastTime", ""))[:10], format="%m/%d/%Y", errors="coerce")
+        if m and p and pd.notna(d) and m.group(1).lower() in MES_EN:
+            pts.append((pd.Timestamp(2000 + int(m.group(2)), MES_EN[m.group(1).lower()], 1), p, d.normalize()))
+    if len(pts) < 3:
+        raise RuntimeError("curva incompleta")
+    f_max = max(d for *_, d in pts)
+    vivos = sorted({cm: p for cm, p, d in pts if (f_max - d).days <= 3}.items())
+    if len(vivos) < 3:
+        raise RuntimeError("curva incompleta")
+    return {"fecha": f_max, "pts": vivos, "fuente": "ICE · último precio negociado"}
+
+
+def curvas_materias():
+    """Curvas actuales de las materias de MATERIAS_CURVA: {clave: {"fecha", "fuente", "pts", "nombre", "unidad"}}."""
+    out, fallos = {}, []
+    try:
+        cn = cnbc_curvas([raiz for _, _, _, raiz, _ in MATERIAS_CURVA if raiz])
+    except Exception as ex:  # noqa
+        cn, fallos = {}, [f"CNBC ({str(ex)[:60]})"]
+    for clave, nom, uni, raiz, ice in MATERIAS_CURVA:
+        c = cn.get(raiz) if raiz else None
+        if c is None and ice:
+            try:
+                c = ice_curva(*ice)
+            except Exception as ex:  # noqa
+                fallos.append(f"{nom} en ICE ({str(ex)[:60]})")
+        if c:
+            c["nombre"], c["unidad"] = nom, uni
+            out[clave] = c
+        else:
+            fallos.append(nom)
+    for f in fallos:
+        ERRORES.append((f"Futuros: {f}", "sin datos hoy"))
+    if not out:
+        raise RuntimeError("sin curvas")
+    return out
+
+
+def resumen_curva(pts):
+    """Primer vencimiento, el de 12 meses después y la diferencia entre ambos (%)."""
+    m1, p1 = pts[0]
+    objetivo = m1 + pd.DateOffset(months=12)
+    cand = [(abs((m - objetivo).days), m, p) for m, p in pts[1:]]
+    if not cand:
+        return None
+    dist, m12, p12 = min(cand)
+    if dist > 45:            # no hay contrato a unos 12 meses: el más lejano disponible
+        m12, p12 = pts[-1]
+    meses = (m12.year - m1.year) * 12 + m12.month - m1.month
+    if meses < 6:
+        return None
+    dif = (p12 / p1 - 1) * 100
+    est = "BACKWARDATION" if dif < -2 else "CONTANGO" if dif > 2 else "PLANA"
+    return {"m1": m1, "p1": p1, "m12": m12, "p12": p12, "meses": meses, "dif": dif,
+            "renov": ((p1 / p12) ** (12 / meses) - 1) * 100, "estado": est}
+
+
+def descargar_move():
+    """MOVE diario: cierres de CNBC (desde 10-2019) + cotización del día + histórico propio (datos/move.csv)."""
+    r = get(f"https://ts-api.cnbc.com/harmony/app/bars/.MOVE/1D/20190101000000/{HOY_NY:%Y%m%d}235959/adjusted/EST5EDT.json",
+            intentos=2, timeout=(10, 40))
+    barras = ((r.json() or {}).get("barData") or {}).get("priceBars") or []
+    d = {}
+    for b in barras:
+        f = pd.to_datetime(str(b.get("tradeTime", ""))[:8], format="%Y%m%d", errors="coerce")
+        v = _num(b.get("close"))
+        if pd.notna(f) and v:
+            d[f] = v
+    try:
+        q = get(CNBC_Q, params={"symbols": ".MOVE", "requestMethod": "itv", "noform": "1", "partnerId": "2", "fund": "1",
+                                "exthrs": "1", "output": "json", "events": "1"}, intentos=1, timeout=(10, 20))
+        qs = ((q.json() or {}).get("FormattedQuoteResult") or {}).get("FormattedQuote") or []
+        q = next((x for x in qs if x.get("symbol") == ".MOVE"), {})
+        f = pd.to_datetime(str(q.get("last_time", ""))[:10], errors="coerce")
+        v = _num(q.get("last"))
+        if pd.notna(f) and v and f.weekday() < 5:
+            d[f.normalize()] = v
+    except Exception:  # noqa  sin cotización del día: basta con los cierres
+        pass
+    nuevo = pd.Series(d, dtype=float).sort_index()
+    h = leer_hist("move.csv")
+    viejo = h["move"] if "move" in h else pd.Series(dtype=float)
+    s = pd.concat([viejo[~viejo.index.isin(nuevo.index)], nuevo]).sort_index()
+    if len(s) < 100:
+        raise RuntimeError("serie demasiado corta")
+    guardar_hist("move.csv", s.to_frame("move"))
+    return s
 
 
 def svg_curvas(series, xs_etq, unidad="", ref=None, ancho=720, alto=250):
@@ -2322,6 +2480,25 @@ def main():
     vx = seguro("Futuros del VIX (Cboe)", actualizar_vx)
     if vx:
         registrar("Futuros del VIX (Cboe)", pd.Series([1.0], index=[max(vx)]))
+    curvas_mp = seguro("Futuros de materias primas", curvas_materias) or {}
+    for cl, c in list(curvas_mp.items()):
+        c["res"] = resumen_curva(c["pts"])
+        if not c["res"]:
+            del curvas_mp[cl]
+            continue
+        registrar(f"Futuros {c['nombre']}", pd.Series([1.0], index=[c["fecha"]]))
+    h_mp = pd.DataFrame()
+    if curvas_mp:
+        try:
+            h_mp = leer_hist("curvas_mp.csv")
+            for cl, c in curvas_mp.items():
+                h_mp.loc[pd.Timestamp(c["fecha"]), cl] = round(c["res"]["dif"], 3)
+            guardar_hist("curvas_mp.csv", h_mp)
+        except Exception as ex:  # noqa
+            ERRORES.append(("Histórico de curvas de materias primas", str(ex)[:120]))
+    move = seguro("MOVE (CNBC)", descargar_move)
+    if move is not None:
+        registrar("Volatilidad de los tipos (MOVE)", move)
     # --- Series semanales (solo semanas cerradas: las reglas usan siempre estas)
     W = {t: semanal(s) for t, s in precios.items()}
     ref_w = W.get(REFERENCIA)
@@ -2549,6 +2726,9 @@ def main():
     vxtlt_w = semanal(cb["VXTLT"]) if "VXTLT" in cb else None
     if vxtlt_w is not None:
         add(variable_macro("Volatilidad de los bonos largos (Cboe VXTLT)", vxtlt_w, "s", 13))
+    move_w = semanal(move) if move is not None else None
+    if move_w is not None:
+        add(variable_macro("Volatilidad de los tipos (MOVE)", move_w, "s", 13))
     m2_yoy = None
     if "M2SL" in fr:
         m2_m = mensual(fr["M2SL"])
@@ -2976,6 +3156,15 @@ def main():
                  f'(percentiles 25, 75 y 90 desde {fd(vxtlt_w.index[0].year)}); media {fmt(mv, 1)}. '
                  'No es el MOVE: otra escala (su umbral de 98 no se aplica).</p>')
         H.append(svg_historico(vxtlt_w, mv, f"media {fmt(mv, 1)}"))
+    if move is not None and len(move) > 200:
+        ahora_m, f_m = float(move.iloc[-1]), move.index[-1]
+        mx_f = move.idxmax()
+        estado_m = "POR ENCIMA DE 98" if ahora_m > 98 else "POR DEBAJO DE 98"
+        H.append(f'<h2>Volatilidad de los tipos del Tesoro (MOVE) · desde {fd(move.index[0].year)}{i("Volatilidad de los tipos (MOVE)")}</h2>'
+                 f'<p class="nota">Cierres diarios. Ahora {fmt(ahora_m, 1)} ({fd(format(f_m, "%d-%m-%Y"))}): <b>{estado_m}</b> '
+                 f'(línea discontinua: umbral de 98). Percentil {fmt(pct(move), 0)} desde {fd(format(move.index[0], "%m-%Y"))} '
+                 f'(historia gratuita corta); media {fmt(float(move.mean()), 1)}; máximo {fmt(float(move.max()), 1)} ({fd(format(mx_f, "%d-%m-%Y"))}).</p>')
+        H.append(svg_historico(move, 98, "umbral 98"))
     if m2_yoy is not None and len(m2_yoy.loc["2008":]) > 24:
         m08 = m2_yoy.loc["2008":]
         mm = float(m08.mean())
@@ -2986,12 +3175,33 @@ def main():
                  f'<b>media desde 2008: {fmt(mm, 1, " %")}</b> (línea discontinua); percentil {fmt(pct(m08), 0)} desde 2008. '
                  f'Como contexto: media desde 1971 {fmt(m71, 1, " %")}; desde {fd(m2_yoy.index[0].year)} {fmt(mtot, 1, " %")}.</p>')
         H.append(svg_historico(m08, mm, f"media {fmt(mm, 1)} %"))
-    H.append(f'<h2>Curvas de futuros de materias primas{i("curvas_mp")}</h2>'
-             '<p class="nota">Sin descarga automática: no hay una fuente gratuita que permita bajarlas a diario desde aquí '
-             '(ver ⓘ). Consulta manual, gratis: liquidaciones oficiales de CME · '
-             + " · ".join(f'<a href="{CME_LIQ}{u}" target="_blank" rel="noopener">{n}</a>' for n, u in CME_PAGINAS)
-             + '. Atajo en TradingView: <code>NYMEX:CL1!-NYMEX:CL2!</code> (positivo = backwardation; cambia CL por BB para Brent, '
-             'NG para gas natural o COMEX:HG para cobre).</p>')
+    if curvas_mp:
+        H.append(f'<h2>Curvas de futuros de materias primas{i("curvas_mp")}</h2>'
+                 '<table><tr><th>Materia</th><th>1.<sup>er</sup> vencimiento</th><th>A unos 12 meses</th><th>Diferencia</th>'
+                 '<th>Estructura</th><th>Renovación a 12 meses (si el contado no cambia)</th><th>Percentil (histórico propio)</th>'
+                 '<th>Fuente · fecha</th></tr>')
+        series_mp, max_m = [], 0
+        for cl, *_ in MATERIAS_CURVA:
+            if cl not in curvas_mp:
+                continue
+            c, rs = curvas_mp[cl], curvas_mp[cl]["res"]
+            hc = h_mp[cl].dropna() if cl in h_mp else pd.Series(dtype=float)
+            p_txt = f"{fmt(pct(hc), 0)} ({len(hc)} días)" if len(hc) >= 20 else f"histórico aún corto ({len(hc)} días)"
+            uni = e(c["unidad"])
+            H.append(f'<tr><td>{e(c["nombre"])}</td><td>{etq_mes(rs["m1"])}: {fmt(rs["p1"], 2)} {uni}</td>'
+                     f'<td>{etq_mes(rs["m12"])}: {fmt(rs["p12"], 2)} {uni}</td>'
+                     f'<td>{_con_signo(rs["dif"])}</td><td><b>{rs["estado"]}</b></td><td>{_con_signo(rs["renov"])}</td><td>{p_txt}</td>'
+                     f'<td>{e(c["fuente"])} · {fd(format(pd.Timestamp(c["fecha"]), "%d-%m-%Y"))}</td></tr>')
+            pts_n = [((m.year - rs["m1"].year) * 12 + m.month - rs["m1"].month, (p / rs["p1"] - 1) * 100) for m, p in c["pts"]]
+            pts_n = [(x, y) for x, y in pts_n if x <= 13]
+            max_m = max(max_m, max(x for x, _ in pts_n))
+            series_mp.append((c["nombre"], COLOR_MATERIA.get(cl, "#555"), pts_n, False))
+        H.append('</table>')
+        H.append(svg_curvas(series_mp, [(k, "1.º" if k == 0 else f"+{k} m") for k in range(0, max_m + 1)], unidad=" %", ref=0))
+        H.append('<p class="nota">Cada línea: precio de cada vencimiento frente al primero, en %. Por encima de la línea discontinua, '
+                 'contango (resta a los fondos que renuevan futuros); por debajo, backwardation (suma). '
+                 'El gas (TTF y Henry Hub) es más caro en invierno: compárese el primer vencimiento con el del mismo mes del año siguiente '
+                 '(columna «A unos 12 meses»), no con el siguiente. Solo información: no cambia ninguna regla.</p>')
     H.append('</section>')
 
     # ===== PESTAÑA 2: OPCIONES
@@ -3160,6 +3370,11 @@ def main():
          "Macro: " + "; ".join(f"{v['nombre']}={nombre_fase_macro(v['fase'])} (p{fmt(v['nivel'], 0)})" for v in macro)]
     if vx_txt:
         R.append(f"Curva VIX={vx_txt}")
+    if curvas_mp:
+        R.append("Curvas materias: " + "; ".join(f"{cl}={c['res']['estado']} ({fmt(c['res']['dif'], 1)} % a {c['res']['meses']} meses)"
+                                                for cl, c in curvas_mp.items()))
+    if move is not None:
+        R.append(f"MOVE={fmt(float(move.iloc[-1]), 1)} ({move.index[-1]:%d-%m-%Y})")
     if gm:
         R.append(f"Gamma={'positiva' if gm['gex_mm'] > 0 else 'negativa'}, giro={fmt(gm['giro'], 0)}, S&P={fmt(gm['spot'], 0)}")
     R.append(f"Blackout estimado={'sí' if en_blackout else 'no'}")
